@@ -5,12 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VibeCreAI - The Future of Creative AI</title>
     <style>
-        /* 1. editundo.ttf 폰트 정의 */
         @font-face {
-            font-family: 'EditUndoFont'; /* 사용자 정의 폰트 이름 */
-            src: url('fonts/editundo.ttf') format('truetype'); /* 폰트 파일 경로 */
-            /* 폰트의 기본 웨이트와 스타일을 지정할 수 있습니다.
-               예: font-weight: normal; font-style: normal; */
+            font-family: 'EditUndoFont';
+            src: url('fonts/editundo.ttf') format('truetype');
         }
 
         * {
@@ -20,7 +17,7 @@
         }
 
         body {
-            font-family: 'Arial', sans-serif; /* 기본 본문 폰트 */
+            font-family: 'Arial', sans-serif;
             background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
             color: #ffffff;
             overflow-x: hidden;
@@ -51,9 +48,8 @@
         }
 
         .logo {
-            /* 2. 헤더 로고 VibeCreAI 폰트 변경 */
-            font-family: 'EditUndoFont', 'Courier New', monospace; /* EditUndoFont 적용, 없을 경우 Courier New, monospace 순으로 적용 */
-            font-size: 20px; /* 새 폰트에 맞게 크기 조절이 필요할 수 있습니다. */
+            font-family: 'EditUndoFont', 'Courier New', monospace;
+            font-size: 20px; /* V, C, AI 부분의 기본 크기 */
             font-weight: bold;
             color: #ffffff;
             text-decoration: none;
@@ -64,11 +60,11 @@
         }
 
         .logo .small-part {
-            font-size: 14px; /* 이 부분도 EditUndoFont가 적용됩니다. */
+            font-size: 16px; /* 기존 14px에서 16px로 증가 (예시) */
         }
 
         .logo .ai-part {
-            color: #2bb4db; /* 이 부분도 EditUndoFont가 적용됩니다. */
+            color: #2bb4db;
         }
 
         .nav-links {
@@ -89,9 +85,8 @@
 
         /* Pixel Logo Style */
         .pixel-logo {
-            /* 3. 히어로 섹션 로고 VibeCreAI 폰트 변경 */
-            font-family: 'EditUndoFont', 'Courier New', monospace; /* EditUndoFont 적용, 없을 경우 Courier New, monospace 순으로 적용 */
-            font-size: 5rem; /* 새 폰트에 맞게 크기 조절이 필요할 수 있습니다. */
+            font-family: 'EditUndoFont', 'Courier New', monospace;
+            font-size: 5rem; /* V, C, AI 부분의 기본 크기 */
             font-weight: bold;
             letter-spacing: 8px;
             text-transform: uppercase;
@@ -107,12 +102,14 @@
         }
 
         .pixel-logo .small-part {
-            font-size: 3rem; /* 이 부분도 EditUndoFont가 적용됩니다. */
+            font-size: 3.5rem; /* 기존 3rem에서 3.5rem으로 증가 (예시) */
         }
 
         .pixel-logo .ai-part {
-            color: #2bb4db; /* 이 부분도 EditUndoFont가 적용됩니다. */
+            color: #2bb4db;
         }
+
+        /* --- 이하 나머지 CSS 코드는 동일 --- */
 
         /* Hero Section */
         .hero {
@@ -339,7 +336,7 @@
             }
             
             .nav-links {
-                display: none; /* 모바일에서는 네비게이션 링크 숨김 처리됨 */
+                display: none; 
             }
             
             .contact-info {
@@ -362,6 +359,7 @@
     </style>
 </head>
 <body>
+    <!-- HTML Body 부분은 이전과 동일합니다. -->
     <header>
         <nav class="container">
             <div class="logo">V<span class="small-part">IBE</span>C<span class="small-part">RE</span><span class="ai-part">AI</span></div>
@@ -462,7 +460,7 @@
     </footer>
 
     <script>
-        // Smooth scrolling for navigation links
+        // JavaScript 부분은 이전과 동일합니다.
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
@@ -476,7 +474,6 @@
             });
         });
 
-        // Scroll animations
         const observerOptions = {
             threshold: 0.1,
             rootMargin: '0px 0px -50px 0px'
@@ -494,7 +491,6 @@
             observer.observe(el);
         });
 
-        // Header background on scroll
         window.addEventListener('scroll', () => {
             const header = document.querySelector('header');
             if (window.scrollY > 100) {
@@ -504,7 +500,6 @@
             }
         });
 
-        // Add some interactive particles effect
         function createParticle() {
             const particle = document.createElement('div');
             particle.style.cssText = `
@@ -539,7 +534,6 @@
             };
         }
 
-        // Create particles periodically
         setInterval(createParticle, 500);
     </script>
 </body>
