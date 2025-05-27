@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VibeCreAI - The Future of Creative AI</title>
     <style>
+        /* 1. editundo.ttf 폰트 정의 */
+        @font-face {
+            font-family: 'EditUndoFont'; /* 사용자 정의 폰트 이름 */
+            src: url('fonts/editundo.ttf') format('truetype'); /* 폰트 파일 경로 */
+            /* 폰트의 기본 웨이트와 스타일을 지정할 수 있습니다.
+               예: font-weight: normal; font-style: normal; */
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -12,7 +20,7 @@
         }
 
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: 'Arial', sans-serif; /* 기본 본문 폰트 */
             background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
             color: #ffffff;
             overflow-x: hidden;
@@ -43,8 +51,9 @@
         }
 
         .logo {
-            font-family: 'Courier New', monospace;
-            font-size: 20px;
+            /* 2. 헤더 로고 VibeCreAI 폰트 변경 */
+            font-family: 'EditUndoFont', 'Courier New', monospace; /* EditUndoFont 적용, 없을 경우 Courier New, monospace 순으로 적용 */
+            font-size: 20px; /* 새 폰트에 맞게 크기 조절이 필요할 수 있습니다. */
             font-weight: bold;
             color: #ffffff;
             text-decoration: none;
@@ -55,11 +64,11 @@
         }
 
         .logo .small-part {
-            font-size: 14px;
+            font-size: 14px; /* 이 부분도 EditUndoFont가 적용됩니다. */
         }
 
         .logo .ai-part {
-            color: #2bb4db;
+            color: #2bb4db; /* 이 부분도 EditUndoFont가 적용됩니다. */
         }
 
         .nav-links {
@@ -80,8 +89,9 @@
 
         /* Pixel Logo Style */
         .pixel-logo {
-            font-family: 'Courier New', monospace;
-            font-size: 5rem;
+            /* 3. 히어로 섹션 로고 VibeCreAI 폰트 변경 */
+            font-family: 'EditUndoFont', 'Courier New', monospace; /* EditUndoFont 적용, 없을 경우 Courier New, monospace 순으로 적용 */
+            font-size: 5rem; /* 새 폰트에 맞게 크기 조절이 필요할 수 있습니다. */
             font-weight: bold;
             letter-spacing: 8px;
             text-transform: uppercase;
@@ -97,11 +107,11 @@
         }
 
         .pixel-logo .small-part {
-            font-size: 3rem;
+            font-size: 3rem; /* 이 부분도 EditUndoFont가 적용됩니다. */
         }
 
         .pixel-logo .ai-part {
-            color: #2bb4db;
+            color: #2bb4db; /* 이 부분도 EditUndoFont가 적용됩니다. */
         }
 
         /* Hero Section */
@@ -329,7 +339,7 @@
             }
             
             .nav-links {
-                display: none;
+                display: none; /* 모바일에서는 네비게이션 링크 숨김 처리됨 */
             }
             
             .contact-info {
@@ -447,7 +457,7 @@
 
     <footer>
         <div class="container">
-            <p>&copy; 2024 VibeCreAI. Creating the future of AI-powered creativity.</p>
+            <p>© 2024 VibeCreAI. Creating the future of AI-powered creativity.</p>
         </div>
     </footer>
 
