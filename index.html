@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VibeCreAI - The Future of Creative AI</title>
-    <!-- Add this line for the favicon -->
-    <link rel="icon" type="image/png" href="favicon.png">
     <style>
         @font-face {
             font-family: 'Born2bSportyFont';
@@ -477,7 +475,8 @@
             rootMargin: '0px 0px -50px 0px'
         };
 
-        const observer = new IntersectionObserver((entries).forEach(entry => {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     entry.target.classList.add('visible');
                 }
