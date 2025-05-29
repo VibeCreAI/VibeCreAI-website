@@ -266,6 +266,24 @@
             color: #ffffff;
         }
 
+        .app-button {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: linear-gradient(45deg, #2bb4db, #1a8ab3);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .app-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(43, 180, 219, 0.3);
+        }
+
         /* Contact Section */
         .contact {
             padding: 100px 0;
@@ -403,16 +421,16 @@
             <h2 class="fade-in">Our Creations</h2>
             <div class="apps-grid">
                 <div class="app-card fade-in">
+                    <div class="app-icon">🎯</div>
+                    <h3>Spin2Pick</h3>
+                    <p>Fun activity picker with AI suggestions</p>
+                    <a href="/spin2pick" class="app-button">Try Now ▶️</a>
+                </div>
+                <div class="app-card fade-in">
                     <div class="app-icon">🎮</div>
                     <h3>Creative Games</h3>
                     <p>Innovative gaming experiences powered by AI</p>
                     <p><small>Coming Soon</small></p>
-                </div>
-                <div class="app-card fade-in">
-                    <div class="app-icon">📱</div>
-                    <h3>Creative Tools</h3>
-                    <p>AI creative tools that anyone can use easily</p>
-                    <p><small>In Development</small></p>
                 </div>
                 <div class="app-card fade-in">
                     <div class="app-icon">🎨</div>
@@ -443,14 +461,12 @@
                     <span>🌐</span>
                     <span>www.vibecreai.com</span>
                 </div>
-                <!-- Google Play Store 항목 제거됨 -->
             </div>
         </div>
     </section>
 
     <footer>
         <div class="container">
-            <!-- copyright 연도를 JavaScript로 동적 삽입하도록 변경 -->
             <p>© <span id="copyright-year"></span> VibeCreAI. Creating the future of AI-powered creativity.</p>
         </div>
     </footer>
@@ -536,8 +552,8 @@
         // Create particles periodically
         setInterval(createParticle, 500);
 
-        // 자동으로 현재 연도를 copyright에 표시
-        document.addEventListener('DOMContentLoaded', function() { // DOM이 완전히 로드된 후 실행
+        // Auto display current year in copyright
+        document.addEventListener('DOMContentLoaded', function() {
             const yearSpan = document.getElementById('copyright-year');
             if (yearSpan) {
                 yearSpan.textContent = new Date().getFullYear();
