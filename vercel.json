@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/spin2pick",
+      "destination": "https://spin2pick-6bet9g2bo-vibecreais-projects.vercel.app"
+    },
+    {
       "source": "/spin2pick/(.*)",
       "destination": "https://spin2pick-6bet9g2bo-vibecreais-projects.vercel.app/$1"
     }
