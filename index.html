@@ -266,6 +266,18 @@
             color: #ffffff;
         }
 
+        .app-icon img {
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+            object-fit: cover;
+            transition: all 0.3s ease;
+        }
+
+        .app-card:hover .app-icon img {
+            transform: scale(1.1);
+        }
+
         .app-button {
             display: inline-block;
             margin-top: 15px;
@@ -421,7 +433,9 @@
             <h2 class="fade-in">Our Creations</h2>
             <div class="apps-grid">
                 <div class="app-card fade-in">
-                    <div class="app-icon">🎯</div>
+                    <div class="app-icon">
+                        <img src="spin2pick_icon.png" alt="Spin2Pick" style="width: 60px; height: 60px; border-radius: 10px;">
+                    </div>
                     <h3>Spin2Pick</h3>
                     <p>Fun activity picker with AI suggestions</p>
                     <a href="/spin2pick" class="app-button">Try Now ▶️</a>
