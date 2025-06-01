@@ -2,11 +2,11 @@
   "rewrites": [
     {
       "source": "/spin2pick",
-      "destination": "https://spin2pick-qbvr5xu7e-vibecreais-projects.vercel.app"
+      "destination": "https://spin2pick-p5kplj8x9-vibecreais-projects.vercel.app"
     },
     {
       "source": "/spin2pick/(.*)",
-      "destination": "https://spin2pick-qbvr5xu7e-vibecreais-projects.vercel.app/$1"
+      "destination": "https://spin2pick-p5kplj8x9-vibecreais-projects.vercel.app/$1"
     }
   ]
 }
