@@ -96,7 +96,7 @@
                 2px 2px 0px #000,
                 4px 4px 0px rgba(0,0,0,0.3);
             margin-bottom: 30px;
-            animation: fadeInUp 1s ease;
+            animation: fadeInUp 1s ease, textGlow 2.5s infinite alternate ease-in-out; /* <-- 이 부분 변경 */
             display: flex;
             align-items: baseline;
             justify-content: center;
@@ -119,10 +119,9 @@
             text-align: center;
             position: relative;
             background: radial-gradient(circle at center, #1a1a1a 0%, #0a0a0a 100%);
-            /* CSS 변수를 위한 초기값 설정 (마스크 효과용) */
             --mask-x: 50%;
             --mask-y: 50%;
-            --mask-radius: 200px; /* 밝은 영역의 초기 크기 (픽셀) */
+            --mask-radius: 200px;
         }
 
         .hero::before {
@@ -133,11 +132,10 @@
             right: 0;
             bottom: 0;
             background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="%23666" stroke-width="0.5" opacity="0.8"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
-            opacity: 0.1; /* 기본 격자 배경의 불투명도 */
-            pointer-events: none; /* 하위 요소 클릭을 방해하지 않도록 */
+            opacity: 0.1;
+            pointer-events: none;
         }
 
-        /* --- 새로운 스타일 추가: 마우스/터치에 반응하는 밝은 격자 레이어 --- */
         .hero-spotlight {
             position: absolute;
             top: 0;
@@ -145,15 +143,11 @@
             width: 100%;
             height: 100%;
             background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="%23666" stroke-width="0.5" opacity="0.8"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
-            opacity: 0.6; /* 밝은 격자 레이어의 불투명도 */
-            
-            /* 마스킹 효과 정의 */
+            opacity: 0.6;
             -webkit-mask-image: radial-gradient(circle var(--mask-radius) at var(--mask-x) var(--mask-y), white 0%, transparent 100%);
             mask-image: radial-gradient(circle var(--mask-radius) at var(--mask-x) var(--mask-y), white 0%, transparent 100%);
-            
-            pointer-events: none; /* 하위 요소 클릭을 방해하지 않도록 */
+            pointer-events: none;
         }
-        /* --- 새로운 스타일 추가 끝 --- */
 
         .hero-content {
             position: relative;
@@ -376,6 +370,33 @@
                 transform: translateY(0);
             }
         }
+        
+        /* 새로운 Keyframes 애니메이션 추가 */
+        @keyframes textGlow {
+            0% {
+                text-shadow:
+                    2px 2px 0px #000,
+                    4px 4px 0px rgba(0,0,0,0.3),
+                    0 0 5px rgba(255, 255, 255, 0.3),
+                    0 0 10px rgba(43, 180, 219, 0.3);
+            }
+            50% {
+                text-shadow:
+                    2px 2px 0px #000,
+                    4px 4px 0px rgba(0,0,0,0.3),
+                    0 0 15px rgba(255, 255, 255, 0.8),
+                    0 0 25px rgba(43, 180, 219, 0.8),
+                    0 0 35px rgba(43, 180, 219, 0.5);
+            }
+            100% {
+                text-shadow:
+                    2px 2px 0px #000,
+                    4px 4px 0px rgba(0,0,0,0.3),
+                    0 0 5px rgba(255, 255, 255, 0.3),
+                    0 0 10px rgba(43, 180, 219, 0.3);
+            }
+        }
+        /* Keyframes 애니메이션 끝 */
 
         /* Responsive */
         @media (max-width: 768px) {
@@ -424,7 +445,7 @@
     </header>
 
     <section id="home" class="hero">
-        <div class="hero-spotlight"></div> <!-- 추가된 부분 -->
+        <div class="hero-spotlight"></div>
         <div class="hero-content">
             <div class="pixel-logo">V<span class="small-part">IBE</span>C<span class="small-part">RE</span><span class="ai-part">AI</span></div>
             <p>The Future of Creative AI</p>
@@ -597,7 +618,7 @@
                 yearSpan.textContent = new Date().getFullYear();
             }
 
-            // --- 마우스/터치 격자 밝기 효과를 위한 JavaScript 추가 ---
+            // 마우스/터치 격자 밝기 효과를 위한 JavaScript
             const heroSection = document.getElementById('home');
             const heroSpotlight = document.querySelector('.hero-spotlight');
 
@@ -605,7 +626,6 @@
                 function updateSpotlight(e) {
                     let clientX, clientY;
 
-                    // 이벤트 종류에 따라 좌표를 얻음
                     if (e.type === 'mousemove') {
                         clientX = e.clientX;
                         clientY = e.clientY;
@@ -613,37 +633,20 @@
                         clientX = e.touches[0].clientX;
                         clientY = e.touches[0].clientY;
                     } else {
-                        return; // 처리하지 않는 이벤트 타입
+                        return;
                     }
 
-                    // hero 섹션에 대한 상대적인 위치 계산
                     const rect = heroSection.getBoundingClientRect();
                     const x = clientX - rect.left;
                     const y = clientY - rect.top;
 
-                    // CSS 변수 업데이트
                     heroSection.style.setProperty('--mask-x', `${x}px`);
                     heroSection.style.setProperty('--mask-y', `${y}px`);
                 }
 
                 heroSection.addEventListener('mousemove', updateSpotlight);
                 heroSection.addEventListener('touchmove', updateSpotlight);
-
-                // 마우스가 hero 섹션을 벗어나거나 터치가 끝날 때 효과를 없애는 경우 (선택 사항)
-                // heroSection.addEventListener('mouseleave', () => {
-                //     heroSection.style.setProperty('--mask-radius', '0px'); // 밝은 영역을 0으로 만들어 숨김
-                // });
-                // heroSection.addEventListener('touchend', () => {
-                //     heroSection.style.setProperty('--mask-radius', '0px');
-                // });
-                // heroSection.addEventListener('mouseenter', () => {
-                //     heroSection.style.setProperty('--mask-radius', '200px'); // 다시 활성화 (초기값으로)
-                // });
-                // heroSection.addEventListener('touchstart', () => {
-                //     heroSection.style.setProperty('--mask-radius', '200px');
-                // });
             }
-            // --- 마우스/터치 격자 밝기 효과를 위한 JavaScript 추가 끝 ---
         });
     </script>
 </body>
