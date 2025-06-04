@@ -1,0 +1,2 @@
+# app-ads.txt for vibecreai.com
+google.com, pub-7239598551330509, DIRECT, f08c47fec0942fa0
