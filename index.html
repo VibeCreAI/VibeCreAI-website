@@ -22,6 +22,10 @@
     <meta name="twitter:image" content="https://www.vibecreai.com/og_image.png">
     <meta name="twitter:site" content="@VibeCreAI">
 
+    <!-- ****** Canonical Tag Added for Main Page ****** -->
+    <link rel="canonical" href="https://www.vibecreai.com/"> 
+    <!-- This tag tells search engines the preferred/canonical URL for this page. -->
+
     <style>
         @font-face {
             font-family: 'Born2bSportyFont';
@@ -528,7 +532,6 @@
         <nav class="container">
             <a href="#home" class="logo">V<span class="small-part">IBE</span>C<span class="small-part">RE</span><span class="ai-part">AI</span></a>
             
-            <!-- Hamburger menu button added -->
             <button class="menu-toggle" id="menu-toggle">
                 <span class="hamburger"></span>
                 <span class="hamburger"></span>
@@ -640,8 +643,8 @@
         if (menuToggle && navLinks) {
             menuToggle.addEventListener('click', () => {
                 navLinks.classList.toggle('open');
-                menuToggle.classList.toggle('open'); // Hamburger icon animation
-                body.classList.toggle('no-scroll'); // Lock scroll
+                menuToggle.classList.toggle('open'); 
+                body.classList.toggle('no-scroll'); 
             });
 
             // Close menu when a menu link is clicked and unlock scroll
