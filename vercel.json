@@ -2,12 +2,12 @@
   "redirects": [
     {
       "source": "/spin2pick",
-      "destination": "https://spin2pick-3je7kzlm5-vibecreais-projects.vercel.app",
+      "destination": "https://spin2pick-gs2x8o4df-vibecreais-projects.vercel.app",
       "permanent": false
     },
     {
       "source": "/spin2pick/(.*)",
-      "destination": "https://spin2pick-3je7kzlm5-vibecreais-projects.vercel.app/$1",
+      "destination": "https://spin2pick-gs2x8o4df-vibecreais-projects.vercel.app/$1",
       "permanent": false
     }
   ]
