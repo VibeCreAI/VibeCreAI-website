@@ -39,6 +39,11 @@
             background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
             color: #ffffff;
             overflow-x: hidden;
+            transition: overflow 0.3s ease; /* For smooth scroll locking */
+        }
+
+        body.no-scroll {
+            overflow: hidden; /* Prevent body scroll when mobile menu is open */
         }
 
         .container {
@@ -85,6 +90,7 @@
             color: #2bb4db;
         }
 
+        /* Desktop Nav Links */
         .nav-links {
             display: flex;
             list-style: none;
@@ -113,7 +119,7 @@
                 2px 2px 0px #000,
                 4px 4px 0px rgba(0,0,0,0.3);
             margin-bottom: 30px;
-            animation: fadeInUp 1s ease, textGlow 4s infinite alternate ease-in-out; /* 4s로 속도 조절 */
+            animation: fadeInUp 1s ease, textGlow 4s infinite alternate ease-in-out; 
             display: flex;
             align-items: baseline;
             justify-content: center;
@@ -388,26 +394,65 @@
             }
         }
         
-        /* Pixel Logo Glow Animation */
         @keyframes textGlow {
             0% {
                 text-shadow:
                     2px 2px 0px #000,
                     4px 4px 0px rgba(0,0,0,0.3),
-                    0 0 5px rgba(255, 255, 255, 0.3);
+                    0 0 5px rgba(255, 255, 255, 0.3),
+                    0 0 10px rgba(43, 180, 219, 0.3);
             }
             50% {
                 text-shadow:
                     2px 2px 0px #000,
                     4px 4px 0px rgba(0,0,0,0.3),
-                    0 0 15px rgba(255, 255, 255, 0.8);
+                    0 0 10px rgba(255, 255, 255, 0.5),
+                    0 0 18px rgba(43, 180, 219, 0.5),
+                    0 0 25px rgba(43, 180, 219, 0.2);
             }
             100% {
                 text-shadow:
                     2px 2px 0px #000,
                     4px 4px 0px rgba(0,0,0,0.3),
-                    0 0 5px rgba(255, 255, 255, 0.3);
+                    0 0 5px rgba(255, 255, 255, 0.3),
+                    0 0 10px rgba(43, 180, 219, 0.3);
             }
+        }
+
+        /* --- Mobile Menu Styles --- */
+        .menu-toggle {
+            display: none; /* Hidden on desktop */
+            flex-direction: column;
+            justify-content: space-between;
+            width: 30px;
+            height: 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            z-index: 1001; /* Above the menu overlay */
+        }
+
+        .hamburger {
+            display: block;
+            width: 100%;
+            height: 2px;
+            background: #2bb4db; /* Hamburger line color */
+            border-radius: 2px;
+            transition: all 0.3s ease-in-out;
+        }
+
+        /* Hamburger icon animation to X shape */
+        .menu-toggle.open .hamburger:nth-child(1) {
+            transform: translateY(9px) rotate(45deg);
+        }
+
+        .menu-toggle.open .hamburger:nth-child(2) {
+            opacity: 0;
+        }
+
+        .menu-toggle.open .hamburger:nth-child(3) {
+            transform: translateY(-9px) rotate(-45deg);
         }
 
         /* Responsive */
@@ -420,8 +465,41 @@
                 font-size: 1.2rem;
             }
 
+            /* Mobile: Nav links hidden by default, shown as overlay */
             .nav-links {
-                display: none;
+                position: fixed;
+                top: 0;
+                right: -100%; /* Hidden off-screen */
+                width: 100%;
+                height: 100vh; /* Full viewport height */
+                background: rgba(0, 0, 0, 0.98); /* Nearly opaque background */
+                flex-direction: column; /* Vertical alignment */
+                justify-content: center;
+                align-items: center;
+                transition: right 0.3s ease-in-out; /* Slide animation */
+                z-index: 999; /* Below header, above content */
+                gap: 40px; /* Spacing between menu items */
+            }
+
+            .nav-links.open {
+                right: 0; /* Slide into view when open */
+            }
+
+            .nav-links a {
+                font-size: 1.8rem; /* Mobile menu font size */
+                color: #ffffff;
+                padding: 10px 0;
+                width: 100%;
+                text-align: center;
+            }
+
+            .nav-links a:hover {
+                color: #2bb4db;
+            }
+
+            /* Mobile: Show hamburger menu button */
+            .menu-toggle {
+                display: flex; /* Show hamburger button */
             }
 
             .contact-info {
@@ -447,7 +525,15 @@
     <header>
         <nav class="container">
             <a href="#home" class="logo">V<span class="small-part">IBE</span>C<span class="small-part">RE</span><span class="ai-part">AI</span></a>
-            <ul class="nav-links">
+            
+            <!-- Hamburger menu button added -->
+            <button class="menu-toggle" id="menu-toggle">
+                <span class="hamburger"></span>
+                <span class="hamburger"></span>
+                <span class="hamburger"></span>
+            </button>
+
+            <ul class="nav-links" id="nav-links">
                 <li><a href="#home">Home</a></li>
                 <li><a href="#about">About</a></li>
                 <li><a href="#apps">Apps</a></li>
@@ -543,6 +629,38 @@
     </footer>
 
     <script>
+        // Get menu related elements
+        const menuToggle = document.getElementById('menu-toggle');
+        const navLinks = document.getElementById('nav-links');
+        const body = document.body; // Reference to the body tag
+
+        // Hamburger menu toggle function
+        if (menuToggle && navLinks) {
+            menuToggle.addEventListener('click', () => {
+                navLinks.classList.toggle('open');
+                menuToggle.classList.toggle('open'); // Hamburger icon animation
+                body.classList.toggle('no-scroll'); // Lock scroll
+            });
+
+            // Close menu when a menu link is clicked and unlock scroll
+            navLinks.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => {
+                    navLinks.classList.remove('open');
+                    menuToggle.classList.remove('open');
+                    body.classList.remove('no-scroll');
+                });
+            });
+        }
+
+        // Reset menu state on screen resize (e.g., switching to desktop)
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) {
+                navLinks.classList.remove('open');
+                menuToggle.classList.remove('open');
+                body.classList.remove('no-scroll');
+            }
+        });
+
         // Smooth scrolling for navigation links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
@@ -630,7 +748,7 @@
                 yearSpan.textContent = new Date().getFullYear();
             }
 
-            // 마우스/터치 격자 밝기 효과를 위한 JavaScript
+            // JavaScript for grid brightness effect on mouse/touch
             const heroSection = document.getElementById('home');
             const heroSpotlight = document.querySelector('.hero-spotlight');
 
