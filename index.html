@@ -40,7 +40,7 @@
 
         body {
             font-family: 'Arial', sans-serif;
-            background: #000000; /* Pure black background for consistency */
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%); 
             color: #ffffff;
             overflow-x: hidden;
             transition: overflow 0.3s ease; 
@@ -137,48 +137,6 @@
             color: #2bb4db;
         }
 
-        /* --- Global Grid Background and Spotlight Styles --- */
-        /* Base class for sections that will have the interactive grid effect */
-        .interactive-grid-container {
-            position: relative; /* Essential for absolute positioned children */
-            overflow: hidden; /* Ensures grid layers don't spill out */
-            /* Default values for custom CSS variables */
-            --mask-x: 50%;
-            --mask-y: 50%;
-            --mask-radius: 200px;
-        }
-
-        /* Base grid layer (darker, always visible) */
-        .grid-base-layer {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="%23666" stroke-width="0.5" opacity="0.8"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
-            opacity: 0.2; /* Increased opacity for better visibility */
-            pointer-events: none;
-            z-index: 0; /* Behind content, same as hero::before */
-        }
-
-        /* Spotlight grid layer (brighter, masked by cursor) */
-        .grid-spotlight-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="%23666" stroke-width="0.5" opacity="0.8"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
-            opacity: 0.6; /* Brighter effect for spotlight */
-            -webkit-mask-image: radial-gradient(circle var(--mask-radius) at var(--mask-x) var(--mask-y), white 0%, transparent 100%);
-            mask-image: radial-gradient(circle var(--mask-radius) at var(--mask-x) var(--mask-y), white 0%, transparent 100%);
-            pointer-events: none;
-            z-index: 1; /* Above base grid, behind content */
-        }
-        /* --- End Global Grid Background and Spotlight Styles --- */
-
-
         /* Hero Section */
         .hero {
             height: 100vh;
@@ -186,9 +144,78 @@
             align-items: center;
             justify-content: center;
             text-align: center;
-            /* Changed hero background to pure black */
-            background: #000000; 
-            /* --mask-x, --mask-y, --mask-radius are now set by .interactive-grid-container */
+            position: relative;
+            background: radial-gradient(circle at center, #1a1a1a 0%, #0a0a0a 100%); 
+            --mask-x: 50%;
+            --mask-y: 50%;
+            --mask-radius: 200px;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+        }
+
+        /* --- Global Grid Background and Spotlight Styles --- */
+        .interactive-grid-container {
+            position: relative; 
+            overflow: hidden; 
+            --mask-x: 50%;
+            --mask-y: 50%;
+            --mask-radius: 200px;
+        }
+
+        .grid-base-layer {
+            position: absolute; 
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            /* Reverted stroke color to original #666 and stroke-width to 0.5 */
+            /* Increased background-size and SVG pattern size to 40px */
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="%23666" stroke-width="0.5" opacity="0.8"/></pattern></defs><rect width="100%" height="100%" fill="url(%23grid)"/></svg>');
+            opacity: 0.25; /* Kept opacity at 0.25 for better base visibility */
+            pointer-events: none;
+            z-index: 0; 
+            background-attachment: fixed; 
+            background-size: 40px 40px; /* Explicit size for consistency */
+            background-position: 0 0; 
+        }
+
+        .grid-spotlight-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            /* Reverted stroke color to original #666 and stroke-width to 0.5 */
+            /* Increased background-size and SVG pattern size to 40px */
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="%23666" stroke-width="0.5" opacity="0.8"/></pattern></defs><rect width="100%" height="100%" fill="url(%23grid)"/></svg>');
+            opacity: 0.6; /* Brighter effect for spotlight */
+            -webkit-mask-image: radial-gradient(circle var(--mask-radius) at var(--mask-x) var(--mask-y), white 0%, transparent 100%);
+            mask-image: radial-gradient(circle var(--mask-radius) at var(--mask-x) var(--mask-y), white 0%, transparent 100%);
+            pointer-events: none;
+            z-index: 1; 
+            background-attachment: fixed; 
+            background-size: 40px 40px; /* Explicit size for consistency */
+            background-position: 0 0; 
+        }
+        /* --- End Global Grid Background and Spotlight Styles --- */
+
+
+        /* Hero Section (now uses .interactive-grid-container) */
+        .hero {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
         }
 
         .hero-content {
@@ -229,10 +256,10 @@
             box-shadow: 0 20px 40px rgba(43, 180, 219, 0.4);
         }
 
-        /* About Section */
+        /* About Section (now uses .interactive-grid-container) */
         .about {
             padding: 100px 0;
-            background: #000000; /* Pure black background for continuity */
+            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%); 
         }
 
         .about h2 {
@@ -251,17 +278,17 @@
 
         /* About Card: Made to match App Card styling */
         .about-card {
-            background: linear-gradient(135deg, rgba(43, 180, 219, 0.1), rgba(26, 138, 179, 0.1)); /* Same as app-card */
-            padding: 40px; /* Keep its original padding */
-            border-radius: 15px; /* Matched app-card's border-radius */
-            backdrop-filter: blur(10px); /* Kept backdrop-filter */
-            border: 1px solid rgba(43, 180, 219, 0.2); /* Same as app-card */
+            background: linear-gradient(135deg, rgba(43, 180, 219, 0.1), rgba(26, 138, 179, 0.1)); 
+            padding: 40px; 
+            border-radius: 15px; 
+            backdrop-filter: blur(10px); 
+            border: 1px solid rgba(43, 180, 219, 0.2); 
             transition: all 0.3s ease;
         }
 
         .about-card:hover {
-            transform: scale(1.05); /* Matched app-card's hover effect */
-            box-shadow: 0 15px 30px rgba(43, 180, 219, 0.2); /* Matched app-card's hover effect */
+            transform: scale(1.05); 
+            box-shadow: 0 15px 30px rgba(43, 180, 219, 0.2); 
         }
 
         .about-card h3 {
@@ -276,10 +303,10 @@
             opacity: 0.9;
         }
 
-        /* Apps Section */
+        /* Apps Section (now uses .interactive-grid-container) */
         .apps {
             padding: 100px 0;
-            background: #000000; /* Pure black background for continuity */
+            background: #0a0a0a;
         }
 
         .apps h2 {
@@ -321,11 +348,6 @@
             font-size: 2rem;
         }
 
-        .app-card h3 {
-            margin-bottom: 15px;
-            color: #ffffff;
-        }
-
         .app-icon img {
             width: 60px;
             height: 60px;
@@ -356,10 +378,10 @@
             box-shadow: 0 8px 20px rgba(43, 180, 219, 0.3);
         }
 
-        /* Contact Section */
+        /* Contact Section (now uses .interactive-grid-container) */
         .contact {
             padding: 100px 0;
-            background: #000000; /* Pure black background for continuity */
+            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%); 
             text-align: center;
         }
 
