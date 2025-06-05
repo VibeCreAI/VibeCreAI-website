@@ -40,15 +40,14 @@
 
         body {
             font-family: 'Arial', sans-serif;
-            /* Pure black background for the entire body */
-            background: #000000; 
+            background: #000000; /* Pure black background for consistency */
             color: #ffffff;
             overflow-x: hidden;
-            transition: overflow 0.3s ease; /* For smooth scroll locking */
+            transition: overflow 0.3s ease; 
         }
 
         body.no-scroll {
-            overflow: hidden; /* Prevent body scroll when mobile menu is open */
+            overflow: hidden; 
         }
 
         .container {
@@ -147,13 +146,12 @@
             --mask-x: 50%;
             --mask-y: 50%;
             --mask-radius: 200px;
-            /* Background for all interactive sections (pure black for consistency) */
-            background: #000000;
         }
 
         /* Base grid layer (darker, always visible) */
         .grid-base-layer {
-            position: absolute; 
+            content: '';
+            position: absolute;
             top: 0;
             left: 0;
             right: 0;
@@ -161,10 +159,7 @@
             background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="%23666" stroke-width="0.5" opacity="0.8"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
             opacity: 0.2; /* Increased opacity for better visibility */
             pointer-events: none;
-            z-index: 0; /* Behind content */
-            background-attachment: fixed; /* Grid pattern fixed relative to viewport */
-            background-size: 10px 10px; /* Explicit size for consistency */
-            background-position: 0 0; /* Align grid to top-left of viewport for consistency */
+            z-index: 0; /* Behind content, same as hero::before */
         }
 
         /* Spotlight grid layer (brighter, masked by cursor) */
@@ -180,22 +175,20 @@
             mask-image: radial-gradient(circle var(--mask-radius) at var(--mask-x) var(--mask-y), white 0%, transparent 100%);
             pointer-events: none;
             z-index: 1; /* Above base grid, behind content */
-            background-attachment: fixed; /* Grid pattern fixed relative to viewport */
-            background-size: 10px 10px; /* Explicit size for consistency */
-            background-position: 0 0; /* Align grid to top-left of viewport for consistency */
         }
         /* --- End Global Grid Background and Spotlight Styles --- */
 
 
-        /* Hero Section (now uses .interactive-grid-container) */
+        /* Hero Section */
         .hero {
             height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
-            position: relative;
-            /* Removed redundant background and ::before grid here */
+            /* Changed hero background to pure black */
+            background: #000000; 
+            /* --mask-x, --mask-y, --mask-radius are now set by .interactive-grid-container */
         }
 
         .hero-content {
@@ -236,10 +229,10 @@
             box-shadow: 0 20px 40px rgba(43, 180, 219, 0.4);
         }
 
-        /* About Section (now uses .interactive-grid-container) */
+        /* About Section */
         .about {
             padding: 100px 0;
-            /* Removed redundant background here */
+            background: #000000; /* Pure black background for continuity */
         }
 
         .about h2 {
@@ -259,7 +252,7 @@
         /* About Card: Made to match App Card styling */
         .about-card {
             background: linear-gradient(135deg, rgba(43, 180, 219, 0.1), rgba(26, 138, 179, 0.1)); /* Same as app-card */
-            padding: 40px; /* Kept its original padding */
+            padding: 40px; /* Keep its original padding */
             border-radius: 15px; /* Matched app-card's border-radius */
             backdrop-filter: blur(10px); /* Kept backdrop-filter */
             border: 1px solid rgba(43, 180, 219, 0.2); /* Same as app-card */
@@ -283,10 +276,10 @@
             opacity: 0.9;
         }
 
-        /* Apps Section (now uses .interactive-grid-container) */
+        /* Apps Section */
         .apps {
             padding: 100px 0;
-            /* Removed redundant background here */
+            background: #000000; /* Pure black background for continuity */
         }
 
         .apps h2 {
@@ -328,6 +321,11 @@
             font-size: 2rem;
         }
 
+        .app-card h3 {
+            margin-bottom: 15px;
+            color: #ffffff;
+        }
+
         .app-icon img {
             width: 60px;
             height: 60px;
@@ -358,10 +356,10 @@
             box-shadow: 0 8px 20px rgba(43, 180, 219, 0.3);
         }
 
-        /* Contact Section (now uses .interactive-grid-container) */
+        /* Contact Section */
         .contact {
             padding: 100px 0;
-            /* Removed redundant background here */
+            background: #000000; /* Pure black background for continuity */
             text-align: center;
         }
 
