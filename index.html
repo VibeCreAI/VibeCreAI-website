@@ -1214,9 +1214,19 @@
         });
 
         // Force scroll to top on page load/refresh
-        window.onload = function() {
-            window.scrollTo(0, 0);
-        };
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'instant'
+            });
+        }
+
+        // Handle both DOMContentLoaded and load events
+        document.addEventListener('DOMContentLoaded', scrollToTop);
+        window.addEventListener('load', scrollToTop);
+        
+        // Additional safety measure with a small delay
+        setTimeout(scrollToTop, 100);
     </script>
 </body>
 </html>
