@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, shrink-to-fit=no">
     <title>VibeCreAI - Vibe coding + Creative + AI</title>
-    <meta name="description" content="VibeCreAI combines AI technology with human creativity to build innovative games, apps, and creative solutions. Explore our AI-powered tools including Spin2Pick and upcoming creative platforms.">
+    <meta name="description" content="VibeCreAI is a pioneering solo creator working with AI agents to build innovative games, apps, and creative solutions. Experience the future of human-AI collaboration through our AI-powered tools including Spin2Pick and upcoming creative platforms.">
     <meta name="keywords" content="AI creativity, creative AI tools, AI games, AI apps, artificial intelligence, creative technology">
     <meta name="author" content="VibeCreAI">
     <link rel="icon" type="image/png" href="images/favicon.png">
@@ -350,47 +350,59 @@
         /* About Section */
         .about {
             padding: 100px 0;
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%); 
+            background: rgba(0, 0, 0, 0.9);
         }
 
-        .about h2 {
-            font-size: 3rem;
-            text-align: center;
-            margin-bottom: 50px;
+        .about p {
+            max-width: 800px;
+            margin: 20px auto;
+            line-height: 1.8;
             color: #ffffff;
+            text-align: center;
         }
 
-        .about-grid {
+        .section-intro {
+            text-align: center;
+            max-width: 800px;
+            margin: 20px auto 50px;
+            color: #ffffff;
+            line-height: 1.6;
+        }
+
+        /* Values Section */
+        .values {
+            padding: 100px 0;
+            background: rgba(0, 0, 0, 0.9);
+        }
+
+        .values-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 40px;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
             margin-top: 50px;
         }
 
-        .about-card {
-            background: linear-gradient(135deg, rgba(43, 180, 219, 0.1), rgba(26, 138, 179, 0.1)); 
-            padding: 40px; 
-            border-radius: 15px; 
-            backdrop-filter: blur(10px); 
-            border: 1px solid rgba(43, 180, 219, 0.2); 
-            transition: all 0.3s ease;
+        .value-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 30px;
+            border-radius: 10px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
-        .about-card:hover {
-            transform: scale(1.05); 
-            box-shadow: 0 15px 30px rgba(43, 180, 219, 0.2); 
+        .value-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
         }
 
-        .about-card h3 {
+        .value-card h3 {
+            color: #2bb4db;
+            margin-bottom: 15px;
             font-size: 1.5rem;
-            margin-bottom: 20px;
-            color: #ffffff;
         }
 
-        .about-card p {
-            line-height: 1.6;
+        .value-card p {
             color: #ffffff;
-            opacity: 0.9;
+            line-height: 1.6;
         }
 
         /* Apps Section */
@@ -849,33 +861,42 @@
         </div>
     </section>
 
-    <section id="about" class="about interactive-grid-container">
-        <div class="grid-base-layer"></div>
-        <div class="grid-spotlight-layer"></div>
+    <section class="about" id="about">
         <div class="container">
-            <h2 class="fade-in">Vibe Coding</h2>
-            <div class="about-grid">
-                <div class="about-card fade-in">
-                    <h3>🎨 Creative Innovation</h3>
-                    <p>We combine AI technology with human creativity to create new forms of digital creations. We provide games, apps, and various creative solutions.</p>
+            <h2>About VibeCreAI</h2>
+            <p>VibeCreAI represents a new paradigm in digital creation - where a single human creator collaborates with advanced AI agents to achieve what traditionally required entire teams. This unique approach combines human vision with AI capabilities to create innovative solutions.</p>
+            <p>As a solo creator working with AI, I maintain creative control while leveraging the power of artificial intelligence to prototype, develop, and iterate rapidly. This human-AI partnership allows for unprecedented creative freedom and the ability to explore multiple ideas simultaneously.</p>
+        </div>
+    </section>
+
+    <section class="values" id="values">
+        <div class="container">
+            <h2>Our Values</h2>
+            <div class="values-grid">
+                <div class="value-card">
+                    <h3>Human-AI Synergy</h3>
+                    <p>We believe in the power of combining human creativity with AI capabilities. As a solo creator working with AI agents, I maintain creative control while leveraging AI's computational power.</p>
                 </div>
-                <div class="about-card fade-in">
-                    <h3>🚀 Tech Innovation</h3>
-                    <p>Using the latest AI technology, we provide users with intuitive and powerful creative tools. We make complex technology easy for everyone to use.</p>
+                <div class="value-card">
+                    <h3>Innovation Through Collaboration</h3>
+                    <p>Our unique approach of human-AI collaboration enables rapid prototyping and iteration. Each project is a partnership between human vision and AI capabilities.</p>
                 </div>
-                <div class="about-card fade-in">
-                    <h3>🌟 Future Oriented</h3>
-                    <p>We expand the boundaries of creation through continuous research and development. Our goal is to make users' imaginations a reality.</p>
+                <div class="value-card">
+                    <h3>Efficiency & Scale</h3>
+                    <p>By working with AI agents, we can achieve what traditionally required larger teams, allowing for faster development and the ability to pursue multiple creative directions simultaneously.</p>
+                </div>
+                <div class="value-card">
+                    <h3>Continuous Learning</h3>
+                    <p>We're constantly evolving our approach to human-AI collaboration, learning from each project to improve our creative process and deliver better solutions.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <section id="apps" class="apps interactive-grid-container">
-        <div class="grid-base-layer"></div>
-        <div class="grid-spotlight-layer"></div>
+    <section class="products" id="products">
         <div class="container">
-            <h2 class="fade-in">Our Creations</h2>
+            <h2>Our Products</h2>
+            <p class="section-intro">Each product is a testament to the power of human-AI collaboration, created through the synergy of human vision and AI capabilities.</p>
             <div class="apps-grid">
                 <div class="app-card fade-in available">
                     <div class="status-badge available">Live</div>
