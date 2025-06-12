@@ -1212,6 +1212,11 @@
                 section.addEventListener('touchmove', updateSpotlight);
             });
         });
+
+        // Force scroll to top on page load/refresh
+        window.onload = function() {
+            window.scrollTo(0, 0);
+        };
     </script>
 </body>
 </html>
