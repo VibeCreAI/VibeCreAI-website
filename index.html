@@ -150,7 +150,7 @@
 
         .logo {
             font-family: 'Born2bSportyFont', 'Courier New', monospace;
-            font-size: 22px;
+            font-size: 30px !important;
             font-weight: normal;
             color: #ffffff;
             text-decoration: none;
@@ -158,10 +158,14 @@
             text-transform: uppercase;
             display: flex;
             align-items: baseline;
+            transform: none !important;
+            zoom: 1 !important;
         }
 
         .logo .small-part {
-            font-size: 18px;
+            font-size: 25px !important;
+            transform: none !important;
+            zoom: 1 !important;
         }
 
         .logo .ai-part {
@@ -188,7 +192,7 @@
         /* Pixel Logo Style */
         .pixel-logo {
             font-family: 'Born2bSportyFont', 'Courier New', monospace;
-            font-size: 5.5rem;
+            font-size: 5.5rem !important;
             font-weight: normal;
             letter-spacing: 5px;
             text-transform: uppercase;
@@ -201,10 +205,14 @@
             display: flex;
             align-items: baseline;
             justify-content: center;
+            transform: none !important;
+            zoom: 1 !important;
         }
 
         .pixel-logo .small-part {
-            font-size: 4rem;
+            font-size: 4rem !important;
+            transform: none !important;
+            zoom: 1 !important;
         }
 
         .pixel-logo .ai-part {
@@ -726,26 +734,7 @@
                 padding: 0 20px;
             }
 
-            .pixel-logo {
-                font-size: 3.5rem;
-            }
-
-            .pixel-logo .small-part {
-                font-size: 2.5rem;
-            }
-
-            /* Fix header logo sizing on mobile - Force with !important */
-            .logo {
-                font-size: 30px !important;
-                transform: none !important;
-                zoom: 1 !important;
-            }
-
-            .logo .small-part {
-                font-size: 25px !important;
-                transform: none !important;
-                zoom: 1 !important;
-            }
+            /* Logo sizes are now fixed globally - no mobile overrides needed */
 
             .nav-links {
                 position: fixed;
