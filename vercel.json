@@ -1,0 +1,14 @@
+{
+  "redirects": [
+    {
+      "source": "/spin2pick",
+      "destination": "https://spin2pick-app.vercel.app/",
+      "permanent": false
+    },
+    {
+      "source": "/spin2pick/(.*)",
+      "destination": "https://spin2pick-app.vercel.app//$1",
+      "permanent": false
+    }
+  ]
+}
