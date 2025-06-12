@@ -976,6 +976,17 @@
             document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
         }
 
+        // Loading screen
+        window.addEventListener('load', () => {
+            const loadingScreen = document.getElementById('loading-screen');
+            setTimeout(() => {
+                loadingScreen.classList.add('hidden');
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                }, 500);
+            }, 1500);
+        });
+
         // Handle both DOMContentLoaded and load events
         document.addEventListener('DOMContentLoaded', scrollToTop);
         window.addEventListener('load', scrollToTop);
