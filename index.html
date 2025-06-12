@@ -1,14 +1,17 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VibeCreAI - Vibe coding + Creative + AI</title>
+    <meta name="description" content="VibeCreAI combines AI technology with human creativity to build innovative games, apps, and creative solutions. Explore our AI-powered tools including Spin2Pick and upcoming creative platforms.">
+    <meta name="keywords" content="AI creativity, creative AI tools, AI games, AI apps, artificial intelligence, creative technology">
+    <meta name="author" content="VibeCreAI">
     <link rel="icon" type="image/png" href="favicon.png">
 
     <!-- Social Media Preview (Open Graph for Facebook, LinkedIn, etc.) -->
     <meta property="og:title" content="VibeCreAI - Vibe coding + Creative + AI">
-    <meta property="og:description" content="Explore new possibilities of creation with VibeCreAI. We combine AI technology with human creativity to build innovative games, apps, and creative solutions.">
+    <meta property="og:description" content="Explore new possibilities of creation with VibeCreAI. We combine AI technology with human creativity to build innovative games, apps, and various creative solutions.">
     <meta property="og:image" content="https://www.vibecreai.com/og_image.png">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="675">
@@ -18,7 +21,7 @@
     <!-- Twitter Card (for Twitter) -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="VibeCreAI - Vibe coding + Creative + AI">
-    <meta name="twitter:description" content="Explore new possibilities of creation with VibeCreAI. We combine AI technology with human creativity to build innovative games, apps, and creative solutions.">
+    <meta name="twitter:description" content="Explore new possibilities of creation with VibeCreAI. We combine AI technology with human creativity to build innovative games, apps, and various creative solutions.">
     <meta name="twitter:image" content="https://www.vibecreai.com/og_image.png">
     <meta name="twitter:site" content="@VibeCreAI">
 
@@ -54,6 +57,73 @@
             max-width: 1200px;
             margin: 0 auto;
             padding: 0 20px;
+        }
+
+        /* Loading Screen */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0a0a0a;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+
+        #loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-animation .pixel-logo {
+            font-family: 'Born2bSportyFont', 'Courier New', monospace;
+            font-size: 4rem;
+            font-weight: normal;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: #ffffff;
+            margin-bottom: 30px;
+            animation: loadingPulse 2s infinite ease-in-out;
+        }
+
+        .loading-animation .pixel-logo .ai-part {
+            color: #2bb4db;
+        }
+
+        .loading-bar {
+            width: 200px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .loading-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, #2bb4db, #1a8ab3);
+            animation: loadingProgress 2s infinite ease-in-out;
+        }
+
+        @keyframes loadingPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        @keyframes loadingProgress {
+            0% { left: -100%; }
+            100% { left: 100%; }
         }
 
         /* Header */
@@ -176,14 +246,12 @@
             left: 0;
             right: 0;
             bottom: 0;
-            /* Reverted stroke color to original #666 and stroke-width to 0.5 */
-            /* Increased background-size and SVG pattern size to 40px */
             background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="%23666" stroke-width="1" opacity="1"/></pattern></defs><rect width="100%" height="100%" fill="url(%23grid)"/></svg>');
-            opacity: 0.25; /* Kept opacity at 0.25 for better base visibility */
+            opacity: 0.25;
             pointer-events: none;
             z-index: 0; 
             background-attachment: fixed; 
-            background-size: 40px 40px; /* Explicit size for consistency */
+            background-size: 40px 40px;
             background-position: 0 0; 
         }
 
@@ -193,20 +261,17 @@
             left: 0;
             width: 100%;
             height: 100%;
-            /* Reverted stroke color to original #666 and stroke-width to 0.5 */
-            /* Increased background-size and SVG pattern size to 40px */
             background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="%23666" stroke-width="1" opacity="1"/></pattern></defs><rect width="100%" height="100%" fill="url(%23grid)"/></svg>');
-            opacity: 0.7; /* Brighter effect for spotlight */
+            opacity: 0.7;
             -webkit-mask-image: radial-gradient(circle var(--mask-radius) at var(--mask-x) var(--mask-y), white 0%, transparent 100%);
             mask-image: radial-gradient(circle var(--mask-radius) at var(--mask-x) var(--mask-y), white 0%, transparent 100%);
             pointer-events: none;
             z-index: 1; 
             background-attachment: fixed; 
-            background-size: 40px 40px; /* Explicit size for consistency */
+            background-size: 40px 40px;
             background-position: 0 0; 
         }
         /* --- End Global Grid Background and Spotlight Styles --- */
-
 
         /* Hero Section (now uses .interactive-grid-container) */
         .hero {
@@ -220,7 +285,7 @@
 
         .hero-content {
             position: relative;
-            z-index: 2; /* Content should be above grid layers */
+            z-index: 2;
         }
 
         .hero h1 {
@@ -249,6 +314,8 @@
             transition: all 0.3s ease;
             animation: fadeInUp 1s ease 0.4s both;
             box-shadow: 0 10px 30px rgba(43, 180, 219, 0.3);
+            border: none;
+            cursor: pointer;
         }
 
         .cta-button:hover {
@@ -256,7 +323,18 @@
             box-shadow: 0 20px 40px rgba(43, 180, 219, 0.4);
         }
 
-        /* About Section (now uses .interactive-grid-container) */
+        .cta-button.secondary {
+            background: transparent;
+            border: 2px solid #2bb4db;
+            color: #2bb4db;
+        }
+
+        .cta-button.secondary:hover {
+            background: #2bb4db;
+            color: white;
+        }
+
+        /* About Section */
         .about {
             padding: 100px 0;
             background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%); 
@@ -276,7 +354,6 @@
             margin-top: 50px;
         }
 
-        /* About Card: Made to match App Card styling */
         .about-card {
             background: linear-gradient(135deg, rgba(43, 180, 219, 0.1), rgba(26, 138, 179, 0.1)); 
             padding: 40px; 
@@ -303,7 +380,7 @@
             opacity: 0.9;
         }
 
-        /* Apps Section (now uses .interactive-grid-container) */
+        /* Apps Section */
         .apps {
             padding: 100px 0;
             background: rgba(0, 0, 0, 0.9);
@@ -329,11 +406,48 @@
             text-align: center;
             border: 1px solid rgba(43, 180, 219, 0.2);
             transition: all 0.3s ease;
+            position: relative;
+            cursor: pointer;
         }
 
         .app-card:hover {
             transform: scale(1.05);
             box-shadow: 0 15px 30px rgba(43, 180, 219, 0.2);
+        }
+
+        .app-card.coming-soon {
+            opacity: 0.8;
+        }
+
+        .status-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            padding: 5px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            z-index: 3;
+        }
+
+        .status-badge.available {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+        }
+
+        .status-badge.coming-soon {
+            background: linear-gradient(45deg, #ffc107, #fd7e14);
+            color: black;
+        }
+
+        .status-badge.planning {
+            background: linear-gradient(45deg, #6f42c1, #e83e8c);
+            color: white;
+        }
+
+        .status-badge.research {
+            background: linear-gradient(45deg, #6c757d, #495057);
+            color: white;
         }
 
         .app-icon {
@@ -371,6 +485,8 @@
             font-weight: bold;
             transition: all 0.3s ease;
             font-size: 14px;
+            border: none;
+            cursor: pointer;
         }
 
         .app-button:hover {
@@ -378,7 +494,42 @@
             box-shadow: 0 8px 20px rgba(43, 180, 219, 0.3);
         }
 
-        /* Contact Section (now uses .interactive-grid-container) */
+        .notify-btn {
+            background: linear-gradient(45deg, #6c757d, #495057);
+        }
+
+        .notify-btn:hover {
+            background: linear-gradient(45deg, #28a745, #20c997);
+        }
+
+        /* CTA Section */
+        .cta-section {
+            padding: 80px 0;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+            text-align: center;
+        }
+
+        .cta-section h2 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: #ffffff;
+        }
+
+        .cta-section p {
+            font-size: 1.3rem;
+            margin-bottom: 40px;
+            color: #ffffff;
+            opacity: 0.9;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        /* Contact Section */
         .contact {
             padding: 100px 0;
             background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%); 
@@ -398,6 +549,60 @@
             opacity: 0.9;
         }
 
+        .newsletter-form {
+            max-width: 500px;
+            margin: 0 auto 40px;
+        }
+
+        .form-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .form-group input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid rgba(43, 180, 219, 0.3);
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 16px;
+            backdrop-filter: blur(10px);
+        }
+
+        .form-group input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #2bb4db;
+            box-shadow: 0 0 20px rgba(43, 180, 219, 0.3);
+        }
+
+        .form-group button {
+            padding: 15px 30px;
+            background: linear-gradient(45deg, #2bb4db, #1a8ab3);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .form-group button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(43, 180, 219, 0.3);
+        }
+
+        .form-note {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 10px;
+        }
+
         .contact-info {
             display: flex;
             justify-content: center;
@@ -410,6 +615,16 @@
             align-items: center;
             gap: 10px;
             color: #2bb4db;
+        }
+
+        .contact-item a {
+            color: #2bb4db;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .contact-item a:hover {
+            color: #ffffff;
         }
 
         /* Footer */
@@ -461,7 +676,7 @@
             }
         }
 
-        /* --- Mobile Menu Styles --- */
+        /* Mobile Menu Styles */
         .menu-toggle {
             display: none; 
             flex-direction: column;
@@ -503,7 +718,12 @@
             }
 
             .hero p {
-                font-size: 1.2rem;
+                font-size: 1.1rem;
+                padding: 0 20px;
+            }
+
+            .pixel-logo {
+                font-size: 3.5rem;
             }
 
             .nav-links {
@@ -545,6 +765,24 @@
                 flex-direction: column;
                 gap: 20px;
             }
+
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .cta-button {
+                width: 250px;
+            }
+
+            .form-group {
+                flex-direction: column;
+            }
+
+            .form-group input,
+            .form-group button {
+                width: 100%;
+            }
         }
 
         /* Scroll animations */
@@ -563,6 +801,14 @@
      crossorigin="anonymous"></script>
 </head>
 <body>
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="loading-animation">
+            <div class="pixel-logo">V<span class="small-part">IBE</span>C<span class="small-part">RE</span><span class="ai-part">AI</span></div>
+            <div class="loading-bar"></div>
+        </div>
+    </div>
+
     <header>
         <nav class="container">
             <a href="#home" class="logo">V<span class="small-part">IBE</span>C<span class="small-part">RE</span><span class="ai-part">AI</span></a>
@@ -582,7 +828,6 @@
         </nav>
     </header>
 
-    <!-- Apply interactive-grid-container and add grid layers to all main sections -->
     <section id="home" class="hero interactive-grid-container">
         <div class="grid-base-layer"></div>
         <div class="grid-spotlight-layer"></div>
@@ -621,7 +866,8 @@
         <div class="container">
             <h2 class="fade-in">Our Creations</h2>
             <div class="apps-grid">
-                <div class="app-card fade-in">
+                <div class="app-card fade-in available">
+                    <div class="status-badge available">Live</div>
                     <div class="app-icon">
                         <img src="spin2pick_icon.png" alt="Spin2Pick" style="width: 60px; height: 60px; border-radius: 10px;">
                     </div>
@@ -629,23 +875,41 @@
                     <p>Fun activity picker with AI suggestions</p>
                     <a href="/spin2pick" class="app-button">Try Now ▶️</a>
                 </div>
-                <div class="app-card fade-in">
+                <div class="app-card fade-in coming-soon">
+                    <div class="status-badge coming-soon">Coming Soon</div>
                     <div class="app-icon">🎮</div>
                     <h3>Creative Games</h3>
                     <p>Innovative gaming experiences powered by AI</p>
-                    <p><small>Coming Soon</small></p>
+                    <button class="app-button notify-btn" data-product="games">Notify Me</button>
                 </div>
-                <div class="app-card fade-in">
+                <div class="app-card fade-in coming-soon">
+                    <div class="status-badge planning">Planning</div>
                     <div class="app-icon">🎨</div>
                     <h3>Design Platform</h3>
                     <p>Smart design with AI collaboration</p>
-                    <p><small>Planning Stage</small></p>
+                    <button class="app-button notify-btn" data-product="design">Notify Me</button>
                 </div>
-                <div class="app-card fade-in">
+                <div class="app-card fade-in coming-soon">
+                    <div class="status-badge research">Research</div>
                     <div class="app-icon">🔧</div>
                     <h3>Developer Tools</h3>
                     <p>AI assistance tools for developers</p>
-                    <p><small>Research Phase</small></p>
+                    <button class="app-button notify-btn" data-product="dev-tools">Notify Me</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta-section interactive-grid-container">
+        <div class="grid-base-layer"></div>
+        <div class="grid-spotlight-layer"></div>
+        <div class="container">
+            <div class="cta-content fade-in">
+                <h2>Ready to Create with AI?</h2>
+                <p>Join thousands of creators using our AI-powered tools</p>
+                <div class="cta-buttons">
+                    <a href="/spin2pick" class="cta-button primary">Try Spin2Pick Now</a>
+                    <a href="#contact" class="cta-button secondary">Get Updates</a>
                 </div>
             </div>
         </div>
@@ -655,12 +919,21 @@
         <div class="grid-base-layer"></div>
         <div class="grid-spotlight-layer"></div>
         <div class="container">
-            <h2 class="fade-in">Let's Create Together</h2>
-            <p class="fade-in">Explore the new possibilities of creation with VibeCreAI</p>
+            <h2 class="fade-in">Stay Updated</h2>
+            <p class="fade-in">Get notified when new AI tools launch</p>
+            
+            <form class="newsletter-form fade-in" id="newsletter-form">
+                <div class="form-group">
+                    <input type="email" placeholder="Enter your email" required>
+                    <button type="submit">Subscribe</button>
+                </div>
+                <p class="form-note">We'll only send updates about new tools and features.</p>
+            </form>
+            
             <div class="contact-info fade-in">
                 <div class="contact-item">
                     <span>📧</span>
-                    <span>contact@vibecreai.com</span>
+                    <a href="mailto:contact@vibecreai.com">contact@vibecreai.com</a>
                 </div>
                 <div class="contact-item">
                     <span>🌐</span>
@@ -677,10 +950,40 @@
     </footer>
 
     <script>
+        // Loading screen
+        window.addEventListener('load', () => {
+            const loadingScreen = document.getElementById('loading-screen');
+            setTimeout(() => {
+                loadingScreen.classList.add('hidden');
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                }, 500);
+            }, 1500);
+        });
+
+        // Add scroll progress indicator
+        const progressBar = document.createElement('div');
+        progressBar.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 3px;
+            background: linear-gradient(45deg, #2bb4db, #1a8ab3);
+            z-index: 1001;
+            transition: width 0.1s ease;
+        `;
+        document.body.appendChild(progressBar);
+
+        window.addEventListener('scroll', () => {
+            const scrolled = (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100;
+            progressBar.style.width = scrolled + '%';
+        });
+
         // Get menu related elements
         const menuToggle = document.getElementById('menu-toggle');
         const navLinks = document.getElementById('nav-links');
-        const body = document.body; // Reference to the body tag
+        const body = document.body;
 
         // Hamburger menu toggle function
         if (menuToggle && navLinks) {
@@ -700,7 +1003,7 @@
             });
         }
 
-        // Reset menu state on screen resize (e.g., switching to desktop)
+        // Reset menu state on screen resize
         window.addEventListener('resize', () => {
             if (window.innerWidth > 768) {
                 navLinks.classList.remove('open');
@@ -749,6 +1052,47 @@
             } else {
                 header.style.background = 'rgba(0, 0, 0, 0.9)';
             }
+        });
+
+        // Newsletter form handling
+        document.getElementById('newsletter-form')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = this.querySelector('input[type="email"]').value;
+            const button = this.querySelector('button');
+            const originalText = button.textContent;
+            
+            button.textContent = 'Subscribing...';
+            button.disabled = true;
+            
+            // Simulate API call (replace with actual subscription logic)
+            setTimeout(() => {
+                button.textContent = 'Subscribed!';
+                button.style.background = '#28a745';
+                this.querySelector('input').value = '';
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.disabled = false;
+                    button.style.background = '';
+                }, 2000);
+            }, 1000);
+        });
+
+        // Notify me buttons
+        document.querySelectorAll('.notify-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const product = this.dataset.product;
+                this.textContent = 'We\'ll notify you!';
+                this.disabled = true;
+                this.style.background = 'linear-gradient(45deg, #28a745, #20c997)';
+                
+                // Reset after 3 seconds
+                setTimeout(() => {
+                    this.textContent = 'Notify Me';
+                    this.disabled = false;
+                    this.style.background = '';
+                }, 3000);
+            });
         });
 
         // Add some interactive particles effect
