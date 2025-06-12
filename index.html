@@ -1064,18 +1064,50 @@
             button.textContent = 'Subscribing...';
             button.disabled = true;
             
-            // Simulate API call (replace with actual subscription logic)
-            setTimeout(() => {
-                button.textContent = 'Subscribed!';
-                button.style.background = '#28a745';
-                this.querySelector('input').value = '';
+            // Send email to Google Sheets
+            const scriptURL = 'YOUR_GOOGLE_SCRIPT_URL_HERE'; // Replace with your actual script URL
+            
+            fetch(scriptURL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `email=${encodeURIComponent(email)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    button.textContent = 'Subscribed!';
+                    button.style.background = '#28a745';
+                    this.querySelector('input').value = '';
+                    
+                    // Show success message
+                    const successMsg = document.createElement('div');
+                    successMsg.textContent = 'Thank you for subscribing!';
+                    successMsg.style.cssText = 'color: #28a745; font-size: 14px; margin-top: 10px;';
+                    this.appendChild(successMsg);
+                    
+                    setTimeout(() => {
+                        successMsg.remove();
+                        button.textContent = originalText;
+                        button.disabled = false;
+                        button.style.background = '';
+                    }, 3000);
+                } else {
+                    throw new Error(data.message || 'Subscription failed');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                button.textContent = 'Error - Try Again';
+                button.style.background = '#dc3545';
                 
                 setTimeout(() => {
                     button.textContent = originalText;
                     button.disabled = false;
                     button.style.background = '';
-                }, 2000);
-            }, 1000);
+                }, 3000);
+            });
         });
 
         // Notify me buttons
