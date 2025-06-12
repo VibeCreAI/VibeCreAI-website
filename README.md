@@ -1,6 +1,6 @@
 # VibeCreAI Website
 
-![VibeCreAI](og_image.png)
+![VibeCreAI](images/og_image.png)
 
 A modern, interactive website for VibeCreAI - combining AI technology with human creativity to build innovative games, apps, and creative solutions.
 
@@ -46,9 +46,10 @@ vibecreai-website/
 ├── index.html              # Main website file
 ├── README.md               # Project documentation
 ├── vercel.json             # Vercel deployment configuration
-├── favicon.png             # Website favicon
-├── og_image.png            # Open Graph image for social sharing
-├── spin2pick_icon.png      # Spin2Pick app icon
+├── images/                 # Image assets folder
+│   ├── favicon.png         # Website favicon
+│   ├── og_image.png        # Open Graph image for social sharing
+│   └── spin2pick_icon.png  # Spin2Pick app icon
 ├── app-ads.txt             # App ads configuration
 ├── CNAME.txt               # Custom domain configuration
 └── fonts/                  # Custom font files
