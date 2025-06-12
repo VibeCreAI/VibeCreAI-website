@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, shrink-to-fit=no">
     <title>VibeCreAI - Vibe coding + Creative + AI</title>
     <meta name="description" content="VibeCreAI combines AI technology with human creativity to build innovative games, apps, and creative solutions. Explore our AI-powered tools including Spin2Pick and upcoming creative platforms.">
     <meta name="keywords" content="AI creativity, creative AI tools, AI games, AI apps, artificial intelligence, creative technology">
@@ -46,7 +46,11 @@
             background: rgba(0, 0, 0, 0.9); 
             color: #ffffff;
             overflow-x: hidden;
-            transition: overflow 0.3s ease; 
+            transition: overflow 0.3s ease;
+            -webkit-text-size-adjust: none;
+            -moz-text-size-adjust: none;
+            -ms-text-size-adjust: none;
+            text-size-adjust: none;
         }
 
         body.no-scroll {
@@ -730,13 +734,17 @@
                 font-size: 2.5rem;
             }
 
-            /* Fix header logo sizing on mobile */
+            /* Fix header logo sizing on mobile - Force with !important */
             .logo {
-                font-size: 30px;
+                font-size: 30px !important;
+                transform: none !important;
+                zoom: 1 !important;
             }
 
             .logo .small-part {
-                font-size: 25px;
+                font-size: 25px !important;
+                transform: none !important;
+                zoom: 1 !important;
             }
 
             .nav-links {
