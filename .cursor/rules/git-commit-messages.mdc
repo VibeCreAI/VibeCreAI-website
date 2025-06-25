@@ -1,0 +1,66 @@
+---
+description: Git Commit Message Creation
+globs: 
+alwaysApply: false
+---
+# Git Commit Message Summaries
+
+## Rule: Always provide git commit messages after code changes
+
+After every code modification, bug fix, or feature implementation, you MUST provide a short, copy-paste ready git commit message summary.
+
+### Format Requirements:
+
+1. **Keep it concise** (50 characters or less for the title)
+2. **Use imperative mood** (Fix, Add, Update, Remove, etc.)
+3. **Be specific** about what changed
+4. **Format consistently**
+
+### Examples:
+
+#### Good Examples:
+```
+Fix: Remove emissive properties from MeshBasicMaterial
+Add: Hover effect dimming for text cards  
+Update: Reduce emissive intensity from 50 to 0.8
+Remove: Redundant card brightness on icon hover
+Refactor: Replace MeshBasicMaterial with MeshStandardMaterial
+```
+
+#### Bad Examples:
+```
+fix stuff
+updated some code
+made changes to the file
+fixed the bug we talked about
+```
+
+### Template Format:
+
+At the end of every code change response, provide:
+
+```
+## 📋 Git Commit Message:
+```
+[Type]: [Brief description of change]
+```
+```
+
+### Commit Types:
+- **Fix**: Bug fixes
+- **Add**: New features or functionality  
+- **Update**: Modifications to existing features
+- **Remove**: Deletion of code/features
+- **Refactor**: Code structure improvements
+- **Style**: Formatting, styling changes
+- **Docs**: Documentation updates
+- **Config**: Configuration file changes
+
+### Implementation:
+This rule applies to ALL code changes, regardless of size. Even single-line fixes should get a commit message summary.
+
+The commit message should be ready to copy-paste directly into:
+```bash
+git commit -m "Your provided message"
+```
+
