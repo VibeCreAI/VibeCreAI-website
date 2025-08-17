@@ -1,114 +1,166 @@
-# VibeCreAI 3D Interactive Website 🚀
+# VibeCreAI Website
 
-![VibeCreAI 3D Website](Assets/Image/og_image.png)
+![VibeCreAI](images/og_image.png)
 
-## 🌟 About This Website
+A cutting-edge, cyberpunk-inspired website for VibeCreAI - combining AI technology with human creativity to build innovative games, apps, and creative solutions. Features a futuristic neon aesthetic with advanced interactive elements.
 
-**VibeCreAI** is a unique one-person company that collaborates with multiple AI agents to create innovative AI-powered applications. This website showcases our approach through an immersive 3D interactive experience with cutting-edge web technologies.
+## 🌟 Features
 
-**🌐 Visit:** [vibecreai.com](https://vibecreai.com)
+### ✨ Cyberpunk Interactive Design
+- **Custom Cursor System** - Animated neon cursor with follower effect
+- **Neural Network Background** - Dynamic animated neural network visualization
+- **Matrix Rain Effect** - Subtle Matrix-style character rain animation
+- **Loading Screen** - Futuristic AI initialization sequence
+- **Floating Particles** - Neon particle effects throughout the page
+- **Glitch Effects** - Animated glitch text on hero title
+- **3D Card Effects** - Interactive 3D tilt animations on cards
+
+### 🎨 Advanced Animations
+- **Anime.js Integration** - Professional-grade animations
+- **Text Scramble Effects** - Dynamic text scrambling animations
+- **Smooth Scroll Animations** - IntersectionObserver-based fade-ins
+- **Staggered Animations** - Sequential element animations
+- **Parallax Effects** - Mouse-following parallax on hero section
+- **Glow Hover Effects** - Neon glow animations on interactive elements
+
+### 📱 Enhanced Mobile Experience
+- **Animated Hamburger Menu** - Advanced mobile menu with smooth transitions
+- **Mobile Menu Animations** - Staggered nav link animations
+- **Touch Optimized** - Perfect touch interactions on all devices
+- **Responsive Neural Network** - Adaptive background effects
+- **Mobile-First Design** - Optimized for all screen sizes
+
+### 🎯 Premium User Experience
+- **Dual-Platform App Buttons** - Separate Web and Android app links
+- **Enhanced Logo Interactions** - Animated logo with underline effects
+- **Section Title Hover Effects** - Interactive glowing animations
+- **Newsletter Integration** - Animated subscription form
+- **Status Badge System** - Live/Soon/Dev status indicators
+- **iOS Coming Soon Notice** - User-friendly platform availability info
+
+### 🚀 Technical Excellence
+- **High Performance** - Optimized animations and efficient rendering
+- **Canvas-Based Effects** - Hardware-accelerated background animations
+- **Responsive Canvas** - Dynamic canvas sizing and node optimization
+- **SEO Optimized** - Complete meta tags and semantic HTML
+- **Social Media Ready** - Open Graph and Twitter Card integration
+
+## 🛠️ Technologies Used
+
+- **HTML5** - Semantic markup structure with modern standards
+- **CSS3** - Advanced styling with animations, gradients, and transforms
+- **Vanilla JavaScript** - ES6+ features with modern APIs
+- **Canvas API** - Hardware-accelerated 2D graphics for background effects
+- **Anime.js** - Professional animation library for smooth interactions
+- **Intersection Observer API** - Efficient scroll-based animations
+- **Request Animation Frame** - Optimized animation loops
+- **Web Fonts** - Custom Born2bSporty font for branding
+
+## 📦 Project Structure
+
+```
+vibecreai-website/
+├── index.html              # Main website file
+├── README.md               # Project documentation
+├── vercel.json             # Vercel deployment configuration
+├── images/                 # Image assets folder
+│   ├── favicon.png         # Website favicon
+│   ├── og_image.png        # Open Graph image for social sharing
+│   └── spin2pick_icon.png  # Spin2Pick app icon
+├── app-ads.txt             # App ads configuration
+├── CNAME.txt               # Custom domain configuration
+└── fonts/                  # Custom font files
+    └── Born2bSportyFS.otf  # Custom display font
+```
+
+## 🚀 Live Demo
+
+Visit the live website: [vibecreai.com](https://vibecreai.com)
+
+## 🎨 Cyberpunk Color Palette
+
+- **Primary Cyan**: `#00ffff` - Main neon accent color
+- **Secondary Magenta**: `#ff00ff` - Complementary neon color
+- **Accent Blue**: `#2bb4db` - Supporting brand color
+- **Dark Background**: `#0a0a0a` - Deep black theme
+- **Text Color**: `#ffffff` - Pure white for contrast
+- **Android Green**: `#4CAF50` - For Android app buttons
+- **Glow Effects**: Multiple rgba variations for neon lighting
+
+## 🏗️ Deployment
+
+This website is deployed using [Vercel](https://vercel.com/) and configured to serve from the custom domain `vibecreai.com`.
+
+### Vercel Configuration
+The `vercel.json` file contains routing rules for proper SPA behavior and custom headers.
+
+### Custom Domain
+The `CNAME.txt` file contains the custom domain configuration for GitHub Pages compatibility.
+
+## 📱 Product Showcase
+
+### Current Products
+- **Spin2Pick** - AI-powered activity picker for kids with intelligent suggestions
+  - 🌐 **Web App**: Available at [spin2pick-app.vercel.app](https://spin2pick-app.vercel.app/)
+  - 📱 **Android App**: Available on [Google Play Store](https://play.google.com/store/apps/details?id=com.vibecreai.spin2pick&pli=1)
+  - 🍎 **iOS App**: Coming Soon!
+
+### Upcoming Products
+- **AI Games** - Next-generation gaming experiences powered by artificial intelligence (Coming Soon)
+- **Smart Tools** - Revolutionary AI tools for creative professionals and developers (In Development)
+- **Creative Platforms** - AI-enhanced design and collaboration tools (Planning)
+
+## 🔧 Development
+
+### Local Development
+1. Clone this repository
+2. Open `index.html` in your preferred browser
+3. For live reload, use a local server:
+   ```bash
+   python -m http.server 8000
+   # or
+   npx serve .
+   ```
+
+### Making Changes
+- All styles are contained within `index.html` for simplicity
+- The website uses vanilla JavaScript for all interactions
+- Images should be optimized before adding to the project
+
+## 🎯 SEO & Social Media
+
+### Meta Tags
+- Complete Open Graph implementation
+- Twitter Card integration
+- Comprehensive meta descriptions and keywords
+
+### Performance
+- Optimized images (WebP where possible)
+- Minimal external requests
+- Efficient CSS and JavaScript
+
+## 📈 Analytics
+
+The website includes Google AdSense integration with the publisher ID configured in the head section.
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly across devices
+5. Submit a pull request
+
+## 📄 License
+
+© 2025 VibeCreAI. All rights reserved.
+
+## 🔗 Links
+
+- **Website**: [vibecreai.com](https://vibecreai.com)
+- **Spin2Pick Tool**: [vibecreai.com/spin2pick](https://vibecreai.com/spin2pick)
+- **Contact**: contact@vibecreai.com
 
 ---
 
-## 🛠️ Built With AI-Powered Development
-
-This entire website was created using **"vibe coding"** - a collaborative approach between human creativity and AI assistance:
-
-### **Development Stack:**
-- **🎯 Cursor IDE** - AI-powered code editor
-- **🤖 Claude 4 Sonnet** - AI coding assistant  
-- **🎨 Three.js** - 3D graphics and animations
-- **⚡ Vanilla JavaScript** - Pure web technologies
-- **🎭 Custom 3D Models** - Interactive elements and animations
-- **🎵 Web Audio API** - Immersive sound experience
-- **🔤 Google Fonts (Orbitron)** - Futuristic typography
-
-### **Development Philosophy:**
-Demonstrating the future of software development through human-AI collaboration, where creativity meets cutting-edge AI assistance to build exceptional digital experiences.
-
----
-
-## ✨ What You'll Experience
-
-### **🎯 Enhanced Navigation System**
-- **Smart Responsive Design**: Horizontal menu by default, hamburger only on extreme narrow screens (<320px)
-- **Centered Layout**: Clean, professional navigation without logo clutter
-- **Orbitron Typography**: Futuristic font throughout the entire website
-- **Mobile Optimized**: Perfect experience across all device sizes
-
-### **🎮 Interactive 3D Environment**
-- **Smooth Camera Controls** with optimized transitions
-- **Card Navigation Arrows**: Browse between Apps/About cards with up/down arrows
-- **Keyboard Support**: Arrow keys for seamless navigation
-- **Hover Effects**: Refined visual feedback with darker, professional colors
-
-### **🎵 Immersive Audio System**
-- **Background Music**: Looping ambient audio for enhanced atmosphere
-- **Transition Sound Effects**: Audio feedback for every camera movement
-- **Smart Audio Control**: Toggle button with autoplay attempt and graceful fallback
-- **Browser Optimized**: Respects autoplay policies while maximizing user experience
-
-### **📱 Professional UX Features**
-- **Subscription System** with Google Sheets integration
-- **Loading Animations** with progress tracking
-- **Dancing Robot Animation** and custom 3D elements
-- **Responsive Design** that adapts beautifully to any device
-- **Accessibility Focused** with proper contrast and user controls
-
----
-
-## 🎯 Technical Highlights
-
-### **🔧 Advanced Features:**
-- **Vector-based Camera Transitions** for smooth 3D navigation
-- **Real-time Audio Management** with volume optimization
-- **Mobile Text Rendering** with high-resolution scaling
-- **State Management** for navigation and audio systems
-- **Error Handling** with graceful fallbacks
-- **Performance Optimizations** for all device types
-
-### **🎨 Design Excellence:**
-- **Consistent Typography**: Orbitron font across all elements
-- **Professional Color Scheme**: Refined hover states and visual feedback
-- **Intuitive Navigation**: Smart show/hide logic for UI elements
-- **Immersive Experience**: Audio-visual harmony for maximum engagement
-
----
-
-## 🚀 Recent Updates
-
-### **Latest Release Features:**
-- ✅ Complete navigation system overhaul
-- ✅ Orbitron font migration for futuristic aesthetic
-- ✅ Card navigation arrows with keyboard support
-- ✅ Full audio system with background music and sound effects
-- ✅ Enhanced mobile responsiveness
-- ✅ Improved hover interactions and visual feedback
-- ✅ Professional audio controls with smart autoplay
-
----
-
-## 🎯 Our Mission
-
-Bridging human creativity with AI capabilities to develop cutting-edge applications that enhance productivity, creativity, and user experience. This website itself demonstrates the power of human-AI collaboration in creating exceptional digital experiences.
-
----
-
-## 📞 Contact
-
-**🌐 Website:** [vibecreai.com](https://vibecreai.com)  
-**📧 Email:** contact@vibecreai.com
-
----
-
-<div align="center">
-
-**Made with ❤️ through Human-AI Collaboration**
-
-*Showcasing the future of AI-powered development*
-
-[![Visit Website](https://img.shields.io/badge/Visit-vibecreai.com-2cb4dd?style=for-the-badge&logo=vercel)](https://vibecreai.com)
-[![Audio Experience](https://img.shields.io/badge/🎵-Audio%20Experience-1abc9c?style=for-the-badge)](https://vibecreai.com)
-[![3D Interactive](https://img.shields.io/badge/🎮-3D%20Interactive-ff6b6b?style=for-the-badge)](https://vibecreai.com)
-
-</div>
+**Built with ❤️ using modern web technologies** 

@@ -1,0 +1,24 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /private/
+
+# Allow crawling of CSS and JS files
+Allow: /*.css$
+Allow: /*.js$
+
+# Sitemap location
+Sitemap: https://vibecreai.com/sitemap.xml
+
+# Crawl-delay (optional, helps with server load)
+Crawl-delay: 1
+
+# Allow specific search engines
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /
