@@ -445,8 +445,10 @@
             letter-spacing: 0.1em;
             margin-bottom: 20px;
             position: relative;
-            display: inline-flex;
+            display: flex;
             align-items: baseline;
+            justify-content: center;
+            width: 100%;
             opacity: 0;
             transform: translateY(-100px);
         }
@@ -1351,10 +1353,9 @@
     <section id="home" class="hero">
         <div class="hero-content">
             <h1 class="hero-title">
-                <span class="glitch-text" data-text="VIBECRE">
-                    <span class="title-v">V</span><span class="title-small">IBE</span><span class="title-c">C</span><span class="title-small">RE</span>
+                <span class="glitch-text" data-text="VIBECREAI" id="logo-text-container">
+                    <!-- Logo will be filled by JS with typing animation -->
                 </span>
-                <span class="title-ai">AI</span>
             </h1>
 <p class="hero-subtitle" id="hero-subtitle"></p>
             <div class="tagline" id="tagline"></div>
@@ -1438,7 +1439,7 @@
     <!-- Contact Section -->
     <section id="contact" class="contact">
         <div class="contact-container">
-            <h2 class="section-title fade-in">CONNECT WITH AI</h2>
+            <h2 class="section-title fade-in">CONTACT US</h2>
             <p class="fade-in">Join the future of AI-powered creativity</p>
             
             <form class="contact-form fade-in" id="newsletter-form">
@@ -1663,16 +1664,93 @@
             }
         }
 
+        // Logo typing animation class
+        class LogoTypewriter {
+            constructor(container) {
+                this.container = container;
+                this.logoText = "VIBECREAI";
+                this.logoStructure = [
+                    { text: "V", class: "title-v" },
+                    { text: "IBE", class: "title-small" },
+                    { text: "C", class: "title-c" },
+                    { text: "RE", class: "title-small" },
+                    { text: "AI", class: "title-ai" }
+                ];
+                this.currentIndex = 0;
+                this.currentStructureIndex = 0;
+                this.currentCharInStructure = 0;
+            }
+
+            type() {
+                return new Promise((resolve) => {
+                    const typeChar = () => {
+                        if (this.currentStructureIndex >= this.logoStructure.length) {
+                            // All typing is complete
+                            resolve();
+                            return;
+                        }
+
+                        const currentPart = this.logoStructure[this.currentStructureIndex];
+                        
+                        if (this.currentCharInStructure === 0) {
+                            // Create new span for this part
+                            const span = document.createElement('span');
+                            span.className = currentPart.class;
+                            // Add all parts to the same container
+                            this.container.appendChild(span);
+                        }
+
+                        // Get the current span from the container
+                        const currentSpan = this.container.lastElementChild;
+                        
+                        const charToAdd = currentPart.text[this.currentCharInStructure];
+                        currentSpan.textContent += charToAdd;
+
+                        // Animate the character appearance
+                        anime({
+                            targets: currentSpan,
+                            scale: [1.2, 1],
+                            duration: 150,
+                            easing: 'easeOutQuad'
+                        });
+
+                        this.currentCharInStructure++;
+
+                        if (this.currentCharInStructure >= currentPart.text.length) {
+                            // Move to next part
+                            this.currentStructureIndex++;
+                            this.currentCharInStructure = 0;
+                            setTimeout(typeChar, 100); // Slightly longer pause between parts
+                        } else {
+                            setTimeout(typeChar, 80); // Typing speed
+                        }
+                    };
+
+                    typeChar();
+                });
+            }
+        }
+
         // Initialize all animations
         function initAnimations() {
-            // Hero title drop-down animation
+            // Hero title drop-down animation with logo typing
             anime({
                 targets: '.hero-title',
                 opacity: [0, 1],
                 translateY: [-100, 0],
                 duration: 1200,
                 easing: 'easeOutExpo',
-                delay: 500
+                delay: 500,
+                complete: () => {
+                    // Start logo typing animation after drop-down completes
+                    const logoContainer = document.getElementById('logo-text-container');
+                    
+                    // Clear the container to ensure clean start
+                    logoContainer.innerHTML = '';
+                    
+                    const logoTypewriter = new LogoTypewriter(logoContainer);
+                    logoTypewriter.type();
+                }
             });
 
             // Hero subtitle animation
@@ -2133,26 +2211,8 @@
             observer.observe(el);
         });
 
-        // 3D Card Tilt Effect
-        document.querySelectorAll('.card-3d').forEach(card => {
-            card.addEventListener('mousemove', (e) => {
-                const rect = card.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                
-                const centerX = rect.width / 2;
-                const centerY = rect.height / 2;
-                
-                const rotateX = (y - centerY) / 10;
-                const rotateY = (centerX - x) / 10;
-                
-                card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(10px)`;
-            });
-            
-            card.addEventListener('mouseleave', () => {
-                card.style.transform = 'rotateX(0) rotateY(0) translateZ(0)';
-            });
-        });
+        // 3D Card Tilt Effect - REMOVED
+        // The 3D tilt effect has been completely removed for better UX
 
         // Newsletter Form
         document.getElementById('newsletter-form').addEventListener('submit', function(e) {
