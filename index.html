@@ -1409,50 +1409,67 @@
         // Set current year
         document.getElementById('year').textContent = new Date().getFullYear();
 
-        // Custom Cursor - Optimized Version
+        // Mobile Detection
+        function isMobileDevice() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+                   (navigator.maxTouchPoints && navigator.maxTouchPoints > 2) ||
+                   window.innerWidth <= 768;
+        }
+
+        // Custom Cursor - Desktop Only
         const cursor = document.querySelector('.cursor');
         const cursorFollower = document.querySelector('.cursor-follower');
+        
+        // Hide custom cursor on mobile devices
+        if (isMobileDevice()) {
+            cursor.style.display = 'none';
+            cursorFollower.style.display = 'none';
+            document.body.style.cursor = 'auto'; // Restore default cursor
+        }
         
         let mouseX = 0;
         let mouseY = 0;
         let followerX = 0;
         let followerY = 0;
         
-        // Update mouse position
-        document.addEventListener('mousemove', (e) => {
-            mouseX = e.clientX;
-            mouseY = e.clientY;
+        // Only initialize cursor functionality on desktop
+        if (!isMobileDevice()) {
+            // Update mouse position
+            document.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                
+                // Update cursor immediately with transform for better performance
+                cursor.style.transform = `translate(${mouseX - 10}px, ${mouseY - 10}px)`;
+            });
             
-            // Update cursor immediately with transform for better performance
-            cursor.style.transform = `translate(${mouseX - 10}px, ${mouseY - 10}px)`;
-        });
-        
-        // Smooth follower animation using RAF
-        function animateFollower() {
-            const dx = mouseX - followerX;
-            const dy = mouseY - followerY;
+            // Smooth follower animation using RAF
+            function animateFollower() {
+                const dx = mouseX - followerX;
+                const dy = mouseY - followerY;
+                
+                followerX += dx * 0.1;
+                followerY += dy * 0.1;
+                
+                cursorFollower.style.transform = `translate(${followerX - 20}px, ${followerY - 20}px)`;
+                
+                requestAnimationFrame(animateFollower);
+            }
             
-            followerX += dx * 0.1;
-            followerY += dy * 0.1;
-            
-            cursorFollower.style.transform = `translate(${followerX - 20}px, ${followerY - 20}px)`;
-            
-            requestAnimationFrame(animateFollower);
-        }
-        
-        animateFollower();
+            animateFollower();
 
-        // Enhanced cursor hover effects
-        document.querySelectorAll('a, button, .section-title').forEach(element => {
-            element.addEventListener('mouseenter', () => {
-                cursor.classList.add('hover');
-                cursorFollower.classList.add('hover');
+            // Enhanced cursor hover effects
+            document.querySelectorAll('a, button, .section-title').forEach(element => {
+                element.addEventListener('mouseenter', () => {
+                    cursor.classList.add('hover');
+                    cursorFollower.classList.add('hover');
+                });
+                element.addEventListener('mouseleave', () => {
+                    cursor.classList.remove('hover');
+                    cursorFollower.classList.remove('hover');
+                });
             });
-            element.addEventListener('mouseleave', () => {
-                cursor.classList.remove('hover');
-                cursorFollower.classList.remove('hover');
-            });
-        });
+        }
 
         // Loading Screen Animation
         window.addEventListener('load', () => {
