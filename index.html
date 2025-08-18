@@ -749,6 +749,16 @@
             letter-spacing: 0.05em;
         }
 
+        .contact-subtitle {
+            font-size: 1.2rem;
+            text-align: center;
+            margin-bottom: 40px;
+            margin-top: -30px;
+            color: var(--primary-color);
+            letter-spacing: 0.05em;
+            opacity: 0.9;
+        }
+
         .about-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -887,6 +897,18 @@
             font-weight: bold;
             border-radius: 20px;
             text-transform: uppercase;
+            animation: badgePulse 2s ease-in-out infinite;
+        }
+
+        @keyframes badgePulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 0 20px rgba(0, 255, 255, 0.6);
+            }
         }
 
         .app-title {
@@ -897,7 +919,10 @@
 
         .app-description {
             margin-bottom: 20px;
-            opacity: 0.8;
+            opacity: 0.9;
+            line-height: 1.6;
+            font-size: 0.95rem;
+            min-height: 80px;
         }
 
         .app-button {
@@ -1411,38 +1436,39 @@
     <!-- Apps Section -->
     <section id="apps" class="apps">
         <div class="apps-container">
-            <h2 class="section-title fade-in">AI CREATIONS</h2>
+            <h2 class="section-title fade-in">MY AI CREATIONS</h2>
+            <p class="section-subtitle fade-in">From zero code to real apps - here's what I've built with AI!</p>
             <div class="app-showcase">
                 <div class="app-card fade-in">
-                    <div class="status-badge">LIVE</div>
+                    <div class="status-badge">🚀 LIVE</div>
                     <div class="app-icon-wrapper">
                         <img src="images/spin2pick_icon.png" alt="Spin2Pick">
                     </div>
                     <h3 class="app-title">Spin2Pick</h3>
-                    <p class="app-description">AI-powered decision wheel for any purpose!</p>
+                    <p class="app-description">My first baby! 🎉 An AI-powered decision wheel that started as "what if we could make choosing fun?" Now it's helping people make decisions worldwide!</p>
                     <div class="app-buttons-container">
-                        <a href="https://spin2pick-app.vercel.app/" target="_blank" class="app-button web-button">🌐 WEB APP</a>
-                        <a href="https://play.google.com/store/apps/details?id=com.vibecreai.spin2pick&pli=1" target="_blank" class="app-button android-button">📱 ANDROID</a>
+                        <a href="https://spin2pick-app.vercel.app/" target="_blank" class="app-button web-button">🌐 TRY WEB APP</a>
+                        <a href="https://play.google.com/store/apps/details?id=com.vibecreai.spin2pick&pli=1" target="_blank" class="app-button android-button">📱 GET ON ANDROID</a>
                     </div>
-                    <p class="ios-note">🍎 iOS version coming soon!</p>
+                    <p class="ios-note">🍎 iOS version in the works!</p>
                 </div>
                 <div class="app-card fade-in">
-                    <div class="status-badge">SOON</div>
+                    <div class="status-badge">🎮 COOKING</div>
                     <div class="app-icon-wrapper">
                         <div style="font-size: 2.5rem;">🎮</div>
                     </div>
-                    <h3 class="app-title">AI GAMES</h3>
-                    <p class="app-description">Next-generation gaming experiences powered by artificial intelligence</p>
-                    <button class="app-button">COMING SOON</button>
+                    <h3 class="app-title">MYSTERY GAME</h3>
+                    <p class="app-description">Something fun is brewing! I'm exploring how AI can create unique gaming experiences. Think: games that adapt to YOU. Can't reveal more yet... 🤫</p>
+                    <button class="app-button">STAY TUNED</button>
                 </div>
                 <div class="app-card fade-in">
-                    <div class="status-badge">DEV</div>
+                    <div class="status-badge">💡 IDEATING</div>
                     <div class="app-icon-wrapper">
-                        <div style="font-size: 2.5rem;">🤖</div>
+                        <div style="font-size: 2.5rem;">✨</div>
                     </div>
-                    <h3 class="app-title">SMART TOOLS</h3>
-                    <p class="app-description">Revolutionary AI tools for creative professionals and developers</p>
-                    <button class="app-button">IN DEVELOPMENT</button>
+                    <h3 class="app-title">YOUR IDEA HERE?</h3>
+                    <p class="app-description">Got a crazy app idea? I'm always looking for the next fun project! The best part about being a solo dev? I can build whatever sounds exciting! Let's collaborate!</p>
+                    <a href="#contact" class="app-button">SHARE YOUR IDEA</a>
                 </div>
             </div>
         </div>
@@ -1451,13 +1477,13 @@
     <!-- Contact Section -->
     <section id="contact" class="contact">
         <div class="contact-container">
-            <h2 class="section-title fade-in">CONTACT US</h2>
-            <p class="fade-in">Join the future of AI-powered creativity</p>
+            <h2 class="section-title fade-in">LET'S CONNECT</h2>
+            <p class="contact-subtitle fade-in">Got ideas? Questions? Or just want to say hi? I'd love to hear from you!</p>
             
             <form class="contact-form fade-in" id="newsletter-form">
                 <div class="form-group">
                     <input type="email" placeholder="ENTER YOUR EMAIL" required>
-                    <button type="submit">SUBSCRIBE</button>
+                    <button type="submit">JOIN THE VIBE</button>
                 </div>
             </form>
 
