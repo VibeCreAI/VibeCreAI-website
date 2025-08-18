@@ -36,6 +36,35 @@
     <link rel="preload" href="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" as="script">
     <link rel="preload" href="fonts/Born2bSportyFS.otf" as="font" type="font/otf" crossorigin>
     
+    <!-- CRITICAL: Always start from hero page - Must be in HEAD -->
+    <script>
+        // Execute immediately to prevent browser scroll restoration
+        (function() {
+            // Remove hash from URL immediately
+            if (window.location.hash) {
+                history.replaceState(null, null, window.location.pathname + window.location.search);
+            }
+            
+            // Force scroll to top immediately
+            if (window.scrollTo) {
+                window.scrollTo(0, 0);
+            }
+            
+            // Set scroll position directly
+            if (document.documentElement) {
+                document.documentElement.scrollTop = 0;
+            }
+            if (document.body) {
+                document.body.scrollTop = 0;
+            }
+            
+            // Disable scroll restoration
+            if ('scrollRestoration' in history) {
+                history.scrollRestoration = 'manual';
+            }
+        })();
+    </script>
+    
     <!-- Structured Data (JSON-LD) -->
     <script type="application/ld+json">
     {
@@ -215,6 +244,19 @@
             color: var(--primary-color);
             text-shadow: var(--neon-glow);
             letter-spacing: 0.2em;
+        }
+
+        .loading-cursor {
+            animation: blinkCursor 1s infinite;
+        }
+
+        @keyframes blinkCursor {
+            0%, 50% {
+                opacity: 1;
+            }
+            51%, 100% {
+                opacity: 0;
+            }
         }
 
         .loading-bar {
@@ -405,6 +447,8 @@
             position: relative;
             display: inline-flex;
             align-items: baseline;
+            opacity: 0;
+            transform: translateY(-100px);
         }
 
         .title-v, .title-c {
@@ -584,6 +628,8 @@
             transition: all 0.3s ease;
             text-transform: uppercase;
             letter-spacing: 0.1em;
+            opacity: 0;
+            transform: translateY(30px);
         }
 
         .cta-button::before {
@@ -1241,13 +1287,31 @@
     </style>
 </head>
 <body>
+    <!-- IMMEDIATE SCROLL RESET - Execute before any content loads -->
+    <script>
+        // Force immediate scroll to top - this runs before DOM elements load
+        window.scrollTo(0, 0);
+        document.documentElement.scrollTop = 0;
+        if (document.body) document.body.scrollTop = 0;
+        
+        // Disable any scroll restoration from browser
+        if ('scrollRestoration' in history) {
+            history.scrollRestoration = 'manual';
+        }
+        
+        // Clean URL hash
+        if (window.location.hash) {
+            history.replaceState(null, null, window.location.pathname + window.location.search);
+        }
+    </script>
+    
     <!-- Custom Cursor -->
     <div class="cursor"></div>
     <div class="cursor-follower"></div>
 
     <!-- Loading Screen -->
     <div id="loading-screen">
-        <div class="loading-text">INITIALIZING AI</div>
+        <div class="loading-text">LOADING<span class="loading-cursor">_</span></div>
         <div class="loading-bar">
             <div class="loading-progress"></div>
         </div>
@@ -1409,11 +1473,56 @@
         // Set current year
         document.getElementById('year').textContent = new Date().getFullYear();
 
+        // Always start from hero page on refresh - Enhanced
+        function ensureHeroStart() {
+            // Remove any hash from URL without triggering scroll
+            if (window.location.hash) {
+                history.replaceState(null, null, window.location.pathname + window.location.search);
+            }
+            
+            // Force scroll to top with multiple methods for maximum compatibility
+            window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+            document.documentElement.scrollTop = 0;
+            document.body.scrollTop = 0;
+            
+            // Also reset any potential smooth scroll behavior temporarily
+            document.documentElement.style.scrollBehavior = 'auto';
+            document.body.style.scrollBehavior = 'auto';
+            
+            // Restore smooth scrolling after a brief delay
+            setTimeout(() => {
+                document.documentElement.style.scrollBehavior = '';
+                document.body.style.scrollBehavior = '';
+            }, 100);
+        }
+        
+        // Call immediately
+        ensureHeroStart();
+        
+        // Also call on DOMContentLoaded for extra reliability
+        document.addEventListener('DOMContentLoaded', ensureHeroStart);
+        
+        // Handle browser back/forward navigation
+        window.addEventListener('popstate', function(event) {
+            // If there's no hash in the URL, ensure we're at the top
+            if (!window.location.hash) {
+                ensureHeroStart();
+            }
+        });
+
         // Mobile Detection
         function isMobileDevice() {
-            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-                   (navigator.maxTouchPoints && navigator.maxTouchPoints > 2) ||
-                   window.innerWidth <= 768;
+            // Check for mobile user agents
+            const mobileUserAgents = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            
+            // Check for touch devices, but exclude desktop touch screens
+            const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+            
+            // More specific mobile detection - combine user agent with screen size and touch
+            const isSmallScreen = window.innerWidth <= 768 && window.innerHeight <= 1024;
+            
+            // Return true only if it's actually a mobile device
+            return mobileUserAgents || (isTouchDevice && isSmallScreen);
         }
 
         // Custom Cursor - Desktop Only
@@ -1556,13 +1665,14 @@
 
         // Initialize all animations
         function initAnimations() {
-            // Hero title animation
+            // Hero title drop-down animation
             anime({
                 targets: '.hero-title',
                 opacity: [0, 1],
-                translateY: [-50, 0],
-                duration: 1000,
-                easing: 'easeOutExpo'
+                translateY: [-100, 0],
+                duration: 1200,
+                easing: 'easeOutExpo',
+                delay: 500
             });
 
             // Hero subtitle animation
