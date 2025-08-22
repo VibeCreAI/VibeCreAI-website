@@ -394,26 +394,36 @@ class VibeRunner {
         this.clickCounts = new Map();
         this.clickTimers = new Map();
         
-        // Main logo requires two clicks (exclude header logo)
+        // Helper function to add both click and touch events
+        const addDoubleClickEvents = (element, triggerType) => {
+            const handler = (e) => {
+                e.preventDefault();
+                this.handleDoubleClickTrigger(element, triggerType);
+            };
+            
+            // Add both click and touchend events for mobile compatibility
+            element.addEventListener('click', handler);
+            element.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.handleDoubleClickTrigger(element, triggerType);
+            }, { passive: false });
+        };
+        
+        // Main logo requires two clicks/touches (exclude header logo)
         const mainLogos = document.querySelectorAll('.hero-title, .glitch-text, #logo-text-container');
         mainLogos.forEach(logo => {
             if (!logo) return;
             logo.style.cursor = 'pointer';
-            logo.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.handleDoubleClickTrigger(logo, 'main-logo');
-            });
+            addDoubleClickEvents(logo, 'main-logo');
         });
         
-        // Stay Tuned button also requires two clicks
+        // Stay Tuned button also requires two clicks/touches
         const stayTunedButtons = document.querySelectorAll('.app-button');
         stayTunedButtons.forEach(button => {
             if (!button || button.textContent.trim() !== 'STAY TUNED') return;
             button.style.cursor = 'pointer';
-            button.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.handleDoubleClickTrigger(button, 'stay-tuned');
-            });
+            addDoubleClickEvents(button, 'stay-tuned');
         });
     }
     
