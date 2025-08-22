@@ -34,7 +34,6 @@
     <!-- Resource Hints for Performance -->
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="preload" href="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" as="script">
-    <link rel="preload" href="fonts/Born2bSportyFS.otf" as="font" type="font/otf" crossorigin>
     
     <!-- CRITICAL: Always start from hero page - Must be in HEAD -->
     <script>
@@ -104,6 +103,7 @@
         @font-face {
             font-family: 'Born2bSportyFont';
             src: url('fonts/Born2bSportyFS.otf') format('opentype');
+            font-display: swap; /* Fallback if font fails to load */
         }
 
         * {
@@ -186,7 +186,7 @@
             transform: translate(-50%, -50%);
             pointer-events: none;
             transition: none;
-            z-index: 10000;
+            z-index: 1000001; /* above game modal/prompt overlays */
             mix-blend-mode: difference;
             will-change: transform;
         }
@@ -201,17 +201,11 @@
             transform: translate(-50%, -50%);
             pointer-events: none;
             transition: none;
-            z-index: 9999;
+            z-index: 1000000; /* above game modal/prompt overlays */
             will-change: transform;
         }
 
-        .cursor.hover {
-            /* No visual changes - keeping same appearance */
-        }
-
-        .cursor-follower.hover {
-            /* No visual changes - keeping same appearance */
-        }
+        /* Cursor hover states removed - no visual changes needed */
 
         .cta-button.secondary:hover {
             color: var(--dark-bg);
@@ -2251,6 +2245,12 @@
 
         // 3D Card Tilt Effect - REMOVED
         // The 3D tilt effect has been completely removed for better UX
+        
+        // Load Vibe Runner Game Easter Egg
+        const gameScript = document.createElement('script');
+        gameScript.src = 'js/vibe-runner-game.js';
+        gameScript.defer = true;
+        document.head.appendChild(gameScript);
 
         // Newsletter Form
         document.getElementById('newsletter-form').addEventListener('submit', function(e) {
