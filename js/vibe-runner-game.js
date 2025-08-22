@@ -28,6 +28,14 @@ class VibeRunner {
         this.gridOffset = 0;
         this.difficulty = 1;
         
+        // Geometry Dash inspired mechanics
+        this.gravityDirection = 1; // 1 = normal, -1 = inverted
+        this.gravityPortals = [];
+        this.jumpPads = [];
+        this.speedZones = [];
+        this.pulseTimer = 0;
+        this.beatInterval = 30; // frames per beat for rhythmic obstacles
+        
         // Level scripting / pattern options
         this.levelEndDistance = 10000; // meters
         this.useScripted = true; // default to scripted obstacle patterns
@@ -35,6 +43,11 @@ class VibeRunner {
         this.patternIndex = 0; // which pattern section we're on
         this.patternPhase = 0; // phase counter for path functions
         this.segmentSpacingPx = 120; // base spacing between obstacle columns (px)
+        
+        // Geometry Dash pattern system
+        this.currentPattern = null;
+        this.patternLibrary = this.initPatternLibrary();
+        this.obstacleAnimations = new Map(); // Store animation data for obstacles
         
         // Visual toggles
         this.enableGlow = true; // glow always on
@@ -56,6 +69,72 @@ class VibeRunner {
     initGame() {
         this.createGameModal();
         this.attachEventListeners();
+    }
+    
+    initPatternLibrary() {
+        return {
+            // Geometry Dash inspired patterns
+            'spike_corridor': {
+                name: 'Spike Corridor',
+                difficulty: 1,
+                length: 10,
+                generate: () => this.generateSpikeCorridor()
+            },
+            'saw_gauntlet': {
+                name: 'Saw Gauntlet',
+                difficulty: 2,
+                length: 12,
+                generate: () => this.generateSawGauntlet()
+            },
+            'gravity_flip': {
+                name: 'Gravity Flip Zone',
+                difficulty: 3,
+                length: 15,
+                generate: () => this.generateGravityFlipZone()
+            },
+            'triple_spike': {
+                name: 'Triple Spike Jump',
+                difficulty: 2,
+                length: 8,
+                generate: () => this.generateTripleSpike()
+            },
+            'moving_blocks': {
+                name: 'Moving Block Maze',
+                difficulty: 3,
+                length: 14,
+                generate: () => this.generateMovingBlockMaze()
+            },
+            'rhythm_spikes': {
+                name: 'Rhythm Spikes',
+                difficulty: 2,
+                length: 16,
+                generate: () => this.generateRhythmSpikes()
+            },
+            'saw_wave': {
+                name: 'Saw Wave',
+                difficulty: 4,
+                length: 12,
+                generate: () => this.generateSawWave()
+            },
+            'cube_jump': {
+                name: 'Cube Jump Section',
+                difficulty: 1,
+                length: 10,
+                generate: () => this.generateCubeJumpSection()
+            },
+            'ship_section': {
+                name: 'Ship Flying Section',
+                difficulty: 2,
+                length: 14,
+                generate: () => this.generateShipSection()
+            },
+            'dual_path': {
+                name: 'Dual Path Choice',
+                difficulty: 3,
+                length: 12,
+                generate: () => this.generateDualPath()
+            }
+        };
     }
     
     createGameModal() {
@@ -739,6 +818,7 @@ class VibeRunner {
         
         // Reset path corridor
         this.pathY = this.canvas.height / 2;
+        this.lastCorridorY = this.canvas.height / 2; // Track last corridor position
         
         // Reset scripted generation state
         this.trackOffsetPx = 0;
@@ -779,6 +859,7 @@ class VibeRunner {
     
     update(dt) {
         this.frameCount++;
+        this.pulseTimer++;
         
         // Update distance (use float accumulation, show integer)
         this.distance += this.gameSpeed * 0.2;
@@ -805,14 +886,15 @@ class VibeRunner {
             this.gridOffset = 0;
         }
         
-        // Update player position - 45 degree movement
+        // Update player position with gravity mechanics (Geometry Dash style)
+        const gravityMultiplier = this.gravityDirection;
         if (this.isPressed) {
-            this.player.y -= this.player.speed;
-            this.player.angle = -45;
+            this.player.y -= this.player.speed * gravityMultiplier;
+            this.player.angle = -45 * gravityMultiplier;
             this.player.glow = Math.min(this.player.glow + 0.1, 1);
         } else {
-            this.player.y += this.player.speed * 1.3;
-            this.player.angle = 45;
+            this.player.y += this.player.speed * 1.3 * gravityMultiplier;
+            this.player.angle = 45 * gravityMultiplier;
             this.player.glow = Math.max(this.player.glow - 0.1, 0);
         }
         
@@ -862,10 +944,20 @@ class VibeRunner {
             this.generateNextSection();
         }
         
-        // Update obstacles
+        // Update obstacles with animations
         for (let i = this.obstacles.length - 1; i >= 0; i--) {
             const obstacle = this.obstacles[i];
             obstacle.x -= this.gameSpeed;
+            
+            // Update obstacle-specific animations
+            if (obstacle.type === 'saw') {
+                obstacle.rotation = (obstacle.rotation || 0) + 5;
+            } else if (obstacle.type === 'moving_block') {
+                obstacle.offsetY = Math.sin(this.frameCount * 0.05 + (obstacle.phase || 0)) * 30;
+            } else if (obstacle.type === 'pulsing_spike') {
+                const beatPhase = (this.pulseTimer % this.beatInterval) / this.beatInterval;
+                obstacle.scale = 1 + Math.sin(beatPhase * Math.PI * 2) * 0.2;
+            }
             
             // Remove off-screen obstacles
             if (obstacle.x + obstacle.maxWidth < 0) {
@@ -877,6 +969,52 @@ class VibeRunner {
             if (this.checkCollision(obstacle)) {
                 this.gameOver();
                 return;
+            }
+        }
+        
+        // Update gravity portals
+        for (let i = this.gravityPortals.length - 1; i >= 0; i--) {
+            const portal = this.gravityPortals[i];
+            portal.x -= this.gameSpeed;
+            portal.rotation = (portal.rotation || 0) + 3;
+            
+            // Check if player hits portal
+            const dist = Math.sqrt(
+                Math.pow(this.player.x - portal.x, 2) + 
+                Math.pow(this.player.y - portal.y, 2)
+            );
+            
+            if (dist < 30 && !portal.used) {
+                this.gravityDirection *= -1;
+                portal.used = true;
+                this.createPortalEffect(portal.x, portal.y);
+            }
+            
+            if (portal.x < -50) {
+                this.gravityPortals.splice(i, 1);
+            }
+        }
+        
+        // Update jump pads
+        for (let i = this.jumpPads.length - 1; i >= 0; i--) {
+            const pad = this.jumpPads[i];
+            pad.x -= this.gameSpeed;
+            
+            // Animate jump pad
+            pad.compression = Math.max(0, pad.compression - 0.1);
+            
+            // Check if player hits jump pad
+            if (Math.abs(this.player.x - pad.x) < 30 && 
+                Math.abs(this.player.y - pad.y) < 20 && !pad.used) {
+                // Launch player upward
+                this.player.y -= 80 * this.gravityDirection;
+                pad.compression = 1;
+                pad.used = true;
+                this.createJumpEffect(pad.x, pad.y);
+            }
+            
+            if (pad.x < -50) {
+                this.jumpPads.splice(i, 1);
             }
         }
         
@@ -940,7 +1078,7 @@ class VibeRunner {
         const segmentSpacing = Math.max(90, 160 - this.difficulty * 8);
         
         // Compute safe corridor (continuous passable path)
-        const minGap = Math.max(80, 140 - this.difficulty * 6);
+        const minGap = Math.max(120, 180 - this.difficulty * 5); // Increased minimum gap
         const margin = 24;
         const maxDrift = Math.max(20, 60 - this.difficulty * 5);
         const drift = (Math.random() * 2 - 1) * maxDrift;
@@ -956,6 +1094,25 @@ class VibeRunner {
     }
     
     generateNextSection() {
+        // Use new Geometry Dash pattern system
+        const patternKeys = Object.keys(this.patternLibrary);
+        const availablePatterns = patternKeys.filter(key => {
+            const pattern = this.patternLibrary[key];
+            return pattern.difficulty <= Math.ceil(this.difficulty);
+        });
+        
+        if (availablePatterns.length > 0 && Math.random() < 0.3) { // Reduce frequency of special patterns
+            const patternKey = availablePatterns[Math.floor(Math.random() * availablePatterns.length)];
+            const pattern = this.patternLibrary[patternKey];
+            this.currentPattern = pattern;
+            pattern.generate();
+            
+            const spacing = Math.max(150, 250 - this.difficulty * 10); // More spacing after patterns
+            this.nextObstacleDistance = this.distance + spacing;
+            return;
+        }
+        
+        // Fallback to existing system if no patterns available
         if (!this.useScripted) {
             // Fallback to existing procedural generator
             this.generateProceduralObstacle();
@@ -977,9 +1134,9 @@ class VibeRunner {
         const endGame = this.distance >= 8000;
 
         // Gap tightens and speed of path movement increases with distance
-        const maxAllowedGap = Math.max(60, this.canvas.height - 2 * margin - 40);
-        const startGap = Math.min(maxAllowedGap, Math.floor(this.canvas.height * 0.62));
-        const endGapFloor = Math.max(80, Math.floor(this.canvas.height * 0.22));
+        const maxAllowedGap = Math.max(100, this.canvas.height - 2 * margin - 40);
+        const startGap = Math.min(maxAllowedGap, Math.floor(this.canvas.height * 0.75)); // Increased from 0.62
+        const endGapFloor = Math.max(120, Math.floor(this.canvas.height * 0.35)); // Increased from 0.22
         const endGap = Math.min(maxAllowedGap, endGapFloor);
         const gap = Math.max(endGap, Math.min(maxAllowedGap, Math.floor(startGap - (startGap - endGap) * progress)));
         const amplitude = Math.min(maxAmp, 45 + progress * (maxAmp - 45));
@@ -989,31 +1146,31 @@ class VibeRunner {
         // 0: Ramp Up  1: Ramp Down  2: V-Valley (top wedge)  3: Peak (bottom wedge)
         // 4: Ceiling Teeth  5: Floor Teeth  6: Diamond Lane (slalom)
         const mode = this.patternIndex % 7;
-        const steps = 14 + Math.floor(progress * 12); // 14..26 columns per section
-        const wavelength = 8 + Math.floor(progress * 6);
+        const steps = Math.max(10, 12 + Math.floor(progress * 8)); // Fewer columns per section (10-20)
+        const wavelength = 8 + Math.floor(progress * 4); // Gentler waves
         const centerIndex = Math.floor(steps / 2);
         const baseX = this.trackOffsetPx;
-        const yClamp = (y) => Math.max(margin + gap / 2, Math.min(this.canvas.height - margin - gap / 2, y));
+        const yClamp = (y) => Math.max(margin + gap / 2 + 10, Math.min(this.canvas.height - margin - gap / 2 - 10, y)); // Extra safety margin
 
         // Pre-place large wedges for valley/peak patterns to create dramatic triangles like the references
         let wedgeStartIdx = -1, wedgeEndIdx = -1;
-        if (mode === 2 || mode === 3) {
-            const spanCols = Math.max(5, Math.floor(6 + progress * 4));
+        if ((mode === 2 || mode === 3) && gap > 160) { // Only add wedges if gap is large enough
+            const spanCols = Math.max(4, Math.floor(5 + progress * 3)); // Smaller wedges
             const widthPx = spanCols * this.segmentSpacingPx;
             wedgeStartIdx = Math.max(0, centerIndex - Math.floor(spanCols / 2));
             wedgeEndIdx = Math.min(steps - 1, wedgeStartIdx + spanCols - 1);
             const xStart = baseX + wedgeStartIdx * this.segmentSpacingPx;
-            // Apex position uses the corridor center at the section middle, leaving some breathing room (35% of gap)
-            const yAtCenter = yClamp(halfH); // initial, refined below in loop by yFor but good enough for apex
+            // Apex position uses the corridor center at the section middle, leaving more breathing room
+            const yAtCenter = yClamp(halfH);
             if (mode === 2) {
-                // Top wedge pointing down
-                const apexY = Math.max(margin + 50, yAtCenter - gap * 0.35);
-                const heightFromTop = Math.max(60, Math.min(this.canvas.height - margin, apexY));
+                // Top wedge pointing down - smaller to avoid overlap
+                const apexY = Math.max(margin + 60, yAtCenter - gap * 0.4);
+                const heightFromTop = Math.max(40, Math.min(this.canvas.height * 0.3, apexY));
                 this.createWedgeAt(xStart, widthPx, heightFromTop, 'down');
             } else {
-                // Bottom wedge pointing up
-                const apexYFromBottom = Math.max(margin + 50, this.canvas.height - (yAtCenter + gap * 0.35));
-                const heightFromBottom = Math.max(60, Math.min(this.canvas.height - margin, apexYFromBottom));
+                // Bottom wedge pointing up - smaller to avoid overlap
+                const apexYFromBottom = Math.max(margin + 60, this.canvas.height - (yAtCenter + gap * 0.4));
+                const heightFromBottom = Math.max(40, Math.min(this.canvas.height * 0.3, apexYFromBottom));
                 this.createWedgeAt(xStart, widthPx, heightFromBottom, 'up');
             }
         }
@@ -1031,18 +1188,8 @@ class VibeRunner {
             const skipBottom = (mode === 3 && i >= wedgeStartIdx && i <= wedgeEndIdx);
             this.createDoubleStack(xOffset, { corridorY: y, gap, margin, skipTop, skipBottom });
 
-            // When a large wedge is present, sprinkle a few alternating up/down small spikes inside the gap
-            if ((mode === 2 || mode === 3) && i >= wedgeStartIdx && i <= wedgeEndIdx) {
-                const idx = i - wedgeStartIdx;
-                if (idx % 3 === 1) {
-                    const ori = (idx % 2 === 0) ? 'top' : 'bottom';
-                    const eY = ori === 'top' ? topEdge : bottomEdge;
-                    const sizeAlt = Math.max(10, Math.min(Math.floor(gap * 0.1), 18));
-                    // Place a bit into the corridor so it doesn't touch the wall line
-                    const xInside = xOffset + wallWidth + Math.floor(this.segmentSpacingPx * 0.35);
-                    this.createSpikeAt(xInside, eY, sizeAlt, ori);
-                }
-            }
+            // Skip adding spikes inside the corridor when wedges are present
+            // This was causing impossible passages
 
             // Base sizes
             const baseSpike = Math.min(Math.floor(gap * 0.18), 26) + Math.floor(progress * 6);
@@ -1054,19 +1201,13 @@ class VibeRunner {
                 if (i % 2 === 0 || midGame || lateGame) {
                     this.createSpikeAt(xOffset + wallWidth, topEdge, baseSpike, 'top');
                 }
-                if ((lateGame || endGame) && i % 5 === 2 && gap > 120) {
-                    const size = Math.min(28, Math.floor(gap * 0.16));
-                    this.createDiamondAt(xOffset + Math.floor(this.segmentSpacingPx / 2), y + (Math.random() - 0.5) * gap * 0.25, size);
-                }
+                // Skip diamonds in corridor - they can block passage
             } else if (mode === 1) {
                 // Ramp Down: move corridor downward; punish the floor
                 if (i % 2 === 0 || midGame || lateGame) {
                     this.createSpikeAt(xOffset + wallWidth, bottomEdge, baseSpike, 'bottom');
                 }
-                if ((lateGame || endGame) && i % 5 === 3 && gap > 120) {
-                    const size = Math.min(28, Math.floor(gap * 0.16));
-                    this.createDiamondAt(xOffset + Math.floor(this.segmentSpacingPx / 2), y + (Math.random() - 0.5) * gap * 0.25, size);
-                }
+                // Skip diamonds in corridor - they can block passage
             } else if (mode === 2) {
                 // V-Valley (top wedge already placed). Approach teeth on ceiling before center, floor after
                 if (i < centerIndex) {
@@ -1084,82 +1225,87 @@ class VibeRunner {
             } else if (mode === 4) {
                 // Ceiling teeth corridor (nearly continuous)
                 if (i % 1 === 0) this.createSpikeAt(xOffset + wallWidth, topEdge, smallSpike, 'top');
-                if ((midGame || lateGame) && i % 4 === 1) {
-                    const size = Math.min(26, Math.floor(gap * 0.15));
-                    this.createDiamondAt(xOffset + Math.floor(this.segmentSpacingPx * 0.55), y + (Math.random() - 0.5) * gap * 0.2, size);
-                }
+                // Skip diamonds in corridor - they can block passage
             } else if (mode === 5) {
                 // Floor teeth corridor
                 if (i % 1 === 0) this.createSpikeAt(xOffset + wallWidth, bottomEdge, smallSpike, 'bottom');
-                if ((midGame || lateGame) && i % 4 === 2) {
-                    const size = Math.min(26, Math.floor(gap * 0.15));
-                    this.createDiamondAt(xOffset + Math.floor(this.segmentSpacingPx * 0.55), y + (Math.random() - 0.5) * gap * 0.2, size);
-                }
+                // Skip diamonds in corridor - they can block passage
             } else {
-                // Diamond lane slalom + occasional opposite-side teeth
-                if (i % 3 !== 0) {
-                    const size = Math.min(24 + Math.floor(progress * 6), Math.floor(gap * 0.2));
-                    const offsetY = (i % 2 === 0 ? -1 : 1) * gap * 0.25;
+                // Diamond lane slalom - reduce frequency and ensure they don't block
+                if (i % 5 === 2) { // Less frequent diamonds
+                    const size = Math.min(20 + Math.floor(progress * 4), Math.floor(gap * 0.15)); // Smaller diamonds
+                    const offsetY = (i % 2 === 0 ? -1 : 1) * gap * 0.35; // Push further from center
                     this.createDiamondAt(xOffset + Math.floor(this.segmentSpacingPx / 2), y + offsetY, size);
                 }
-                if ((lateGame || endGame) && i % 4 === 0) {
-                    const orient = i % 8 === 0 ? 'top' : 'bottom';
+                if ((lateGame || endGame) && i % 6 === 0) { // Less frequent spikes
+                    const orient = i % 12 === 0 ? 'top' : 'bottom';
                     const edgeY = orient === 'top' ? topEdge : bottomEdge;
                     this.createSpikeAt(xOffset + wallWidth, edgeY, smallSpike, orient);
                 }
             }
 
-            // Extra brutality for end game
-            if (endGame && i % 6 === 3 && gap > 110) {
-                const b = Math.min(30, Math.floor(gap * 0.16));
-                const fy = y + Math.sin((this.patternPhase + i) * 0.5) * gap * 0.22;
+            // Extra challenge for end game - but ensure it doesn't block passage
+            if (endGame && i % 8 === 4 && gap > 140) { // Less frequent, needs bigger gap
+                const b = Math.min(25, Math.floor(gap * 0.12)); // Smaller blocks
+                const fy = y + Math.sin((this.patternPhase + i) * 0.5) * gap * 0.3; // Push further from center
                 this.createFloatingBlock(xOffset + Math.floor(this.segmentSpacingPx * 0.4), fy, b, b);
             }
         };
 
+        // Track the last corridor Y position for smooth transitions
+        const lastCorridorY = this.lastCorridorY || halfH;
+        
         // Y path per pattern (keeps the corridor style while creating the ramp/valley feel)
         const yFor = (i) => {
             const t = this.patternPhase + i;
+            const blendFactor = Math.min(1, i / 3); // Smooth transition over first 3 columns
+            
+            let targetY;
             if (mode === 0) {
                 // Ramp Up
-                const start = yClamp(halfH + amplitude * 0.5);
-                const end = yClamp(halfH - amplitude * 0.5);
-                return start + (end - start) * (i / Math.max(1, steps - 1));
-            }
-            if (mode === 1) {
+                const start = yClamp(halfH + amplitude * 0.4);
+                const end = yClamp(halfH - amplitude * 0.4);
+                targetY = start + (end - start) * (i / Math.max(1, steps - 1));
+            } else if (mode === 1) {
                 // Ramp Down
-                const start = yClamp(halfH - amplitude * 0.5);
-                const end = yClamp(halfH + amplitude * 0.5);
-                return start + (end - start) * (i / Math.max(1, steps - 1));
-            }
-            if (mode === 2) {
+                const start = yClamp(halfH - amplitude * 0.4);
+                const end = yClamp(halfH + amplitude * 0.4);
+                targetY = start + (end - start) * (i / Math.max(1, steps - 1));
+            } else if (mode === 2) {
                 // V-Valley (lowest at center)
-                const k = (Math.abs(i - centerIndex) / Math.max(1, centerIndex)); // 0 at center .. 1 at ends
-                return yClamp(halfH + (1 - k * 2) * amplitude * 0.8); // center -> +amplitude
-            }
-            if (mode === 3) {
+                const k = (Math.abs(i - centerIndex) / Math.max(1, centerIndex));
+                targetY = yClamp(halfH + (1 - k * 2) * amplitude * 0.6);
+            } else if (mode === 3) {
                 // Peak (highest at center)
                 const k = (Math.abs(i - centerIndex) / Math.max(1, centerIndex));
-                return yClamp(halfH - (1 - k * 2) * amplitude * 0.8); // center -> -amplitude
-            }
-            if (mode === 4) {
+                targetY = yClamp(halfH - (1 - k * 2) * amplitude * 0.6);
+            } else if (mode === 4) {
                 // Mild wave with ceiling teeth
-                return yClamp(halfH + amplitude * 0.35 * Math.sin((2 * Math.PI * t) / wavelength));
-            }
-            if (mode === 5) {
+                targetY = yClamp(halfH + amplitude * 0.3 * Math.sin((2 * Math.PI * t) / wavelength));
+            } else if (mode === 5) {
                 // Mild wave with floor teeth
-                return yClamp(halfH + amplitude * 0.35 * Math.sin((2 * Math.PI * (t + wavelength / 2)) / wavelength));
+                targetY = yClamp(halfH + amplitude * 0.3 * Math.sin((2 * Math.PI * (t + wavelength / 2)) / wavelength));
+            } else {
+                // Diamond lane S-curves
+                const primary = Math.sin((2 * Math.PI * t) / wavelength);
+                const secondary = Math.sin((4 * Math.PI * t) / wavelength) * 0.2;
+                targetY = yClamp(halfH + amplitude * 0.35 * (primary + secondary));
             }
-            // Diamond lane S-curves
-            const primary = Math.sin((2 * Math.PI * t) / wavelength);
-            const secondary = Math.sin((4 * Math.PI * t) / wavelength) * 0.25;
-            return yClamp(halfH + amplitude * 0.45 * (primary + secondary));
+            
+            // Blend from last corridor position to prevent jumps
+            if (i === 0) {
+                return lastCorridorY + (targetY - lastCorridorY) * 0.3; // Gentle transition
+            }
+            return lastCorridorY + (targetY - lastCorridorY) * blendFactor;
         };
 
         // Build the section
         for (let i = 0; i < steps; i++) {
             spawnColumnAt(i, yFor(i));
         }
+        
+        // Remember the last corridor position for smooth transitions
+        this.lastCorridorY = yFor(steps - 1);
 
         // Advance build head and schedule next
         this.trackOffsetPx += steps * this.segmentSpacingPx;
@@ -1167,7 +1313,7 @@ class VibeRunner {
         this.patternIndex++;
         const metersPerPx = 0.2;
         const sectionMeters = steps * this.segmentSpacingPx * metersPerPx;
-        this.nextObstacleDistance = this.distance + Math.max(60, sectionMeters * 0.4);
+        this.nextObstacleDistance = this.distance + Math.max(80, sectionMeters * 0.5); // More spacing between sections
 
         // Check for level completion
         if (this.levelEndDistance && this.distance >= this.levelEndDistance - 1) {
@@ -1183,6 +1329,324 @@ class VibeRunner {
         document.getElementById('final-distance').textContent = Math.floor(Math.max(this.distance, this.levelEndDistance)) + 'm';
         document.getElementById('final-best').textContent = this.highScore + 'm';
         document.getElementById('game-over-screen').style.display = 'block';
+    }
+    
+    // Geometry Dash Pattern Generators
+    generateSpikeCorridor() {
+        const spacing = 80;
+        for (let i = 0; i < 10; i++) {
+            const y = i % 2 === 0 ? 100 : this.canvas.height - 100;
+            this.obstacles.push({
+                x: this.canvas.width + i * spacing,
+                type: 'spike',
+                triangles: [{
+                    type: 'triangle',
+                    x: 0,
+                    y: y,
+                    points: i % 2 === 0 ? 
+                        [{x: 0, y: 0}, {x: 30, y: 0}, {x: 15, y: 30}] : // top spike
+                        [{x: 0, y: 30}, {x: 30, y: 30}, {x: 15, y: 0}]  // bottom spike
+                }],
+                maxWidth: 30
+            });
+        }
+    }
+    
+    generateSawGauntlet() {
+        const spacing = 120;
+        for (let i = 0; i < 8; i++) {
+            const y = this.canvas.height / 2 + Math.sin(i * 0.5) * 100;
+            this.obstacles.push({
+                x: this.canvas.width + i * spacing,
+                type: 'saw',
+                rotation: 0,
+                blocks: [{
+                    x: 0,
+                    y: y - 20,
+                    width: 40,
+                    height: 40
+                }],
+                maxWidth: 40
+            });
+        }
+    }
+    
+    generateGravityFlipZone() {
+        // Add gravity portal
+        this.gravityPortals.push({
+            x: this.canvas.width + 200,
+            y: this.canvas.height / 2,
+            rotation: 0,
+            used: false
+        });
+        
+        // Add obstacles that require gravity flip
+        for (let i = 0; i < 8; i++) {
+            const isTop = i < 4;
+            this.obstacles.push({
+                x: this.canvas.width + 400 + i * 100,
+                type: 'block',
+                blocks: [{
+                    x: 0,
+                    y: isTop ? 0 : this.canvas.height - 150,
+                    width: 50,
+                    height: 150
+                }],
+                maxWidth: 50
+            });
+        }
+    }
+    
+    generateTripleSpike() {
+        const spacing = 60;
+        const baseX = this.canvas.width;
+        const y = this.canvas.height - 50;
+        
+        for (let i = 0; i < 3; i++) {
+            this.obstacles.push({
+                x: baseX + i * spacing,
+                type: 'spike',
+                triangles: [{
+                    type: 'triangle',
+                    x: 0,
+                    y: y,
+                    points: [{x: 0, y: 50}, {x: 50, y: 50}, {x: 25, y: 0}]
+                }],
+                maxWidth: 50
+            });
+        }
+        
+        // Add jump pad before spikes
+        this.jumpPads.push({
+            x: baseX - 100,
+            y: this.canvas.height - 20,
+            compression: 0,
+            used: false
+        });
+    }
+    
+    generateMovingBlockMaze() {
+        const spacing = 150;
+        for (let i = 0; i < 6; i++) {
+            this.obstacles.push({
+                x: this.canvas.width + i * spacing,
+                type: 'moving_block',
+                phase: i * Math.PI / 3,
+                offsetY: 0,
+                blocks: [{
+                    x: 0,
+                    y: this.canvas.height / 2 - 30,
+                    width: 60,
+                    height: 60
+                }],
+                maxWidth: 60
+            });
+        }
+    }
+    
+    generateRhythmSpikes() {
+        const spacing = 60;
+        const pattern = [0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0]; // Rhythm pattern
+        
+        pattern.forEach((beat, i) => {
+            if (beat === 1) {
+                this.obstacles.push({
+                    x: this.canvas.width + i * spacing,
+                    type: 'pulsing_spike',
+                    scale: 1,
+                    triangles: [{
+                        type: 'triangle',
+                        x: 0,
+                        y: this.canvas.height - 40,
+                        points: [{x: 0, y: 40}, {x: 40, y: 40}, {x: 20, y: 0}]
+                    }],
+                    maxWidth: 40
+                });
+            }
+        });
+    }
+    
+    generateSawWave() {
+        const spacing = 100;
+        for (let i = 0; i < 10; i++) {
+            const y = this.canvas.height / 2 + Math.sin(i * 0.8) * 150;
+            this.obstacles.push({
+                x: this.canvas.width + i * spacing,
+                type: 'saw',
+                rotation: 0,
+                triangles: [{
+                    type: 'diamond',
+                    x: 0,
+                    y: y - 25,
+                    points: [
+                        {x: 25, y: 0},
+                        {x: 50, y: 25},
+                        {x: 25, y: 50},
+                        {x: 0, y: 25}
+                    ]
+                }],
+                maxWidth: 50
+            });
+        }
+    }
+    
+    generateCubeJumpSection() {
+        const spacing = 120;
+        for (let i = 0; i < 8; i++) {
+            // Platform blocks
+            this.obstacles.push({
+                x: this.canvas.width + i * spacing,
+                type: 'block',
+                blocks: [{
+                    x: 0,
+                    y: this.canvas.height - 40 - (i % 3) * 60,
+                    width: 80,
+                    height: 20
+                }],
+                maxWidth: 80
+            });
+            
+            // Ceiling spikes
+            if (i % 2 === 0) {
+                this.obstacles.push({
+                    x: this.canvas.width + i * spacing + 40,
+                    type: 'spike',
+                    triangles: [{
+                        type: 'triangle',
+                        x: 0,
+                        y: 0,
+                        points: [{x: 0, y: 0}, {x: 30, y: 0}, {x: 15, y: 30}]
+                    }],
+                    maxWidth: 30
+                });
+            }
+        }
+    }
+    
+    generateShipSection() {
+        // Narrow corridor with moving obstacles
+        const spacing = 100;
+        for (let i = 0; i < 12; i++) {
+            const gapY = this.canvas.height / 2 + Math.sin(i * 0.4) * 60;
+            const gapSize = 200; // Further increased for safety
+            
+            // Only add blocks if they won't completely block the passage
+            const topHeight = Math.max(0, gapY - gapSize / 2);
+            const bottomY = gapY + gapSize / 2;
+            const bottomHeight = Math.max(0, this.canvas.height - bottomY);
+            
+            if (topHeight > 20) {
+                // Top block
+                this.obstacles.push({
+                    x: this.canvas.width + i * spacing,
+                    type: 'block',
+                    blocks: [{
+                        x: 0,
+                        y: 0,
+                        width: 40,
+                        height: topHeight
+                    }],
+                    maxWidth: 40
+                });
+            }
+            
+            if (bottomHeight > 20) {
+                // Bottom block
+                this.obstacles.push({
+                    x: this.canvas.width + i * spacing,
+                    type: 'block',
+                    blocks: [{
+                        x: 0,
+                        y: bottomY,
+                        width: 40,
+                        height: bottomHeight
+                    }],
+                    maxWidth: 40
+                });
+            }
+        }
+    }
+    
+    generateDualPath() {
+        // Create two paths with different obstacles
+        const topPath = this.canvas.height * 0.25;
+        const bottomPath = this.canvas.height * 0.75;
+        const spacing = 100;
+        
+        for (let i = 0; i < 10; i++) {
+            if (i < 5) {
+                // Top path - easier
+                this.obstacles.push({
+                    x: this.canvas.width + i * spacing,
+                    type: 'spike',
+                    triangles: [{
+                        type: 'triangle',
+                        x: 0,
+                        y: topPath + 50,
+                        points: [{x: 0, y: 30}, {x: 30, y: 30}, {x: 15, y: 0}]
+                    }],
+                    maxWidth: 30
+                });
+            } else {
+                // Bottom path - harder
+                this.obstacles.push({
+                    x: this.canvas.width + i * spacing,
+                    type: 'saw',
+                    rotation: 0,
+                    blocks: [{
+                        x: 0,
+                        y: bottomPath - 25,
+                        width: 50,
+                        height: 50
+                    }],
+                    maxWidth: 50
+                });
+            }
+            
+            // Middle barrier
+            this.obstacles.push({
+                x: this.canvas.width + i * spacing,
+                type: 'block',
+                blocks: [{
+                    x: 0,
+                    y: this.canvas.height / 2 - 20,
+                    width: 30,
+                    height: 40
+                }],
+                maxWidth: 30
+            });
+        }
+    }
+    
+    createPortalEffect(x, y) {
+        // Create particle burst effect for portal
+        for (let i = 0; i < 20; i++) {
+            const angle = (Math.PI * 2 * i) / 20;
+            this.particles.push({
+                x: x,
+                y: y,
+                vx: Math.cos(angle) * 5,
+                vy: Math.sin(angle) * 5,
+                size: 4,
+                life: 1.0,
+                color: '#ffff00'
+            });
+        }
+    }
+    
+    createJumpEffect(x, y) {
+        // Create particle burst for jump pad
+        for (let i = 0; i < 10; i++) {
+            this.particles.push({
+                x: x + (Math.random() - 0.5) * 20,
+                y: y,
+                vx: (Math.random() - 0.5) * 3,
+                vy: -Math.random() * 5 - 2,
+                size: 3,
+                life: 1.0,
+                color: '#00ff00'
+            });
+        }
     }
     
     // --- Extra hazard helpers (spikes and diamonds) ---
@@ -1296,8 +1760,8 @@ class VibeRunner {
         let topHeight, bottomHeight;
         if (opts) {
             const halfGap = opts.gap / 2;
-            topHeight = Math.max(20, opts.corridorY - halfGap);
-            bottomHeight = Math.max(20, this.canvas.height - (opts.corridorY + halfGap));
+            topHeight = Math.max(20, opts.corridorY - halfGap - 10); // Added extra spacing
+            bottomHeight = Math.max(20, this.canvas.height - (opts.corridorY + halfGap + 10)); // Added extra spacing
         } else {
             topHeight = 50 + Math.random() * 100;
             bottomHeight = 50 + Math.random() * 100;
@@ -1321,17 +1785,29 @@ class VibeRunner {
     
     createTunnel(xOffset = 0, opts = null) {
         const width = 80;
-        const gap = opts ? opts.gap : Math.max(100, 140 - this.difficulty * 8);
+        const gap = opts ? opts.gap : Math.max(160, 200 - this.difficulty * 6); // Further increased gap
         const centerY = opts ? opts.corridorY : 100 + Math.random() * (this.canvas.height - 200);
         
-        this.obstacles.push({
-            x: this.canvas.width + xOffset,
-            blocks: [
-                { x: 0, y: 0, width, height: centerY - gap / 2 },
-                { x: 0, y: centerY + gap / 2, width, height: this.canvas.height - (centerY + gap / 2) }
-            ],
-            maxWidth: width
-        });
+        // Ensure tunnel doesn't create impossible passages
+        const topHeight = Math.max(0, centerY - gap / 2);
+        const bottomY = centerY + gap / 2;
+        const bottomHeight = Math.max(0, this.canvas.height - bottomY);
+        
+        const blocks = [];
+        if (topHeight > 10) {
+            blocks.push({ x: 0, y: 0, width, height: topHeight });
+        }
+        if (bottomHeight > 10) {
+            blocks.push({ x: 0, y: bottomY, width, height: bottomHeight });
+        }
+        
+        if (blocks.length > 0) {
+            this.obstacles.push({
+                x: this.canvas.width + xOffset,
+                blocks: blocks,
+                maxWidth: width
+            });
+        }
     }
     
     createZigzag(xOffset = 0, opts = null) {
