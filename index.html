@@ -1529,8 +1529,7 @@
             .source-code-terminal {
                 width: 95vw; /* Use more of the viewport width on mobile */
                 max-height: 420px; /* Slightly smaller on mobile */
-                margin-top: 15px;
-                z-index: 999999; /* Maximum z-index for mobile to appear above all content */
+                margin: 15px auto 0; /* Center with top margin, no z-index needed */
             }
             
             .source-code-terminal.active {
@@ -1568,12 +1567,9 @@
             transform: translateY(0);
         }
 
-        /* Source Code Terminal Dropdown */
+        /* Source Code Terminal - Push Content Down Instead of Overlay */
         .source-code-terminal {
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
+            position: relative;
             width: 900px; /* Fixed width */
             max-width: 90vw; /* Responsive on smaller screens */
             max-height: 0;
@@ -1583,9 +1579,8 @@
             transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
                         padding 0.5s cubic-bezier(0.4, 0, 0.2, 1),
                         border-color 0.5s ease;
-            z-index: 999998; /* High z-index to ensure it appears above other content */
             font-family: 'Courier New', Courier, monospace;
-            margin-top: 10px;
+            margin: 10px auto 0; /* Center horizontally with top margin */
             text-align: left; /* Left align all content */
         }
         
@@ -1595,13 +1590,13 @@
             border-color: #666;
         }
         
-        /* Prevent pointer events on page content when terminal is active */
-        body.terminal-active .about,
+        /* Pointer events no longer need to be disabled since terminal pushes content down */
+        /* body.terminal-active .about,
         body.terminal-active .apps,
         body.terminal-active .contact,
         body.terminal-active header {
             pointer-events: none;
-        }
+        } */
         
         .terminal-content {
             color: #ffffff;
@@ -1723,10 +1718,12 @@
             }
         }
         
-        /* Adjust tagline container for dropdown */
+        /* Adjust tagline container to push content down instead of overlay */
         .tagline-container {
-            position: relative;
-            display: inline-block;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
         }
         
         /* Hide scrollbar but keep functionality */
@@ -2766,19 +2763,19 @@
             }, 250); // Debounce delay in milliseconds
         });
 
-        // Parallax Effect on Mouse Move
-        document.addEventListener('mousemove', (e) => {
-            const x = (e.clientX / window.innerWidth - 0.5) * 2;
-            const y = (e.clientY / window.innerHeight - 0.5) * 2;
-            
-            anime({
-                targets: '.hero-content',
-                translateX: x * 10,
-                translateY: y * 10,
-                duration: 1000,
-                easing: 'easeOutQuad'
-            });
-        });
+        // Parallax Effect on Mouse Move - REMOVED per user request
+        // document.addEventListener('mousemove', (e) => {
+        //     const x = (e.clientX / window.innerWidth - 0.5) * 2;
+        //     const y = (e.clientY / window.innerHeight - 0.5) * 2;
+        //     
+        //     anime({
+        //         targets: '.hero-content',
+        //         translateX: x * 10,
+        //         translateY: y * 10,
+        //         duration: 1000,
+        //         easing: 'easeOutQuad'
+        //     });
+        // });
 
         // Add glowing effect to buttons on hover
         document.querySelectorAll('.cta-button, .app-button').forEach(button => {
@@ -3224,7 +3221,6 @@ Email: contact@vibecreai.com`
                 // Open terminal
                 terminalOpen = true;
                 sourceTerminal.classList.add('active');
-                document.body.classList.add('terminal-active'); // Disable pointer events on page content
                 
                 // Clear and populate terminal content with random code snippet
                 terminalContent.innerHTML = '';
@@ -3342,7 +3338,6 @@ Email: contact@vibecreai.com`
             if (terminalOpen) {
                 terminalOpen = false;
                 sourceTerminal.classList.remove('active');
-                document.body.classList.remove('terminal-active'); // Re-enable pointer events on page content
             }
         }
         
