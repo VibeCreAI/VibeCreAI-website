@@ -308,6 +308,12 @@
             justify-content: space-between;
             align-items: center;
         }
+        
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
 
         .logo {
             font-family: 'Born2bSportyFont', monospace;
@@ -409,6 +415,205 @@
 
         .nav-links a:hover::before {
             width: 100%;
+        }
+
+        /* Vibe Switcher Floating Action Button - Minimal Design */
+        .vibe-switcher {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid var(--primary-color);
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 999;
+            backdrop-filter: blur(10px);
+            box-shadow: 
+                0 4px 20px rgba(0, 0, 0, 0.3),
+                0 0 40px rgba(0, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            animation: fabEntrance 0.6s ease-out;
+        }
+        
+        @keyframes fabEntrance {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .vibe-switcher::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: rgba(0, 255, 255, 0.05);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .vibe-switcher:hover {
+            transform: translateY(-3px);
+            border-color: var(--primary-color);
+            box-shadow: 
+                0 6px 30px rgba(0, 0, 0, 0.4),
+                0 0 60px rgba(0, 255, 255, 0.2);
+        }
+
+        .vibe-switcher:hover::before {
+            opacity: 1;
+        }
+
+        .vibe-switcher:active {
+            transform: scale(0.98);
+        }
+
+        .vibe-icon {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            transition: transform 0.3s ease;
+        }
+
+        .vibe-text {
+            display: none; /* Hide text for FAB design */
+        }
+        
+        /* Tooltip for FAB */
+        .vibe-tooltip {
+            position: absolute;
+            bottom: 70px;
+            right: 0;
+            background: rgba(0, 0, 0, 0.95);
+            color: var(--primary-color);
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transform: translateY(5px);
+            transition: all 0.2s ease;
+            border: 1px solid rgba(0, 255, 255, 0.2);
+        }
+        
+        .vibe-switcher:hover .vibe-tooltip {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+        
+        /* Pulse animation for attention */
+        @keyframes fabPulse {
+            0%, 100% {
+                box-shadow: 
+                    0 4px 12px rgba(0, 255, 255, 0.3),
+                    0 2px 4px rgba(0, 0, 0, 0.2),
+                    0 0 0 0 rgba(0, 255, 255, 0.4);
+            }
+            50% {
+                box-shadow: 
+                    0 4px 12px rgba(0, 255, 255, 0.3),
+                    0 2px 4px rgba(0, 0, 0, 0.2),
+                    0 0 0 15px rgba(0, 255, 255, 0);
+            }
+        }
+        
+        .vibe-switcher.pulse {
+            animation: fabPulse 2s ease-out infinite;
+        }
+
+        @keyframes rainbow-pulse {
+            0%, 100% {
+                filter: hue-rotate(0deg) brightness(1);
+            }
+            25% {
+                filter: hue-rotate(90deg) brightness(1.1);
+            }
+            50% {
+                filter: hue-rotate(180deg) brightness(1.2);
+            }
+            75% {
+                filter: hue-rotate(270deg) brightness(1.1);
+            }
+        }
+
+        /* Theme Classes */
+        /* Default theme - already defined by existing CSS variables */
+
+        /* Synthwave Theme */
+        .theme-synthwave {
+            --primary-color: #ff00ff;
+            --secondary-color: #00ffff;
+            --accent-color: #ff6b6b;
+            --dark-bg: #1a0d26;
+            --text-color: #ffffff;
+            --neon-glow: 
+                0 0 10px rgba(255, 0, 255, 0.8),
+                0 0 20px rgba(255, 0, 255, 0.6),
+                0 0 30px rgba(255, 105, 180, 0.4);
+        }
+
+        .theme-synthwave body {
+            background: linear-gradient(135deg, #1a0d26 0%, #2d1b3d 50%, #1a0d26 100%);
+        }
+
+        /* Matrix Theme */
+        .theme-matrix {
+            --primary-color: #00ff41;
+            --secondary-color: #39ff14;
+            --accent-color: #00cc33;
+            --dark-bg: #000000;
+            --text-color: #00ff41;
+            --neon-glow: 
+                0 0 10px rgba(0, 255, 65, 0.8),
+                0 0 20px rgba(0, 255, 65, 0.6),
+                0 0 30px rgba(0, 204, 51, 0.4);
+        }
+
+        .theme-matrix body {
+            background: #000000;
+            color: #00ff41;
+        }
+
+        .theme-matrix .matrix-rain {
+            opacity: 0.4;
+        }
+
+        /* Ghost Theme */
+        .theme-ghost {
+            --primary-color: #b8b8ff;
+            --secondary-color: #e6e6fa;
+            --accent-color: #9370db;
+            --dark-bg: #1e1e2e;
+            --text-color: #e0e0e0;
+            --neon-glow: 
+                0 0 10px rgba(184, 184, 255, 0.8),
+                0 0 20px rgba(184, 184, 255, 0.6),
+                0 0 30px rgba(147, 112, 219, 0.4);
+        }
+
+        .theme-ghost body {
+            background: linear-gradient(135deg, #1e1e2e 0%, #2d2d3f 50%, #1e1e2e 100%);
+        }
+
+        .theme-ghost .matrix-rain {
+            opacity: 0.05;
         }
 
         /* Hero Section */
@@ -593,6 +798,31 @@
             align-items: center;
             justify-content: center;
             text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .tagline:hover {
+            text-shadow: 0 0 20px rgba(0, 255, 255, 0.8);
+            transform: scale(1.02);
+        }
+        
+        .tagline::after {
+            content: '< / >';
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.7rem;
+            opacity: 0;
+            color: rgba(0, 255, 255, 0.5);
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+        
+        .tagline:hover::after {
+            opacity: 1;
         }
 
         .tagline .dud {
@@ -1286,6 +1516,16 @@
                 justify-content: center;
                 font-size: 1rem; /* Slightly smaller on mobile */
             }
+            
+            .vibe-switcher {
+                margin-right: 10px;
+            }
+            
+            .vibe-text {
+                display: none;
+            }
+            
+            /* Keep vibe-icon font size consistent - removed font-size override */
         }
 
         /* Scroll animations */
@@ -1299,6 +1539,108 @@
             transform: translateY(0);
         }
 
+        /* Source Code Terminal Dropdown */
+        .source-code-terminal {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 900px; /* Fixed width */
+            max-width: 90vw; /* Responsive on smaller screens */
+            max-height: 0;
+            overflow: hidden;
+            background: #000000;
+            border: 1px solid #333;
+            transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
+                        padding 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                        border-color 0.5s ease;
+            z-index: 100;
+            font-family: 'Courier New', Courier, monospace;
+            margin-top: 10px;
+            text-align: left; /* Left align all content */
+        }
+        
+        .source-code-terminal.active {
+            max-height: 480px; /* Increased height to ensure cursor visibility */
+            padding: 20px;
+            border-color: #666;
+        }
+        
+        .terminal-content {
+            color: #ffffff;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            overflow: hidden; /* No scrolling */
+            text-align: left;
+            white-space: pre-wrap; /* Preserve formatting but wrap long lines */
+            word-wrap: break-word;
+        }
+        
+        .terminal-line {
+            margin: 0;
+            padding: 1px 0;
+            opacity: 0;
+            animation: terminalFadeIn 0.3s ease-out forwards;
+            text-align: left;
+        }
+        
+        @keyframes terminalFadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+        
+        .terminal-line:nth-child(1) { animation-delay: 0.1s; }
+        .terminal-line:nth-child(2) { animation-delay: 0.2s; }
+        .terminal-line:nth-child(3) { animation-delay: 0.3s; }
+        .terminal-line:nth-child(4) { animation-delay: 0.4s; }
+        .terminal-line:nth-child(5) { animation-delay: 0.5s; }
+        .terminal-line:nth-child(6) { animation-delay: 0.6s; }
+        .terminal-line:nth-child(7) { animation-delay: 0.7s; }
+        .terminal-line:nth-child(8) { animation-delay: 0.8s; }
+        .terminal-line:nth-child(9) { animation-delay: 0.9s; }
+        .terminal-line:nth-child(10) { animation-delay: 1.0s; }
+        
+        .terminal-prompt {
+            color: #999;
+        }
+        
+        .terminal-cursor {
+            display: inline-block;
+            width: 8px;
+            height: 14px;
+            background: #ffffff;
+            animation: blink 1s infinite;
+            margin-left: 2px;
+            vertical-align: text-bottom;
+        }
+        
+        @keyframes blink {
+            0%, 49% { opacity: 1; }
+            50%, 100% { opacity: 0; }
+        }
+        
+        .terminal-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #666;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: color 0.3s ease;
+            z-index: 10;
+        }
+        
+        .terminal-close:hover {
+            color: #fff;
+        }
+        
+        /* Adjust tagline container for dropdown */
+        .tagline-container {
+            position: relative;
+            display: inline-block;
+        }
+        
         /* Hide scrollbar but keep functionality */
         ::-webkit-scrollbar {
             width: 5px;
@@ -1365,6 +1707,7 @@
                 <span class="logo-small">RE</span>
                 <span class="logo-ai">AI</span>
             </a>
+            
             <button class="menu-toggle" id="menu-toggle">
                 <span></span>
                 <span></span>
@@ -1388,7 +1731,13 @@
                 </span>
             </h1>
 <p class="hero-subtitle" id="hero-subtitle"></p>
-            <div class="tagline" id="tagline"></div>
+            <div class="tagline-container">
+                <div class="tagline" id="tagline"></div>
+                <div class="source-code-terminal" id="source-code-terminal">
+                    <span class="terminal-close" id="close-terminal">×</span>
+                    <div class="terminal-content" id="terminal-content"></div>
+                </div>
+            </div>
             <div class="cta-container">
                 <a href="#about" class="cta-button">ABOUT</a>
                 <a href="#apps" class="cta-button secondary">PROJECTS</a>
@@ -1498,6 +1847,91 @@
     <footer>
         <p>© <span id="year"></span> VIBECREAI - CREATING THE FUTURE WITH AI</p>
     </footer>
+    
+    <!-- Source Code Reveal Panel -->
+    <div class="source-code-panel" id="source-code-panel">
+        <div class="source-code-header">
+            <h2 class="source-code-title">{'<'} SOURCE CODE {'>'}</h2>
+            <button class="source-code-close" id="close-source-code">CLOSE</button>
+        </div>
+        <div class="source-code-content">
+            <div class="code-section">
+                <h3>// ABOUT THIS PROJECT</h3>
+                <div class="code-block">
+                    <pre><span class="code-comment">/*
+ * VibeCreAI Website
+ * Built with: HTML5, CSS3, JavaScript, Anime.js
+ * Created by: Samson (with AI assistance)
+ * 
+ * This website is a testament to what's possible when
+ * creativity meets AI collaboration. Every line of code
+ * was written through the partnership between human
+ * imagination and artificial intelligence.
+ */</span></pre>
+                </div>
+            </div>
+            
+            <div class="code-section">
+                <h3>// TECH STACK</h3>
+                <div class="code-block">
+                    <button class="copy-code-btn" onclick="copyCode(this)">COPY</button>
+                    <pre><span class="code-keyword">const</span> <span class="code-function">techStack</span> = {
+    <span class="code-string">"frontend"</span>: [<span class="code-string">"HTML5"</span>, <span class="code-string">"CSS3"</span>, <span class="code-string">"JavaScript"</span>],
+    <span class="code-string">"animations"</span>: <span class="code-string">"Anime.js"</span>,
+    <span class="code-string">"effects"</span>: [
+        <span class="code-string">"Neural Network Canvas"</span>,
+        <span class="code-string">"Matrix Rain Effect"</span>,
+        <span class="code-string">"Particle System"</span>,
+        <span class="code-string">"Custom Cursor"</span>
+    ],
+    <span class="code-string">"ai_tools"</span>: [<span class="code-string">"Claude"</span>, <span class="code-string">"Cursor IDE"</span>],
+    <span class="code-string">"deployment"</span>: <span class="code-string">"GitHub Pages"</span>
+};</pre>
+                </div>
+            </div>
+            
+            <div class="code-section">
+                <h3>// THE VIBE CODE</h3>
+                <div class="code-block">
+                    <button class="copy-code-btn" onclick="copyCode(this)">COPY</button>
+                    <pre><span class="code-keyword">function</span> <span class="code-function">createWithVibes</span>() {
+    <span class="code-keyword">const</span> passion = <span class="code-string">"unlimited"</span>;
+    <span class="code-keyword">const</span> codingSkills = <span class="code-string">"learning"</span>;
+    <span class="code-keyword">const</span> aiAssistance = <span class="code-keyword">true</span>;
+    
+    <span class="code-keyword">if</span> (passion === <span class="code-string">"unlimited"</span> && aiAssistance) {
+        <span class="code-keyword">return</span> <span class="code-string">"Amazing things are possible!"</span>;
+    }
+}
+
+<span class="code-comment">// Remember: You don't need to be a coding expert
+// to build something amazing. You just need ideas,
+// determination, and the right AI partner!</span></pre>
+                </div>
+            </div>
+            
+            <div class="code-section">
+                <h3>// GET THE SOURCE</h3>
+                <div class="code-block">
+                    <pre><span class="code-comment">// This website is open source!</span>
+<span class="code-comment">// Feel free to explore, learn, and create your own version.</span>
+
+<span class="code-keyword">GitHub Repository:</span>
+<span class="code-string">https://github.com/YourUsername/VibeCreAI-Website</span>
+
+<span class="code-comment">// Want to collaborate or have questions?</span>
+<span class="code-keyword">Email:</span> <span class="code-string">contact@vibecreai.com</span></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Vibe Switcher Floating Action Button -->
+    <button class="vibe-switcher" id="vibe-switcher" aria-label="Switch Vibe Theme">
+        <span class="vibe-icon">VIBE</span>
+        <span class="vibe-text"></span>
+        <span class="vibe-tooltip">Switch Vibe Theme</span>
+    </button>
 
     <!-- Anime.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
@@ -1840,6 +2274,7 @@
                 "Solo developer + AI agents = ∞",
                 "Creating innovative digital experiences",
                 "Vibe coding in progress...",
+                "Find a hidden easter egg 'Vibe Runner'...",
                 "Where creativity meets artificial intelligence"
             ];
             
@@ -2352,6 +2787,496 @@
                     easing: 'easeOutExpo'
                 });
             });
+        });
+
+        // Vibe Switcher Theme Functionality
+        const vibeSwitcher = document.getElementById('vibe-switcher');
+        const vibeIcon = vibeSwitcher.querySelector('.vibe-icon');
+        const vibeText = vibeSwitcher.querySelector('.vibe-text');
+        
+        const themes = [
+            {
+                name: 'default',
+                class: '',
+                text: 'VIBE',
+                description: 'Default'
+            },
+            {
+                name: 'synthwave',
+                class: 'theme-synthwave',
+                text: 'SYNTH',
+                description: 'Synthwave'
+            },
+            {
+                name: 'matrix',
+                class: 'theme-matrix',
+                text: 'MTRX',
+                description: 'Matrix'
+            },
+            {
+                name: 'ghost',
+                class: 'theme-ghost',
+                text: 'GHST',
+                description: 'Ghost'
+            }
+        ];
+        
+        let currentThemeIndex = 0; // Always start with default theme
+        
+        // Apply theme function
+        function applyTheme(themeIndex, animate = false) {
+            const theme = themes[themeIndex];
+            
+            // Remove all theme classes
+            themes.forEach(t => {
+                if (t.class) {
+                    document.body.classList.remove(t.class);
+                }
+            });
+            
+            // Apply new theme class
+            if (theme.class) {
+                document.body.classList.add(theme.class);
+            }
+            
+            // Update button appearance with animation
+            if (animate) {
+                anime({
+                    targets: vibeIcon,
+                    scale: [1, 0, 1],
+                    duration: 400,
+                    easing: 'easeInOutQuad',
+                    complete: () => {
+                        vibeIcon.textContent = theme.text;
+                    }
+                });
+            } else {
+                vibeIcon.textContent = theme.text;
+            }
+            
+            // Don't save theme to localStorage - always start fresh
+            // localStorage.setItem('vibeTheme', theme.name);
+            
+            // Show theme change notification with anime.js
+            showThemeNotification(theme.description);
+        }
+        
+        // Show theme change notification
+        function showThemeNotification(themeName) {
+            // Remove existing notification if any
+            const existingNotification = document.querySelector('.theme-notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+            
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = 'theme-notification';
+            notification.textContent = `${themeName} Theme Active`;
+            notification.style.cssText = `
+                position: fixed;
+                top: 100px;
+                right: 20px;
+                background: rgba(0, 0, 0, 0.9);
+                color: var(--primary-color);
+                padding: 12px 20px;
+                border: 1px solid var(--primary-color);
+                border-radius: 25px;
+                font-size: 0.9rem;
+                font-weight: bold;
+                letter-spacing: 0.1em;
+                z-index: 10000;
+                pointer-events: none;
+                backdrop-filter: blur(10px);
+                box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+                opacity: 0;
+                transform: translateX(100px) scale(0.8);
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Animate notification in
+            anime({
+                targets: notification,
+                opacity: [0, 1],
+                translateX: [100, 0],
+                scale: [0.8, 1],
+                duration: 400,
+                easing: 'easeOutBack',
+                complete: () => {
+                    // Auto-hide after 2 seconds
+                    setTimeout(() => {
+                        anime({
+                            targets: notification,
+                            opacity: [1, 0],
+                            translateX: [0, 100],
+                            scale: [1, 0.8],
+                            duration: 300,
+                            easing: 'easeInBack',
+                            complete: () => {
+                                notification.remove();
+                            }
+                        });
+                    }, 2000);
+                }
+            });
+        }
+        
+        // Apply initial theme
+        applyTheme(currentThemeIndex, false);
+        
+        // Vibe Switcher click handler
+        vibeSwitcher.addEventListener('click', (e) => {
+            e.preventDefault();
+            
+            // Cycle to next theme
+            currentThemeIndex = (currentThemeIndex + 1) % themes.length;
+            applyTheme(currentThemeIndex, true);
+            
+            // Button click animation
+            anime({
+                targets: vibeSwitcher,
+                scale: [1, 0.95, 1],
+                duration: 200,
+                easing: 'easeOutQuad'
+            });
+        });
+        
+        // Add hover effect for vibe switcher
+        vibeSwitcher.addEventListener('mouseenter', () => {
+            anime({
+                targets: vibeIcon,
+                scale: [1, 1.05],
+                duration: 200,
+                easing: 'easeOutQuad'
+            });
+        });
+        
+        vibeSwitcher.addEventListener('mouseleave', () => {
+            anime({
+                targets: vibeIcon,
+                scale: [1.05, 1],
+                duration: 200,
+                easing: 'easeOutQuad'
+            });
+        });
+        
+        // Source Code Terminal Dropdown Functionality
+        const tagline = document.getElementById('tagline');
+        const sourceTerminal = document.getElementById('source-code-terminal');
+        const terminalContent = document.getElementById('terminal-content');
+        const closeTerminal = document.getElementById('close-terminal');
+        let terminalOpen = false;
+        
+        // Actual code snippets from this website
+        const codeSnippets = [
+            // Neural Network Animation
+            `// Neural Network Background Animation
+function initNeuralNetwork() {
+    const canvas = document.getElementById('neural-network');
+    const ctx = canvas.getContext('2d');
+    
+    const nodes = [];
+    for (let i = 0; i < finalNodeCount; i++) {
+        nodes.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            vx: (Math.random() - 0.5) * 0.3,
+            vy: (Math.random() - 0.5) * 0.3,
+            radius: Math.random() * 2 + 0.5,
+            pulseOffset: Math.random() * Math.PI * 2
+        });
+    }
+}`,
+            // Text Scramble Effect
+            `// Text Scramble Animation Class
+class TextScramble {
+    constructor(el) {
+        this.el = el;
+        this.chars = '!<>-_\\/[]{}—=+*^?#________';
+        this.update = this.update.bind(this);
+    }
+    
+    setText(newText) {
+        const oldText = this.el.innerText;
+        const length = Math.max(oldText.length, newText.length);
+        const promise = new Promise((resolve) => this.resolve = resolve);
+        this.queue = [];
+        for (let i = 0; i < length; i++) {
+            const from = oldText[i] || '';
+            const to = newText[i] || '';
+            const start = Math.floor(Math.random() * 40);
+            const end = start + Math.floor(Math.random() * 40);
+            this.queue.push({ from, to, start, end });
+        }
+    }
+}`,
+            // Particle System
+            `// Particle System Generator
+function createParticles() {
+    const colors = ['#00ffff', '#2bb4db', '#ff00ff'];
+    
+    setInterval(() => {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.left = Math.random() * window.innerWidth + 'px';
+        particle.style.top = Math.random() * window.innerHeight + 'px';
+        particle.style.width = particle.style.height = Math.random() * 5 + 2 + 'px';
+        particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+        particle.style.borderRadius = '50%';
+        particle.style.boxShadow = \`0 0 10px \${particle.style.background}\`;
+        document.body.appendChild(particle);
+        
+        anime({
+            targets: particle,
+            translateX: (Math.random() - 0.5) * 200,
+            translateY: (Math.random() - 0.5) * 200,
+            scale: [0, 1, 0],
+            opacity: [0, 1, 0],
+            duration: 3000,
+            easing: 'easeOutExpo',
+            complete: () => particle.remove()
+        });
+    }, 300);
+}`,
+            // Matrix Rain Effect
+            `// Matrix Rain Effect
+function initMatrixRain() {
+    const canvas = document.getElementById('matrix');
+    const ctx = canvas.getContext('2d');
+    
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()';
+    const fontSize = 14;
+    let columns = Math.floor(canvas.width / fontSize);
+    let drops = [];
+    
+    function draw() {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.fillStyle = '#00ffff';
+        ctx.font = fontSize + 'px monospace';
+        
+        for (let i = 0; i < drops.length; i++) {
+            const text = characters.charAt(Math.floor(Math.random() * characters.length));
+            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+            
+            if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                drops[i] = 0;
+            }
+            drops[i]++;
+        }
+    }
+}`,
+            // Theme Switcher
+            `// Vibe Theme Switcher Configuration
+const themes = [
+    {
+        name: 'default',
+        class: '',
+        text: 'VIBE',
+        description: 'Default'
+    },
+    {
+        name: 'synthwave',
+        class: 'theme-synthwave',
+        text: 'SYNTH',
+        description: 'Synthwave'
+    },
+    {
+        name: 'matrix',
+        class: 'theme-matrix',
+        text: 'MTRX',
+        description: 'Matrix'
+    },
+    {
+        name: 'ghost',
+        class: 'theme-ghost',
+        text: 'GHST',
+        description: 'Ghost'
+    }
+];`,
+            // Logo Typewriter
+            `// Logo Typing Animation
+class LogoTypewriter {
+    constructor(container) {
+        this.container = container;
+        this.logoText = "VIBECREAI";
+        this.logoStructure = [
+            { text: "V", class: "title-v" },
+            { text: "IBE", class: "title-small" },
+            { text: "C", class: "title-c" },
+            { text: "RE", class: "title-small" },
+            { text: "AI", class: "title-ai" }
+        ];
+        this.currentIndex = 0;
+        this.currentStructureIndex = 0;
+        this.currentCharInStructure = 0;
+    }
+    
+    type() {
+        return new Promise((resolve) => {
+            const typeChar = () => {
+                if (this.currentStructureIndex >= this.logoStructure.length) {
+                    resolve();
+                    return;
+                }
+                // ... typing logic
+            };
+            typeChar();
+        });
+    }
+}`,
+            // Custom Cursor
+            `// Custom Cursor Animation
+if (!isMobileDevice()) {
+    document.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+        
+        // Update cursor immediately with transform for better performance
+        cursor.style.transform = \`translate(\${mouseX - 10}px, \${mouseY - 10}px)\`;
+    });
+    
+    // Smooth follower animation using RAF
+    function animateFollower() {
+        const dx = mouseX - followerX;
+        const dy = mouseY - followerY;
+        
+        followerX += dx * 0.1;
+        followerY += dy * 0.1;
+        
+        cursorFollower.style.transform = \`translate(\${followerX - 20}px, \${followerY - 20}px)\`;
+        
+        requestAnimationFrame(animateFollower);
+    }
+    
+    animateFollower();
+}`,
+            // Glitch Effect
+            `// Glitch Animation Keyframes
+@keyframes glitch-1 {
+    0%, 100% {
+        clip-path: inset(0 0 0 0);
+        transform: translate(0);
+    }
+    20% {
+        clip-path: inset(20% 0 30% 0);
+        transform: translate(-2px, 2px);
+    }
+    40% {
+        clip-path: inset(50% 0 20% 0);
+        transform: translate(2px, -2px);
+    }
+    60% {
+        clip-path: inset(10% 0 60% 0);
+        transform: translate(-2px, 1px);
+    }
+    80% {
+        clip-path: inset(70% 0 10% 0);
+        transform: translate(2px, -1px);
+    }
+}`
+        ];
+        
+        // Function to get random code snippet
+        function getRandomCodeSnippet() {
+            const randomIndex = Math.floor(Math.random() * codeSnippets.length);
+            return codeSnippets[randomIndex];
+        }
+        
+        // Tagline click handler
+        tagline.addEventListener('click', (e) => {
+            e.preventDefault();
+            
+            if (!terminalOpen) {
+                // Open terminal
+                terminalOpen = true;
+                sourceTerminal.classList.add('active');
+                
+                // Clear and populate terminal content with random code snippet
+                terminalContent.innerHTML = '';
+                
+                // Add terminal prompt
+                const promptLine = document.createElement('div');
+                promptLine.className = 'terminal-line';
+                promptLine.innerHTML = '<span class="terminal-prompt">$</span> cat source_code.js';
+                promptLine.style.animationDelay = '0s';
+                terminalContent.appendChild(promptLine);
+                
+                // Add empty line
+                const emptyLine = document.createElement('div');
+                emptyLine.className = 'terminal-line';
+                emptyLine.innerHTML = '&nbsp;';
+                emptyLine.style.animationDelay = '0.05s';
+                terminalContent.appendChild(emptyLine);
+                
+                // Get random code snippet and split into lines
+                const codeSnippet = getRandomCodeSnippet();
+                const lines = codeSnippet.split('\n');
+                
+                // Display up to 14 lines of code (leaving room for prompt, empty line, spacer, and cursor)
+                const maxLines = Math.min(lines.length, 14);
+                lines.slice(0, maxLines).forEach((line, index) => {
+                    const lineElement = document.createElement('div');
+                    lineElement.className = 'terminal-line';
+                    // Escape HTML and preserve spaces
+                    lineElement.textContent = line;
+                    lineElement.style.animationDelay = `${(index + 2) * 0.03}s`;
+                    terminalContent.appendChild(lineElement);
+                });
+                
+                // Add empty line before cursor for better visibility
+                const spacerLine = document.createElement('div');
+                spacerLine.className = 'terminal-line';
+                spacerLine.innerHTML = '&nbsp;';
+                spacerLine.style.animationDelay = `${(maxLines + 2) * 0.03}s`;
+                terminalContent.appendChild(spacerLine);
+                
+                // Add cursor at the end
+                const cursorLine = document.createElement('div');
+                cursorLine.className = 'terminal-line';
+                cursorLine.innerHTML = '<span class="terminal-prompt">$</span> <span class="terminal-cursor"></span>';
+                cursorLine.style.animationDelay = `${(maxLines + 3) * 0.03}s`;
+                terminalContent.appendChild(cursorLine);
+                
+                // Animate tagline click feedback
+                anime({
+                    targets: tagline,
+                    scale: [1, 0.98, 1],
+                    duration: 300,
+                    easing: 'easeOutQuad'
+                });
+            } else {
+                // Close terminal
+                closeTerminalFunction();
+            }
+        });
+        
+        // Close terminal function
+        function closeTerminalFunction() {
+            if (terminalOpen) {
+                terminalOpen = false;
+                sourceTerminal.classList.remove('active');
+            }
+        }
+        
+        // Close button handler
+        closeTerminal.addEventListener('click', (e) => {
+            e.stopPropagation();
+            closeTerminalFunction();
+        });
+        
+        // Close terminal on ESC key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && terminalOpen) {
+                closeTerminalFunction();
+            }
+        });
+        
+        // Prevent terminal content click from closing
+        sourceTerminal.addEventListener('click', (e) => {
+            e.stopPropagation();
         });
     </script>
 </body>
