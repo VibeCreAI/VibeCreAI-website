@@ -1525,6 +1525,24 @@
                 display: none;
             }
             
+            /* Terminal mobile improvements */
+            .source-code-terminal {
+                width: 95vw; /* Use more of the viewport width on mobile */
+                max-height: 420px; /* Slightly smaller on mobile */
+                margin-top: 15px;
+                z-index: 10000; /* Even higher z-index for mobile */
+            }
+            
+            .source-code-terminal.active {
+                max-height: 420px; /* Match the max-height above */
+                padding: 15px;
+            }
+            
+            .terminal-content {
+                font-size: 0.8rem; /* Slightly smaller text on mobile */
+                line-height: 1.3;
+            }
+            
             /* Keep vibe-icon font size consistent - removed font-size override */
         }
 
@@ -1554,7 +1572,7 @@
             transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
                         padding 0.5s cubic-bezier(0.4, 0, 0.2, 1),
                         border-color 0.5s ease;
-            z-index: 100;
+            z-index: 9999; /* Increased z-index to ensure it appears above other content */
             font-family: 'Courier New', Courier, monospace;
             margin-top: 10px;
             text-align: left; /* Left align all content */
@@ -1615,6 +1633,46 @@
             vertical-align: text-bottom;
         }
         
+        .terminal-next-command {
+            display: inline-block;
+            color: #00ffff;
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            padding: 2px 8px;
+            border-radius: 3px;
+            margin-left: 5px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: all 0.3s ease;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+        }
+        
+        .terminal-next-command:hover {
+            background: rgba(0, 255, 255, 0.2);
+            border-color: rgba(0, 255, 255, 0.6);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+        
+        .terminal-next-command:active {
+            transform: scale(0.95);
+        }
+        
+        @media (max-width: 768px) {
+            .terminal-next-command {
+                font-size: 0.7rem;
+                padding: 3px 10px;
+                margin-left: 8px;
+                /* Better touch target */
+                min-height: 24px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+        }
+        
         @keyframes blink {
             0%, 49% { opacity: 1; }
             50%, 100% { opacity: 0; }
@@ -1633,6 +1691,31 @@
         
         .terminal-close:hover {
             color: #fff;
+        }
+        
+        .terminal-hint {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #666;
+            font-size: 0.6rem;
+            opacity: 0.7;
+            font-family: 'Courier New', Courier, monospace;
+            pointer-events: none;
+            animation: terminalHintFade 3s ease-out;
+        }
+        
+        @keyframes terminalHintFade {
+            0%, 70% { opacity: 0.7; }
+            100% { opacity: 0; }
+        }
+        
+        @media (max-width: 768px) {
+            .terminal-hint {
+                font-size: 0.55rem;
+                top: 8px;
+            }
         }
         
         /* Adjust tagline container for dropdown */
@@ -1735,6 +1818,7 @@
                 <div class="tagline" id="tagline"></div>
                 <div class="source-code-terminal" id="source-code-terminal">
                     <span class="terminal-close" id="close-terminal">×</span>
+                    <div class="terminal-hint" id="terminal-hint">Type '/next' or click the button to navigate</div>
                     <div class="terminal-content" id="terminal-content"></div>
                 </div>
             </div>
@@ -2963,6 +3047,116 @@ Email: contact@vibecreai.com`
             return content;
         }
         
+        // Function to go to next section via /next command
+        function goToNextSection() {
+            if (!terminalOpen) return;
+            
+            // Animate the /next button click
+            const nextBtn = document.getElementById('terminal-next-btn');
+            if (nextBtn) {
+                anime({
+                    targets: nextBtn,
+                    scale: [1, 0.9, 1],
+                    duration: 200,
+                    easing: 'easeOutQuad'
+                });
+            }
+            
+            // Clear current terminal content
+            terminalContent.innerHTML = '';
+            
+            // Get next progressive content
+            const contentData = getProgressiveContent();
+            
+            // Add terminal prompt with dynamic filename
+            const promptLine = document.createElement('div');
+            promptLine.className = 'terminal-line';
+            promptLine.innerHTML = `<span class="terminal-prompt">$</span> ${contentData.prompt}`;
+            promptLine.style.animationDelay = '0s';
+            terminalContent.appendChild(promptLine);
+            
+            // Add empty line
+            const emptyLine = document.createElement('div');
+            emptyLine.className = 'terminal-line';
+            emptyLine.innerHTML = '&nbsp;';
+            emptyLine.style.animationDelay = '0.05s';
+            terminalContent.appendChild(emptyLine);
+            
+            // Add section indicator
+            const sectionIndicator = document.createElement('div');
+            sectionIndicator.className = 'terminal-line';
+            sectionIndicator.innerHTML = `<span style="color: #666;"># ${contentData.title} (${currentContentIndex}/${storyContent.length})</span>`;
+            sectionIndicator.style.animationDelay = '0.1s';
+            terminalContent.appendChild(sectionIndicator);
+            
+            // Add another empty line
+            const emptyLine2 = document.createElement('div');
+            emptyLine2.className = 'terminal-line';
+            emptyLine2.innerHTML = '&nbsp;';
+            emptyLine2.style.animationDelay = '0.15s';
+            terminalContent.appendChild(emptyLine2);
+            
+            // Split content into lines
+            const lines = contentData.content.split('\n');
+            
+            // Display up to 12 lines of code (leaving room for prompt, empty line, section indicator, spacer, and cursor)
+            const maxLines = Math.min(lines.length, 12);
+            lines.slice(0, maxLines).forEach((line, index) => {
+                const lineElement = document.createElement('div');
+                lineElement.className = 'terminal-line';
+                // Escape HTML and preserve spaces
+                lineElement.textContent = line;
+                lineElement.style.animationDelay = `${0.2 + (index * 0.03)}s`;
+                terminalContent.appendChild(lineElement);
+            });
+            
+            // Add empty line before cursor for better visibility
+            const spacerLine = document.createElement('div');
+            spacerLine.className = 'terminal-line';
+            spacerLine.innerHTML = '&nbsp;';
+            spacerLine.style.animationDelay = `${0.2 + (maxLines * 0.03)}s`;
+            terminalContent.appendChild(spacerLine);
+            
+            // Add cursor at the end with /next command
+            const cursorLine = document.createElement('div');
+            cursorLine.className = 'terminal-line';
+            cursorLine.innerHTML = `
+                <span class="terminal-prompt">$</span> 
+                <span class="terminal-cursor"></span>
+                <span class="terminal-next-command" id="terminal-next-btn" onclick="goToNextSection()">/next</span>
+            `;
+            cursorLine.style.animationDelay = `${0.25 + (maxLines * 0.03)}s`;
+            terminalContent.appendChild(cursorLine);
+        }
+        
+        // Add keyboard support for /next command
+        let terminalKeyBuffer = '';
+        
+        document.addEventListener('keydown', (e) => {
+            if (!terminalOpen) return;
+            
+            // Add typed characters to buffer
+            if (e.key.length === 1) {
+                terminalKeyBuffer += e.key;
+                
+                // Check if user typed '/next'
+                if (terminalKeyBuffer.includes('/next')) {
+                    goToNextSection();
+                    terminalKeyBuffer = ''; // Reset buffer
+                }
+                
+                // Keep buffer short to prevent memory issues
+                if (terminalKeyBuffer.length > 10) {
+                    terminalKeyBuffer = terminalKeyBuffer.slice(-10);
+                }
+            }
+            
+            // Reset buffer on Enter or Escape
+            if (e.key === 'Enter' || e.key === 'Escape') {
+                terminalKeyBuffer = '';
+            }
+        });
+        
         // Tagline click handler
         tagline.addEventListener('click', (e) => {
             e.preventDefault();
@@ -3027,10 +3221,14 @@ Email: contact@vibecreai.com`
                 spacerLine.style.animationDelay = `${0.2 + (maxLines * 0.03)}s`;
                 terminalContent.appendChild(spacerLine);
                 
-                // Add cursor at the end
+                // Add cursor at the end with /next command
                 const cursorLine = document.createElement('div');
                 cursorLine.className = 'terminal-line';
-                cursorLine.innerHTML = '<span class="terminal-prompt">$</span> <span class="terminal-cursor"></span>';
+                cursorLine.innerHTML = `
+                    <span class="terminal-prompt">$</span> 
+                    <span class="terminal-cursor"></span>
+                    <span class="terminal-next-command" id="terminal-next-btn" onclick="goToNextSection()">/next</span>
+                `;
                 cursorLine.style.animationDelay = `${0.25 + (maxLines * 0.03)}s`;
                 terminalContent.appendChild(cursorLine);
                 
