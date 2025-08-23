@@ -1530,7 +1530,7 @@
                 width: 95vw; /* Use more of the viewport width on mobile */
                 max-height: 420px; /* Slightly smaller on mobile */
                 margin-top: 15px;
-                z-index: 10000; /* Even higher z-index for mobile */
+                z-index: 999999; /* Maximum z-index for mobile to appear above all content */
             }
             
             .source-code-terminal.active {
@@ -1583,7 +1583,7 @@
             transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
                         padding 0.5s cubic-bezier(0.4, 0, 0.2, 1),
                         border-color 0.5s ease;
-            z-index: 9999; /* Increased z-index to ensure it appears above other content */
+            z-index: 999998; /* High z-index to ensure it appears above other content */
             font-family: 'Courier New', Courier, monospace;
             margin-top: 10px;
             text-align: left; /* Left align all content */
@@ -1593,6 +1593,14 @@
             max-height: 480px; /* Increased height to ensure cursor visibility */
             padding: 20px;
             border-color: #666;
+        }
+        
+        /* Prevent pointer events on page content when terminal is active */
+        body.terminal-active .about,
+        body.terminal-active .apps,
+        body.terminal-active .contact,
+        body.terminal-active header {
+            pointer-events: none;
         }
         
         .terminal-content {
@@ -1650,14 +1658,24 @@
             user-select: none;
             -webkit-user-select: none;
             -moz-user-select: none;
+            padding: 8px 4px; /* Larger click area */
+            margin: -8px -4px; /* Negative margin to maintain alignment */
+            position: relative;
+            z-index: 999; /* Higher z-index to ensure clickability */
+            display: inline-block; /* Better for click targeting */
+            border-radius: 2px; /* Subtle visual feedback */
+            touch-action: manipulation; /* Better touch handling */
+            pointer-events: auto; /* Ensure click events work */
         }
         
         .terminal-next-text:hover {
             opacity: 0.8;
+            background: rgba(0, 255, 255, 0.1); /* Subtle highlight on hover */
         }
         
         .terminal-next-text:active {
             opacity: 0.6;
+            background: rgba(0, 255, 255, 0.2);
         }
         
         @keyframes blink {
@@ -3030,13 +3048,18 @@ Email: contact@vibecreai.com`
         // Function to get progressive story content
         function getProgressiveContent() {
             const content = storyContent[currentContentIndex];
+            const displayIndex = currentContentIndex + 1; // Display 1-based index
             currentContentIndex = (currentContentIndex + 1) % storyContent.length;
-            return content;
+            return { ...content, displayIndex };
         }
         
         // Function to go to next section via /next command
         function goToNextSection() {
-            if (!terminalOpen) return;
+            console.log('goToNextSection called'); // Debug log
+            if (!terminalOpen) {
+                console.log('Terminal not open, returning'); // Debug log
+                return;
+            }
             
             // Simple click animation for /next text
             anime({
@@ -3069,7 +3092,7 @@ Email: contact@vibecreai.com`
             // Add section indicator
             const sectionIndicator = document.createElement('div');
             sectionIndicator.className = 'terminal-line';
-            sectionIndicator.innerHTML = `<span style="color: #666;"># ${contentData.title} (${currentContentIndex}/${storyContent.length})</span>`;
+            sectionIndicator.innerHTML = `<span style="color: #666;"># ${contentData.title} (${contentData.displayIndex}/${storyContent.length})</span>`;
             sectionIndicator.style.animationDelay = '0.1s';
             terminalContent.appendChild(sectionIndicator);
             
@@ -3104,9 +3127,45 @@ Email: contact@vibecreai.com`
             // Add cursor at the end with /next command as plain terminal text
             const cursorLine = document.createElement('div');
             cursorLine.className = 'terminal-line';
-            cursorLine.innerHTML = `<span class="terminal-prompt">$</span> <span class="terminal-next-text" onclick="goToNextSection()">/next</span><span class="terminal-cursor"></span>`;
+            
+            // Create prompt
+            const promptElement = document.createElement('span');
+            promptElement.className = 'terminal-prompt';
+            promptElement.textContent = '$ ';
+            
+            // Create /next element with proper event handlers
+            const nextElement = document.createElement('span');
+            nextElement.className = 'terminal-next-text';
+            nextElement.textContent = '/next';
+            nextElement.onclick = function(e) {
+                console.log('Click event triggered on /next');
+                e.preventDefault();
+                e.stopPropagation();
+                goToNextSection();
+            };
+            nextElement.addEventListener('touchstart', function(e) {
+                console.log('Touch event triggered on /next');
+                e.preventDefault();
+                e.stopPropagation();
+                goToNextSection();
+            }, {passive: false});
+            
+            // Create cursor
+            const cursorElement = document.createElement('span');
+            cursorElement.className = 'terminal-cursor';
+            
+            // Assemble the line
+            cursorLine.appendChild(promptElement);
+            cursorLine.appendChild(nextElement);
+            cursorLine.appendChild(cursorElement);
             cursorLine.style.animationDelay = `${0.25 + (maxLines * 0.03)}s`;
             terminalContent.appendChild(cursorLine);
+            
+            // Force immediate availability of click events by adding a small delay
+            setTimeout(() => {
+                nextElement.style.pointerEvents = 'auto';
+                console.log('Click events enabled for /next element');
+            }, 100);
         }
         
         // Add keyboard support for /next command
@@ -3137,6 +3196,26 @@ Email: contact@vibecreai.com`
             }
         });
         
+        // Event delegation for /next clicks - this handles all /next elements
+        document.addEventListener('click', function(e) {
+            if (e.target && e.target.classList.contains('terminal-next-text')) {
+                console.log('Event delegation caught /next click');
+                e.preventDefault();
+                e.stopPropagation();
+                goToNextSection();
+            }
+        });
+        
+        // Event delegation for touch events on /next elements
+        document.addEventListener('touchstart', function(e) {
+            if (e.target && e.target.classList.contains('terminal-next-text')) {
+                console.log('Event delegation caught /next touch');
+                e.preventDefault();
+                e.stopPropagation();
+                goToNextSection();
+            }
+        }, {passive: false});
+        
         // Tagline click handler
         tagline.addEventListener('click', (e) => {
             e.preventDefault();
@@ -3145,6 +3224,7 @@ Email: contact@vibecreai.com`
                 // Open terminal
                 terminalOpen = true;
                 sourceTerminal.classList.add('active');
+                document.body.classList.add('terminal-active'); // Disable pointer events on page content
                 
                 // Clear and populate terminal content with random code snippet
                 terminalContent.innerHTML = '';
@@ -3169,7 +3249,7 @@ Email: contact@vibecreai.com`
                 // Add section indicator
                 const sectionIndicator = document.createElement('div');
                 sectionIndicator.className = 'terminal-line';
-                sectionIndicator.innerHTML = `<span style="color: #666;"># ${contentData.title} (${currentContentIndex}/${storyContent.length})</span>`;
+                sectionIndicator.innerHTML = `<span style="color: #666;"># ${contentData.title} (${contentData.displayIndex}/${storyContent.length})</span>`;
                 sectionIndicator.style.animationDelay = '0.1s';
                 terminalContent.appendChild(sectionIndicator);
                 
@@ -3204,9 +3284,45 @@ Email: contact@vibecreai.com`
                 // Add cursor at the end with /next command as plain terminal text
                 const cursorLine = document.createElement('div');
                 cursorLine.className = 'terminal-line';
-                cursorLine.innerHTML = `<span class="terminal-prompt">$</span> <span class="terminal-next-text" onclick="goToNextSection()">/next</span><span class="terminal-cursor"></span>`;
+                
+                // Create prompt
+                const promptElement = document.createElement('span');
+                promptElement.className = 'terminal-prompt';
+                promptElement.textContent = '$ ';
+                
+                // Create /next element with proper event handlers
+                const nextElement = document.createElement('span');
+                nextElement.className = 'terminal-next-text';
+                nextElement.textContent = '/next';
+                nextElement.onclick = function(e) {
+                    console.log('Click event triggered on /next (initial)');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    goToNextSection();
+                };
+                nextElement.addEventListener('touchstart', function(e) {
+                    console.log('Touch event triggered on /next (initial)');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    goToNextSection();
+                }, {passive: false});
+                
+                // Create cursor
+                const cursorElement = document.createElement('span');
+                cursorElement.className = 'terminal-cursor';
+                
+                // Assemble the line
+                cursorLine.appendChild(promptElement);
+                cursorLine.appendChild(nextElement);
+                cursorLine.appendChild(cursorElement);
                 cursorLine.style.animationDelay = `${0.25 + (maxLines * 0.03)}s`;
                 terminalContent.appendChild(cursorLine);
+                
+                // Force immediate availability of click events by adding a small delay
+                setTimeout(() => {
+                    nextElement.style.pointerEvents = 'auto';
+                    console.log('Click events enabled for /next element (initial)');
+                }, 100);
                 
                 // Animate tagline click feedback
                 anime({
@@ -3226,6 +3342,7 @@ Email: contact@vibecreai.com`
             if (terminalOpen) {
                 terminalOpen = false;
                 sourceTerminal.classList.remove('active');
+                document.body.classList.remove('terminal-active'); // Re-enable pointer events on page content
             }
         }
         
