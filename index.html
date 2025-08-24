@@ -172,6 +172,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: var(--dark-bg);
             color: var(--text-color);
+            min-width: 430px; /* Minimum website width */
             overflow-x: hidden;
             cursor: none;
         }
@@ -1541,19 +1542,19 @@
             /* Terminal mobile improvements */
             .source-code-terminal {
                 width: 95vw; /* Use more of the viewport width on mobile */
-                max-height: 420px; /* Slightly smaller on mobile */
+                max-height: 460px; /* Increased by one line height for mobile */
                 margin: 15px auto 0; /* Center with top margin, no z-index needed */
             }
             
             .source-code-terminal.active {
-                max-height: 420px; /* Match the max-height above */
+                max-height: 460px; /* Match the max-height above */
                 padding: 15px;
             }
             
             .terminal-content {
                 font-size: 0.8rem; /* Slightly smaller text on mobile */
                 line-height: 1.3;
-                padding-top: 50px; /* Extra padding on mobile to prevent hint text overlap */
+                padding-top: 40px; /* Reduced padding to improve /next button visibility on mobile */
             }
             
             .terminal-cursor {
@@ -1838,7 +1839,7 @@
                 <div class="tagline" id="tagline"></div>
                 <div class="source-code-terminal" id="source-code-terminal">
                     <span class="terminal-close" id="close-terminal">×</span>
-                    <div class="terminal-hint" id="terminal-hint">Click '/next' to navigate next section</div>
+                    <div class="terminal-hint" id="terminal-hint">Click '/next' to navigate</div>
                     <div class="terminal-content" id="terminal-content"></div>
                 </div>
             </div>
