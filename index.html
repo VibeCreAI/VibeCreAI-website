@@ -1429,16 +1429,17 @@
 
         /* Responsive */
         @media (max-width: 768px) {
-            /* Increase hero section height on mobile to prevent PROJECTS button clickability issues */
+            /* Moderate hero section height increase for mobile button accessibility */
             .hero {
-                min-height: 140vh; /* Further increased to provide more space */
+                min-height: 110vh; /* Reduced from 140vh to 110vh for better proportion */
             }
             
             /* Ensure CTA buttons have proper positioning and z-index on mobile */
             .cta-container {
                 position: relative;
                 z-index: 100;
-                margin-bottom: 40px; /* Add extra bottom margin */
+                margin-bottom: 60px; /* Increased margin for better spacing */
+                padding-bottom: 20px; /* Additional padding for safety */
             }
             
             .hero-title {
@@ -1710,12 +1711,13 @@
             top: 10px;
             left: 50%;
             transform: translateX(-50%);
-            color: #666;
-            font-size: 0.6rem;
-            opacity: 0.7;
+            color: #ffffff;
+            font-size: 0.9rem;
+            opacity: 0.9;
             font-family: 'Courier New', Courier, monospace;
             pointer-events: none;
             animation: terminalHintFade 3s ease-out;
+            font-weight: bold;
         }
         
         @keyframes terminalHintFade {
@@ -1725,7 +1727,7 @@
         
         @media (max-width: 768px) {
             .terminal-hint {
-                font-size: 0.55rem;
+                font-size: 0.8rem;
                 top: 8px;
             }
         }
@@ -1832,7 +1834,7 @@
                 <div class="tagline" id="tagline"></div>
                 <div class="source-code-terminal" id="source-code-terminal">
                     <span class="terminal-close" id="close-terminal">×</span>
-                    <div class="terminal-hint" id="terminal-hint">Type '/next' or click the button to navigate</div>
+                    <div class="terminal-hint" id="terminal-hint">Click '/next' to navigate next section</div>
                     <div class="terminal-content" id="terminal-content"></div>
                 </div>
             </div>
@@ -2299,7 +2301,7 @@
                 "Solo developer + AI agents = ∞",
                 "Creating innovative digital experiences",
                 "Vibe coding in progress...",
-                "Find a hidden easter egg 'Vibe Runner'...",
+                "Find a hidden easter egg...",
                 "Where creativity meets artificial intelligence"
             ];
             
@@ -3068,9 +3070,7 @@ Email: contact@vibecreai.com`
         
         // Function to go to next section via /next command
         function goToNextSection() {
-            console.log('goToNextSection called'); // Debug log
             if (!terminalOpen) {
-                console.log('Terminal not open, returning'); // Debug log
                 return;
             }
             
@@ -3105,7 +3105,7 @@ Email: contact@vibecreai.com`
             // Add section indicator
             const sectionIndicator = document.createElement('div');
             sectionIndicator.className = 'terminal-line';
-            sectionIndicator.innerHTML = `<span style="color: #666;"># ${contentData.title} (${contentData.displayIndex}/${storyContent.length})</span>`;
+            sectionIndicator.innerHTML = `<span style="color: #ffffff; font-size: 1.1em; font-weight: bold;"># ${contentData.title} (${contentData.displayIndex}/${storyContent.length})</span>`;
             sectionIndicator.style.animationDelay = '0.1s';
             terminalContent.appendChild(sectionIndicator);
             
@@ -3151,13 +3151,11 @@ Email: contact@vibecreai.com`
             nextElement.className = 'terminal-next-text';
             nextElement.textContent = '/next';
             nextElement.onclick = function(e) {
-                console.log('Click event triggered on /next');
                 e.preventDefault();
                 e.stopPropagation();
                 goToNextSection();
             };
             nextElement.addEventListener('touchstart', function(e) {
-                console.log('Touch event triggered on /next');
                 e.preventDefault();
                 e.stopPropagation();
                 goToNextSection();
@@ -3177,7 +3175,6 @@ Email: contact@vibecreai.com`
             // Force immediate availability of click events by adding a small delay
             setTimeout(() => {
                 nextElement.style.pointerEvents = 'auto';
-                console.log('Click events enabled for /next element');
             }, 100);
         }
         
@@ -3212,7 +3209,6 @@ Email: contact@vibecreai.com`
         // Event delegation for /next clicks - this handles all /next elements
         document.addEventListener('click', function(e) {
             if (e.target && e.target.classList.contains('terminal-next-text')) {
-                console.log('Event delegation caught /next click');
                 e.preventDefault();
                 e.stopPropagation();
                 goToNextSection();
@@ -3222,7 +3218,6 @@ Email: contact@vibecreai.com`
         // Event delegation for touch events on /next elements
         document.addEventListener('touchstart', function(e) {
             if (e.target && e.target.classList.contains('terminal-next-text')) {
-                console.log('Event delegation caught /next touch');
                 e.preventDefault();
                 e.stopPropagation();
                 goToNextSection();
@@ -3261,7 +3256,7 @@ Email: contact@vibecreai.com`
                 // Add section indicator
                 const sectionIndicator = document.createElement('div');
                 sectionIndicator.className = 'terminal-line';
-                sectionIndicator.innerHTML = `<span style="color: #666;"># ${contentData.title} (${contentData.displayIndex}/${storyContent.length})</span>`;
+                sectionIndicator.innerHTML = `<span style="color: #ffffff; font-size: 1.1em; font-weight: bold;"># ${contentData.title} (${contentData.displayIndex}/${storyContent.length})</span>`;
                 sectionIndicator.style.animationDelay = '0.1s';
                 terminalContent.appendChild(sectionIndicator);
                 
@@ -3307,13 +3302,11 @@ Email: contact@vibecreai.com`
                 nextElement.className = 'terminal-next-text';
                 nextElement.textContent = '/next';
                 nextElement.onclick = function(e) {
-                    console.log('Click event triggered on /next (initial)');
                     e.preventDefault();
                     e.stopPropagation();
                     goToNextSection();
                 };
                 nextElement.addEventListener('touchstart', function(e) {
-                    console.log('Touch event triggered on /next (initial)');
                     e.preventDefault();
                     e.stopPropagation();
                     goToNextSection();
@@ -3333,7 +3326,6 @@ Email: contact@vibecreai.com`
                 // Force immediate availability of click events by adding a small delay
                 setTimeout(() => {
                     nextElement.style.pointerEvents = 'auto';
-                    console.log('Click events enabled for /next element (initial)');
                 }, 100);
                 
                 // Animate tagline click feedback

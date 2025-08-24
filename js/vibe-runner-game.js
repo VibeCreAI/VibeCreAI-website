@@ -36,6 +36,11 @@ class VibeRunner {
         this.pulseTimer = 0;
         this.beatInterval = 30; // frames per beat for rhythmic obstacles
         
+        // Audio system
+        this.backgroundMusic = new Audio('sound/Vibe_Runner.mp3');
+        this.backgroundMusic.loop = true;
+        this.backgroundMusic.volume = 0.5;
+        
         // Level scripting / pattern options
         this.levelEndDistance = 10000; // meters
         this.useScripted = true; // default to scripted obstacle patterns
@@ -808,6 +813,16 @@ class VibeRunner {
         this.frameCount = 0;
         this.nextObstacleDistance = 100;
         this.gridOffset = 0;
+        
+        // Reset Geometry Dash mechanics
+        this.gravityDirection = 1; // Reset to normal gravity
+        this.gravityPortals = [];
+        this.jumpPads = [];
+        this.speedZones = [];
+        
+        // Start background music
+        this.backgroundMusic.currentTime = 0;
+        this.backgroundMusic.play().catch(e => console.log('Audio play failed:', e));
         
         // Reset player
         this.player.x = Math.max(60, Math.min(240, this.canvas.width * 0.22));
@@ -2216,6 +2231,10 @@ class VibeRunner {
     
     gameOver() {
         this.gameActive = false;
+        
+        // Stop background music
+        this.backgroundMusic.pause();
+        this.backgroundMusic.currentTime = 0;
         
         // Update high score
         const finalDistForScore = Math.floor(this.distance);
