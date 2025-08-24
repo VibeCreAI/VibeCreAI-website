@@ -678,6 +678,10 @@ class VibeRunner {
         const container = document.getElementById('vibe-runner-container');
         container.classList.remove('vibe-runner-hidden');
         
+        // Start background music when game window opens
+        this.backgroundMusic.currentTime = 0;
+        this.backgroundMusic.play().catch(e => console.log('Audio play failed:', e));
+        
         // Reset to start screen
         document.getElementById('start-screen').style.display = 'block';
         document.getElementById('game-over-screen').style.display = 'none';
@@ -717,6 +721,10 @@ class VibeRunner {
     closeGame() {
         const container = document.getElementById('vibe-runner-container');
         container.classList.add('vibe-runner-hidden');
+        
+        // Stop background music when game window closes
+        this.backgroundMusic.pause();
+        this.backgroundMusic.currentTime = 0;
         
         if (this.gameActive) {
             this.gameActive = false;
@@ -820,9 +828,6 @@ class VibeRunner {
         this.jumpPads = [];
         this.speedZones = [];
         
-        // Start background music
-        this.backgroundMusic.currentTime = 0;
-        this.backgroundMusic.play().catch(e => console.log('Audio play failed:', e));
         
         // Reset player
         this.player.x = Math.max(60, Math.min(240, this.canvas.width * 0.22));
@@ -2232,9 +2237,6 @@ class VibeRunner {
     gameOver() {
         this.gameActive = false;
         
-        // Stop background music
-        this.backgroundMusic.pause();
-        this.backgroundMusic.currentTime = 0;
         
         // Update high score
         const finalDistForScore = Math.floor(this.distance);

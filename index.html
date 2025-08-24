@@ -1553,6 +1553,7 @@
             .terminal-content {
                 font-size: 0.8rem; /* Slightly smaller text on mobile */
                 line-height: 1.3;
+                padding-top: 50px; /* Extra padding on mobile to prevent hint text overlap */
             }
             
             .terminal-cursor {
@@ -1615,6 +1616,7 @@
             color: #ffffff;
             font-size: 0.85rem;
             line-height: 1.4;
+            padding-top: 40px;
             overflow: hidden; /* No scrolling */
             text-align: left;
             white-space: pre-wrap; /* Preserve formatting but wrap long lines */
@@ -1695,22 +1697,22 @@
             position: absolute;
             top: 10px;
             right: 10px;
-            color: #666;
+            color: #ffffff;
             cursor: pointer;
-            font-size: 1.2rem;
+            font-size: 1.5rem;
+            font-weight: bold;
             transition: color 0.3s ease;
             z-index: 10;
         }
         
         .terminal-close:hover {
-            color: #fff;
+            color: #ff6b6b;
         }
         
         .terminal-hint {
             position: absolute;
             top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
+            left: 15px;
             color: #ffffff;
             font-size: 0.9rem;
             opacity: 0.9;
@@ -1718,6 +1720,7 @@
             pointer-events: none;
             animation: terminalHintFade 3s ease-out;
             font-weight: bold;
+            margin-bottom: 10px;
         }
         
         @keyframes terminalHintFade {
@@ -1729,6 +1732,7 @@
             .terminal-hint {
                 font-size: 0.8rem;
                 top: 8px;
+                left: 10px;
             }
         }
         
