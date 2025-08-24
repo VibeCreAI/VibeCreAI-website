@@ -1429,6 +1429,18 @@
 
         /* Responsive */
         @media (max-width: 768px) {
+            /* Increase hero section height on mobile to prevent PROJECTS button clickability issues */
+            .hero {
+                min-height: 140vh; /* Further increased to provide more space */
+            }
+            
+            /* Ensure CTA buttons have proper positioning and z-index on mobile */
+            .cta-container {
+                position: relative;
+                z-index: 100;
+                margin-bottom: 40px; /* Add extra bottom margin */
+            }
+            
             .hero-title {
                 font-size: 3rem;
             }
@@ -1924,6 +1936,10 @@
                 <div class="contact-item">
                     <span>🌐</span>
                     <span>www.vibecreai.com</span>
+                </div>
+                <div class="contact-item">
+                    <span>💻</span>
+                    <a href="https://github.com/VibeCreAI/VibeCreAI-website" target="_blank" rel="noopener noreferrer">GitHub Repository</a>
                 </div>
             </div>
         </div>
