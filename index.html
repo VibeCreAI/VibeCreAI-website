@@ -1542,12 +1542,12 @@
             /* Terminal mobile improvements */
             .source-code-terminal {
                 width: 95vw; /* Use more of the viewport width on mobile */
-                max-height: 460px; /* Increased by one line height for mobile */
+                max-height: 520px; /* Increased by one line height for mobile */
                 margin: 15px auto 0; /* Center with top margin, no z-index needed */
             }
             
             .source-code-terminal.active {
-                max-height: 460px; /* Match the max-height above */
+                max-height: 520px; /* Match the max-height above */
                 padding: 15px;
             }
             
@@ -1600,7 +1600,7 @@
         }
         
         .source-code-terminal.active {
-            max-height: 480px; /* Increased height to ensure cursor visibility */
+            max-height: 520px; /* Increased height to ensure cursor visibility */
             padding: 20px;
             border-color: #666;
         }
@@ -1721,7 +1721,6 @@
             pointer-events: none;
             animation: terminalHintFade 3s ease-out;
             font-weight: bold;
-            margin-bottom: 10px;
         }
         
         @keyframes terminalHintFade {
