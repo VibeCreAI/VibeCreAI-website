@@ -73,7 +73,6 @@ class VibeRunner {
     
     initGame() {
         this.createGameModal();
-        this.attachEventListeners();
     }
     
     initPatternLibrary() {
@@ -236,9 +235,8 @@ class VibeRunner {
                 height: 100%;
                 z-index: 99999;
                 animation: fadeIn 0.3s ease;
+                cursor: none; /* Allow custom cursor to show through */
             }
-            
-            /* Do not force-hide cursor here; inherit from page (desktop uses custom cursor via body, mobile uses auto) */
             
             .vibe-runner-overlay {
                 position: absolute;
@@ -473,210 +471,33 @@ class VibeRunner {
         document.head.appendChild(style);
     }
     
-    attachEventListeners() {
-        // Track clicks for double-click detection
-        this.clickCounts = new Map();
-        this.clickTimers = new Map();
-        
-        // Helper function to add both click and touch events
-        const addDoubleClickEvents = (element, triggerType) => {
-            const handler = (e) => {
-                e.preventDefault();
-                this.handleDoubleClickTrigger(element, triggerType);
-            };
-            
-            // Add both click and touchend events for mobile compatibility
-            element.addEventListener('click', handler);
-            element.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                this.handleDoubleClickTrigger(element, triggerType);
-            }, { passive: false });
-        };
-        
-        // Main logo requires two clicks/touches (exclude header logo)
-        const mainLogos = document.querySelectorAll('.hero-title, .glitch-text, #logo-text-container');
-        mainLogos.forEach(logo => {
-            if (!logo) return;
-            logo.style.cursor = 'pointer';
-            addDoubleClickEvents(logo, 'main-logo');
-        });
-        
-        // Stay Tuned button also requires two clicks/touches
-        const stayTunedButtons = document.querySelectorAll('.app-button');
-        stayTunedButtons.forEach(button => {
-            if (!button || button.textContent.trim() !== 'STAY TUNED') return;
-            button.style.cursor = 'pointer';
-            addDoubleClickEvents(button, 'stay-tuned');
-        });
+    
+    // Public method to launch game directly
+    launchGame() {
+        this.openGame();
     }
     
-    showGamePrompt() {
-        // Check if prompt already exists and remove it
-        const existingPrompt = document.querySelector('.vibe-game-prompt');
-        if (existingPrompt) {
-            existingPrompt.remove();
-        }
-        
-        // Remove existing prompt styles to avoid conflicts
-        const existingStyles = document.querySelectorAll('style');
-        existingStyles.forEach(style => {
-            if (style.textContent.includes('.vibe-game-prompt')) {
-                style.remove();
-            }
-        });
-        
-        const promptDiv = document.createElement('div');
-        promptDiv.className = 'vibe-game-prompt';
-        promptDiv.innerHTML = `
-            <div class="vibe-prompt-content">
-                <h3>🎮 Secret Game Unlocked! 🎮</h3>
-                <p>You've discovered the Vibe Runner!</p>
-                <p>Navigate through cyber space and survive!</p>
-                <div class="vibe-prompt-buttons">
-                    <button class="vibe-prompt-play">Play</button>
-                    <button class="vibe-prompt-cancel">Cancel</button>
-                </div>
-            </div>
-        `;
-        
-        const promptStyle = document.createElement('style');
-        promptStyle.id = 'vibe-game-prompt-styles';
-        promptStyle.textContent = `
-            .vibe-game-prompt {
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                background: linear-gradient(135deg, #0a0a1a, #1a0a2a);
-                border: 2px solid #00ffff;
-                border-radius: 15px;
-                padding: 30px;
-                z-index: 100000;
-                animation: promptBounce 0.5s ease;
-                box-shadow: 0 0 40px rgba(0, 255, 255, 0.5);
-            }
-            
-            .vibe-prompt-content h3 {
-                color: #00ffff;
-                margin-bottom: 15px;
-                text-align: center;
-                font-size: 24px;
-                text-shadow: 0 0 20px rgba(0, 255, 255, 0.8);
-            }
-            
-            .vibe-prompt-content p {
-                color: #fff;
-                margin-bottom: 10px;
-                text-align: center;
-                font-size: 14px;
-            }
-            
-            .vibe-prompt-buttons {
-                display: flex;
-                gap: 15px;
-                justify-content: center;
-                margin-top: 20px;
-            }
-            
-            .vibe-prompt-buttons button {
-                padding: 10px 25px;
-                border: 2px solid #00ffff;
-                background: transparent;
-                color: #00ffff;
-                font-weight: bold;
-                cursor: inherit;
-                transition: all 0.3s ease;
-                font-size: 14px;
-                border-radius: 20px;
-            }
-            
-            .vibe-prompt-buttons button:hover {
-                background: rgba(0, 255, 255, 0.2);
-                box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
-            }
-            
-            @keyframes promptBounce {
-                0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
-                50% { transform: translate(-50%, -50%) scale(1.1); }
-                100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-            }
-        `;
-        document.head.appendChild(promptStyle);
-        document.body.appendChild(promptDiv);
-        
-        // Use proper event handling with immediate removal
-        const handlePlay = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            promptDiv.remove();
-            const style = document.getElementById('vibe-game-prompt-styles');
-            if (style) style.remove();
-            this.openGame();
-        };
-        
-        const handleCancel = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            promptDiv.remove();
-            const style = document.getElementById('vibe-game-prompt-styles');
-            if (style) style.remove();
-        };
-        
-        promptDiv.querySelector('.vibe-prompt-play').addEventListener('click', handlePlay);
-        promptDiv.querySelector('.vibe-prompt-cancel').addEventListener('click', handleCancel);
-    }
     
-    handleDoubleClickTrigger(element, triggerType) {
-        const elementKey = `${triggerType}-${element.tagName}-${element.className}`;
-        
-        // Initialize or increment click count
-        const currentCount = this.clickCounts.get(elementKey) || 0;
-        this.clickCounts.set(elementKey, currentCount + 1);
-        
-        // Clear existing timer if any
-        if (this.clickTimers.has(elementKey)) {
-            clearTimeout(this.clickTimers.get(elementKey));
-        }
-        
-        // Check if we've reached 2 clicks
-        if (this.clickCounts.get(elementKey) >= 2) {
-            // Reset count and show game prompt
-            this.clickCounts.set(elementKey, 0);
-            this.showGamePrompt();
-            return;
-        }
-        
-        // Set timer to reset count after 1.5 seconds
-        const timer = setTimeout(() => {
-            this.clickCounts.set(elementKey, 0);
-            this.clickTimers.delete(elementKey);
-        }, 1500);
-        
-        this.clickTimers.set(elementKey, timer);
-        
-        // Visual feedback for first click
-        this.showClickFeedback(element, triggerType);
-    }
-    
-    showClickFeedback(element, triggerType) {
-        // Add subtle visual feedback to indicate first click registered
-        const originalTransform = element.style.transform;
-        const originalTextShadow = element.style.textShadow;
-        
-        element.style.transform = 'scale(1.05)';
-        element.style.textShadow = '0 0 15px rgba(0, 255, 255, 0.8)';
-        element.style.transition = 'all 0.2s ease';
-        
-        setTimeout(() => {
-            element.style.transform = originalTransform;
-            element.style.textShadow = originalTextShadow;
-        }, 200);
-    }
     
     openGame() {
-        const container = document.getElementById('vibe-runner-container');
-        container.classList.remove('vibe-runner-hidden');
+        let container = document.getElementById('vibe-runner-container');
+        
+        // If container doesn't exist, recreate it
+        if (!container) {
+            console.log('Vibe Runner container not found, recreating...');
+            this.createGameModal();
+            container = document.getElementById('vibe-runner-container');
+        }
+        
+        if (container) {
+            container.classList.remove('vibe-runner-hidden');
+            
+            // Ensure custom cursor appears above the modal
+            this.preserveCustomCursor();
+        } else {
+            console.error('Failed to create Vibe Runner container');
+            return;
+        }
         
         // Start background music when game window opens
         this.backgroundMusic.currentTime = 0;
@@ -720,7 +541,11 @@ class VibeRunner {
     
     closeGame() {
         const container = document.getElementById('vibe-runner-container');
-        container.classList.add('vibe-runner-hidden');
+        if (container) {
+            container.classList.add('vibe-runner-hidden');
+        } else {
+            console.log('Vibe Runner container not found during close - already removed');
+        }
         
         // Stop background music when game window closes
         this.backgroundMusic.pause();
@@ -745,6 +570,23 @@ class VibeRunner {
             // Restore default cursor on mobile
             document.body.style.cursor = 'auto';
         }
+    }
+    
+    preserveCustomCursor() {
+        console.log('Preserving custom cursor for Vibe Runner...');
+        
+        // Make sure custom cursor elements have higher z-index than modal (99999)
+        const cursorElements = document.querySelectorAll('.cursor, .cursor-follower');
+        cursorElements.forEach(cursor => {
+            cursor.style.zIndex = '9999999'; // Higher than vibe-runner-container (99999)
+            cursor.style.position = 'fixed';
+            cursor.style.display = 'block';
+            cursor.style.visibility = 'visible';
+            cursor.style.opacity = '1';
+            cursor.style.pointerEvents = 'none';
+        });
+        
+        console.log('Custom cursor preserved for Vibe Runner');
     }
     
     setupCanvas() {

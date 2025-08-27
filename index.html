@@ -1206,6 +1206,41 @@
             box-shadow: 0 0 20px rgba(76, 175, 80, 0.5) !important;
         }
 
+        .game-button {
+            font-size: 0.85rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-width: 2px;
+        }
+
+        .game-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 255, 0.4);
+        }
+
+        #vibe-runner-btn {
+            border-color: #FF6B6B;
+            color: #FF6B6B;
+        }
+
+        #vibe-runner-btn:hover {
+            background: #FF6B6B;
+            color: var(--dark-bg);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+
+        #vibe-survivor-btn {
+            border-color: #9B59B6;
+            color: #9B59B6;
+        }
+
+        #vibe-survivor-btn:hover {
+            background: #9B59B6;
+            color: var(--dark-bg);
+            box-shadow: 0 5px 15px rgba(155, 89, 182, 0.4);
+        }
+
         .ios-note {
             font-size: 0.85rem;
             color: rgba(255, 255, 255, 0.6);
@@ -1900,13 +1935,16 @@
                     <p class="ios-note">🍎 iOS version in the works!</p>
                 </div>
                 <div class="app-card fade-in">
-                    <div class="status-badge">🎮 COOKING</div>
+                    <div class="status-badge">🎮 LIVE</div>
                     <div class="app-icon-wrapper" style="background: transparent;">
-                        <img src="images/game.png" alt="Mystery Game" style="width: 4.5rem; height: 4.5rem; border-radius: 50%; background: transparent; backdrop-filter: contrast(1.2) brightness(1.1);">
+                        <img src="images/game.png" alt="Secret Games" style="width: 4.5rem; height: 4.5rem; border-radius: 50%; background: transparent; backdrop-filter: contrast(1.2) brightness(1.1);">
                     </div>
-                    <h3 class="app-title">MYSTERY GAME</h3>
-                    <p class="app-description">Something fun is brewing! I'm exploring how AI can create unique gaming experiences. Think: games that adapt to YOU. Can't reveal more yet... 🤫</p>
-                    <button class="app-button">STAY TUNED</button>
+                    <h3 class="app-title">SECRET GAMES</h3>
+                    <p class="app-description">Two neon cyber games with the same thrilling aesthetic! Challenge yourself in fast-paced endless running or survive waves of geometric enemies. Ready to unlock the secrets? 🎮</p>
+                    <div class="app-buttons-container">
+                        <button class="app-button game-button" id="vibe-runner-btn">🎮 VIBE RUNNER</button>
+                        <button class="app-button game-button" id="vibe-survivor-btn">⚔️ VIBE SURVIVOR</button>
+                    </div>
                 </div>
                 <div class="app-card fade-in">
                     <div class="status-badge">💡 IDEATING</div>
@@ -2712,11 +2750,17 @@
         // 3D Card Tilt Effect - REMOVED
         // The 3D tilt effect has been completely removed for better UX
         
-        // Load Vibe Runner Game Easter Egg
+        // Load Vibe Runner Game
         const gameScript = document.createElement('script');
         gameScript.src = 'js/vibe-runner-game.js';
         gameScript.defer = true;
         document.head.appendChild(gameScript);
+        
+        // Load Game Manager
+        const gameManagerScript = document.createElement('script');
+        gameManagerScript.src = 'js/game-manager.js';
+        gameManagerScript.defer = true;
+        document.head.appendChild(gameManagerScript);
 
         // Newsletter Form
         document.getElementById('newsletter-form').addEventListener('submit', function(e) {
