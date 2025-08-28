@@ -15,7 +15,7 @@ coverage/
 .claude/
 .idea/
 .serena/
-.playwright-mpc/
+.playwright-mcp/
 WARP.md
 *.swp
 *.swo
