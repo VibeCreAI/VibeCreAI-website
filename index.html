@@ -174,39 +174,8 @@
             color: var(--text-color);
             min-width: 430px; /* Minimum website width */
             overflow-x: hidden;
-            cursor: none;
         }
 
-        /* Custom Cursor */
-        .cursor {
-            width: 20px;
-            height: 20px;
-            border: 2px solid var(--primary-color);
-            border-radius: 50%;
-            position: fixed;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-            transition: none;
-            z-index: 1000001; /* above game modal/prompt overlays */
-            mix-blend-mode: difference;
-            will-change: transform;
-        }
-
-        .cursor-follower {
-            width: 40px;
-            height: 40px;
-            background: rgba(0, 255, 255, 0.1);
-            border: 1px solid rgba(0, 255, 255, 0.3);
-            border-radius: 50%;
-            position: fixed;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-            transition: none;
-            z-index: 1000000; /* above game modal/prompt overlays */
-            will-change: transform;
-        }
-
-        /* Cursor hover states removed - no visual changes needed */
 
         .cta-button.secondary:hover {
             color: var(--dark-bg);
@@ -1817,9 +1786,6 @@
         }
     </script>
     
-    <!-- Custom Cursor -->
-    <div class="cursor"></div>
-    <div class="cursor-follower"></div>
 
     <!-- Loading Screen -->
     <div id="loading-screen">
@@ -1937,9 +1903,9 @@
                 <div class="app-card fade-in">
                     <div class="status-badge">🎮 LIVE</div>
                     <div class="app-icon-wrapper" style="background: transparent;">
-                        <img src="images/game.png" alt="Secret Games" style="width: 4.5rem; height: 4.5rem; border-radius: 50%; background: transparent; backdrop-filter: contrast(1.2) brightness(1.1);">
+                        <img src="images/game.png" alt="Mini Games" style="width: 4.5rem; height: 4.5rem; border-radius: 50%; background: transparent; backdrop-filter: contrast(1.2) brightness(1.1);">
                     </div>
-                    <h3 class="app-title">SECRET GAMES</h3>
+                    <h3 class="app-title">MINI GAMES</h3>
                     <p class="app-description">Two neon cyber games with the same thrilling aesthetic! Challenge yourself in fast-paced endless running or survive waves of geometric enemies. Ready to unlock the secrets? 🎮</p>
                     <div class="app-buttons-container">
                         <button class="app-button game-button" id="vibe-runner-btn">🎮 VIBE RUNNER</button>
@@ -2061,60 +2027,6 @@
             return mobileUserAgents || (isTouchDevice && isSmallScreen);
         }
 
-        // Custom Cursor - Desktop Only
-        const cursor = document.querySelector('.cursor');
-        const cursorFollower = document.querySelector('.cursor-follower');
-        
-        // Hide custom cursor on mobile devices
-        if (isMobileDevice()) {
-            cursor.style.display = 'none';
-            cursorFollower.style.display = 'none';
-            document.body.style.cursor = 'auto'; // Restore default cursor
-        }
-        
-        let mouseX = 0;
-        let mouseY = 0;
-        let followerX = 0;
-        let followerY = 0;
-        
-        // Only initialize cursor functionality on desktop
-        if (!isMobileDevice()) {
-            // Update mouse position
-            document.addEventListener('mousemove', (e) => {
-                mouseX = e.clientX;
-                mouseY = e.clientY;
-                
-                // Update cursor immediately with transform for better performance
-                cursor.style.transform = `translate(${mouseX - 10}px, ${mouseY - 10}px)`;
-            });
-            
-            // Smooth follower animation using RAF
-            function animateFollower() {
-                const dx = mouseX - followerX;
-                const dy = mouseY - followerY;
-                
-                followerX += dx * 0.1;
-                followerY += dy * 0.1;
-                
-                cursorFollower.style.transform = `translate(${followerX - 20}px, ${followerY - 20}px)`;
-                
-                requestAnimationFrame(animateFollower);
-            }
-            
-            animateFollower();
-
-            // Enhanced cursor hover effects
-            document.querySelectorAll('a, button, .section-title').forEach(element => {
-                element.addEventListener('mouseenter', () => {
-                    cursor.classList.add('hover');
-                    cursorFollower.classList.add('hover');
-                });
-                element.addEventListener('mouseleave', () => {
-                    cursor.classList.remove('hover');
-                    cursorFollower.classList.remove('hover');
-                });
-            });
-        }
 
         // Loading Screen Animation
         window.addEventListener('load', () => {

@@ -235,7 +235,6 @@ class VibeRunner {
                 height: 100%;
                 z-index: 99999;
                 animation: fadeIn 0.3s ease;
-                cursor: none; /* Allow custom cursor to show through */
             }
             
             .vibe-runner-overlay {
@@ -280,7 +279,6 @@ class VibeRunner {
                 border-radius: 50%;
                 font-size: 24px;
                 font-weight: bold;
-                cursor: inherit !important;
                 transition: all 0.3s ease;
                 z-index: 20;
                 display: flex;
@@ -338,7 +336,6 @@ class VibeRunner {
                 width: 100%;
                 height: 100%;
                 display: block;
-                cursor: inherit !important;
             }
             
             .vibe-runner-start-screen,
@@ -404,7 +401,6 @@ class VibeRunner {
                 color: #00ffff;
                 font-weight: bold;
                 font-size: 18px;
-                cursor: inherit !important;
                 transition: all 0.3s ease;
                 text-transform: uppercase;
                 letter-spacing: 2px;
@@ -492,8 +488,6 @@ class VibeRunner {
         if (container) {
             container.classList.remove('vibe-runner-hidden');
             
-            // Ensure custom cursor appears above the modal
-            this.preserveCustomCursor();
         } else {
             console.error('Failed to create Vibe Runner container');
             return;
@@ -559,35 +553,8 @@ class VibeRunner {
         // Use the same mobile detection function as main page
         const isMobile = this.isMobileDevice();
         
-        if (!isMobile) {
-            // Restore custom cursor on desktop
-            const cursor = document.querySelector('.cursor');
-            const cursorFollower = document.querySelector('.cursor-follower');
-            if (cursor) cursor.style.display = 'block';
-            if (cursorFollower) cursorFollower.style.display = 'block';
-            document.body.style.cursor = 'none';
-        } else {
-            // Restore default cursor on mobile
-            document.body.style.cursor = 'auto';
-        }
     }
     
-    preserveCustomCursor() {
-        console.log('Preserving custom cursor for Vibe Runner...');
-        
-        // Make sure custom cursor elements have higher z-index than modal (99999)
-        const cursorElements = document.querySelectorAll('.cursor, .cursor-follower');
-        cursorElements.forEach(cursor => {
-            cursor.style.zIndex = '9999999'; // Higher than vibe-runner-container (99999)
-            cursor.style.position = 'fixed';
-            cursor.style.display = 'block';
-            cursor.style.visibility = 'visible';
-            cursor.style.opacity = '1';
-            cursor.style.pointerEvents = 'none';
-        });
-        
-        console.log('Custom cursor preserved for Vibe Runner');
-    }
     
     setupCanvas() {
         this.canvas = document.getElementById('vibe-runner-canvas');

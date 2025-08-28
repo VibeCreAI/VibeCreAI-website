@@ -39,6 +39,26 @@ class VibeSurvivor {
             lastFire: 0
         }];
         
+        // Pause functionality
+        this.isPaused = false;
+        
+        // Mobile touch controls
+        this.isMobile = this.detectMobile();
+        this.touchControls = {
+            joystick: {
+                active: false,
+                startX: 0,
+                startY: 0,
+                currentX: 0,
+                currentY: 0,
+                moveX: 0,
+                moveY: 0
+            },
+            dashButton: {
+                pressed: false
+            }
+        };
+        
         // UI properties
         this.frameCount = 0;
         this.lastSpawn = 0;
@@ -46,6 +66,7 @@ class VibeSurvivor {
         this.camera = { x: 0, y: 0 };
         this.spawnRate = 120; // frames between spawns
         this.waveMultiplier = 1;
+        
         
         this.initGame();
     }
@@ -105,7 +126,7 @@ class VibeSurvivor {
                             <div class="survivor-title">
                                 <h1>VIBE SURVIVOR</h1>
                                 <p>Survive the endless waves!</p>
-                                <p class="controls-info">Use WASD to move, SHIFT to dash</p>
+                                <p class="controls-info">Use WASD to move, SPACEBAR to dash</p>
                             </div>
                             <button id="start-survivor" class="survivor-btn primary">START GAME</button>
                         </div>
@@ -123,9 +144,34 @@ class VibeSurvivor {
                                         <span id="level-text">Level 1</span>
                                     </div>
                                     <div class="time-display" id="time-display">0:00</div>
-                                    <div class="position-display" id="position-display" style="color: #9B59B6; font-size: 12px; margin-top: 5px;">Position: 0, 0</div>
+
                                 </div>
                                 <div class="weapon-display" id="weapon-display"></div>
+                            </div>
+                            
+                            <!-- Pause Menu -->
+                            <div id="pause-menu" class="pause-menu" style="display: none;">
+                                <div class="pause-content">
+                                    <h2>GAME PAUSED</h2>
+                                    <div class="pause-buttons">
+                                        <button id="resume-btn" class="survivor-btn primary">RESUME</button>
+                                        <button id="exit-to-menu-btn" class="survivor-btn">EXIT TO MENU</button>
+                                    </div>
+                                    <p class="pause-hint">Press ESC to resume</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Mobile Touch Controls -->
+                            <div id="mobile-controls" class="mobile-controls" style="display: none;">
+                                <!-- Virtual Joystick -->
+                                <div id="virtual-joystick" class="virtual-joystick">
+                                    <div id="joystick-handle" class="joystick-handle"></div>
+                                </div>
+                                
+                                <!-- Dash Button -->
+                                <div id="mobile-dash-btn" class="mobile-dash-btn">
+                                    <span>DASH</span>
+                                </div>
                             </div>
                         </div>
                         
@@ -176,24 +222,29 @@ class VibeSurvivor {
                 background: linear-gradient(135deg, #1a1a2e, #16213e);
                 border: 2px solid #9B59B6;
                 border-radius: 15px;
-                width: 95%;
-                max-width: 900px;
-                height: 90%;
+                width: 95vw;
+                max-width: 95vw;
+                height: 90vh;
+                max-height: 90vh;
                 position: relative;
                 overflow: hidden;
                 box-shadow: 0 0 30px rgba(155, 89, 182, 0.3);
+                display: flex;
+                flex-direction: column;
             }
 
             .vibe-survivor-header {
                 background: rgba(155, 89, 182, 0.2);
                 padding: 15px 20px;
                 border-bottom: 1px solid #9B59B6;
-                display: flex;
+                display: flex !important;
                 justify-content: space-between;
                 align-items: center;
                 position: relative !important;
                 z-index: 999999 !important;
                 pointer-events: auto !important;
+                visibility: visible !important;
+                opacity: 1 !important;
             }
 
             .vibe-survivor-header h2 {
@@ -212,7 +263,6 @@ class VibeSurvivor {
                 width: 35px;
                 height: 35px;
                 border-radius: 50%;
-                cursor: pointer;
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -290,7 +340,6 @@ class VibeSurvivor {
                 padding: 15px 30px;
                 font-size: 1.1rem;
                 border-radius: 25px;
-                cursor: pointer;
                 margin: 10px;
                 transition: all 0.3s ease;
                 text-transform: uppercase;
@@ -331,12 +380,35 @@ class VibeSurvivor {
                 z-index: 100;
             }
 
+            /* Mobile responsive positioning to prevent overlay */
+            @media screen and (max-width: 480px) {
+                .survivor-ui {
+                    position: relative;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    margin: 10px;
+                    margin-bottom: 5px;
+                }
+                
+                .survivor-stats {
+                    position: static;
+                    margin-bottom: 5px;
+                }
+                
+                .weapon-display {
+                    position: static;
+                    margin-top: 5px;
+                }
+            }
+
             .survivor-stats {
                 background: rgba(0, 0, 0, 0.7);
-                padding: 15px;
-                border-radius: 10px;
+                padding: 8px 12px;
+                border-radius: 8px;
                 border: 1px solid #9B59B6;
                 backdrop-filter: blur(5px);
+                max-height: 120px;
             }
 
             .health-bar, .xp-bar {
@@ -389,6 +461,141 @@ class VibeSurvivor {
                 border: 1px solid #9B59B6;
                 backdrop-filter: blur(5px);
                 max-width: 250px;
+            }
+
+            .pause-menu {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.8);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 20000;
+                backdrop-filter: blur(5px);
+            }
+
+            .pause-content {
+                background: linear-gradient(135deg, #1a1a2e, #16213e);
+                border: 2px solid #9B59B6;
+                border-radius: 15px;
+                padding: 40px;
+                text-align: center;
+                box-shadow: 0 0 30px rgba(155, 89, 182, 0.5);
+            }
+
+            .pause-content h2 {
+                color: #9B59B6;
+                font-size: 2rem;
+                margin-bottom: 30px;
+                text-shadow: 0 0 20px rgba(155, 89, 182, 0.8);
+            }
+
+            .pause-buttons {
+                display: flex;
+                flex-direction: column;
+                gap: 15px;
+                margin-bottom: 20px;
+            }
+
+            .pause-hint {
+                color: #888;
+                font-size: 0.9rem;
+                margin: 0;
+            }
+
+            /* Mobile Touch Controls */
+            .mobile-controls {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                pointer-events: none;
+                z-index: 15000;
+            }
+
+            .virtual-joystick {
+                position: absolute;
+                bottom: 40px;
+                left: 40px;
+                width: 100px;
+                height: 100px;
+                background: rgba(155, 89, 182, 0.3);
+                border: 2px solid rgba(155, 89, 182, 0.6);
+                border-radius: 50%;
+                pointer-events: auto;
+                touch-action: none;
+            }
+
+            .joystick-handle {
+                position: absolute;
+                width: 40px;
+                height: 40px;
+                background: #9B59B6;
+                border-radius: 50%;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                box-shadow: 0 0 10px rgba(155, 89, 182, 0.8);
+                transition: all 0.1s ease;
+            }
+
+            .mobile-dash-btn {
+                position: absolute;
+                bottom: 40px;
+                right: 40px;
+                width: 80px;
+                height: 80px;
+                background: rgba(155, 89, 182, 0.8);
+                border: 2px solid #9B59B6;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-weight: bold;
+                font-size: 12px;
+                pointer-events: auto;
+                touch-action: none;
+                user-select: none;
+                box-shadow: 0 0 20px rgba(155, 89, 182, 0.6);
+            }
+
+            .mobile-dash-btn:active {
+                background: #9B59B6;
+                transform: scale(0.9);
+            }
+
+            /* Show mobile controls only on touch devices */
+            @media (hover: none) and (pointer: coarse) {
+                .mobile-controls {
+                    display: block !important;
+                }
+            }
+
+            /* Responsive canvas and screen styles */
+            .vibe-survivor-screen {
+                display: none;
+                width: 100%;
+                height: 100%;
+                position: relative;
+                flex: 1;
+                min-height: 0;
+            }
+
+            .vibe-survivor-screen.active {
+                display: flex;
+                flex-direction: column;
+            }
+
+            #survivor-canvas {
+                max-width: 100%;
+                max-height: 100%;
+                object-fit: contain;
+                background: #0a0a0a;
             }
 
             .weapon-item {
@@ -462,7 +669,6 @@ class VibeSurvivor {
                 border-radius: 10px;
                 padding: 20px;
                 width: 200px;
-                cursor: pointer;
                 transition: all 0.3s ease;
                 text-align: center;
             }
@@ -521,12 +727,36 @@ class VibeSurvivor {
             this.closeGame();
         });
         
+        // Pause menu event listeners
+        document.getElementById('resume-btn').addEventListener('click', () => {
+            this.togglePause();
+        });
+        
+        document.getElementById('exit-to-menu-btn').addEventListener('click', () => {
+            this.exitToMenu();
+        });
+        
         // Keyboard controls
         document.addEventListener('keydown', (e) => {
             if (this.gameRunning) {
                 this.keys[e.key.toLowerCase()] = true;
-                if (e.key.toLowerCase() === 'shift') {
+                
+                // Prevent default for game keys to avoid page scrolling
+                if (e.key === ' ' || 
+                    e.key.toLowerCase() === 'w' || 
+                    e.key.toLowerCase() === 'a' || 
+                    e.key.toLowerCase() === 's' || 
+                    e.key.toLowerCase() === 'd' ||
+                    e.key === 'ArrowUp' ||
+                    e.key === 'ArrowDown' ||
+                    e.key === 'ArrowLeft' ||
+                    e.key === 'ArrowRight' ||
+                    e.key.toLowerCase() === 'escape') {
                     e.preventDefault();
+                }
+                
+                if (e.key.toLowerCase() === 'escape') {
+                    this.togglePause();
                 }
             }
         });
@@ -536,6 +766,11 @@ class VibeSurvivor {
         });
         
         window.addEventListener('resize', () => this.resizeCanvas());
+        
+        // Setup mobile controls if on mobile device
+        if (this.isMobile) {
+            this.setupMobileControls();
+        }
     }
 
     launchGame() {
@@ -567,12 +802,6 @@ class VibeSurvivor {
         // Show fresh start screen
         this.showStartScreen();
         
-        // Enable custom cursor
-        this.enableCustomCursor();
-        
-        // Ensure cursor is properly layered above modal
-        console.log('Calling preserveCustomCursor() during launchGame...');
-        this.preserveCustomCursor();
     }
     
     openGame() {
@@ -594,8 +823,120 @@ class VibeSurvivor {
     
     resizeCanvas() {
         if (this.canvas) {
-            this.canvas.width = 800;
-            this.canvas.height = 600;
+            const container = this.canvas.parentElement;
+            if (container) {
+                // Get viewport constraints first
+                const viewportWidth = window.innerWidth;
+                const viewportHeight = window.innerHeight;
+                
+                // Calculate actual available space in container
+                const containerRect = container.getBoundingClientRect();
+                let availableWidth = containerRect.width;
+                let availableHeight = containerRect.height;
+                
+                // Account for modal header and other UI elements
+                const modal = document.querySelector('#vibe-survivor-modal');
+                if (modal) {
+                    const header = modal.querySelector('.vibe-survivor-header');
+                    const headerHeight = header ? header.offsetHeight : 60; // fallback to 60px
+                    
+                    // Account for padding, margins, and touch controls space - increased for better spacing
+                    const reservedHeight = headerHeight + 160; // header + touch controls + padding + stats + extra margin
+                    const reservedWidth = 60; // side padding increased
+                    
+                    availableWidth = Math.min(availableWidth - reservedWidth, viewportWidth * 0.88);
+                    availableHeight = Math.min(availableHeight - reservedHeight, viewportHeight * 0.70);
+                }
+                
+                // Set responsive minimum sizes based on screen size
+                let minWidth, minHeight, maxWidth, maxHeight;
+                if (viewportWidth <= 480) { // Mobile
+                    minWidth = 320;
+                    minHeight = 240;
+                    maxWidth = viewportWidth * 0.9;
+                    maxHeight = viewportHeight * 0.6;
+                } else if (viewportWidth <= 768) { // Tablet
+                    minWidth = 480;
+                    minHeight = 360;
+                    maxWidth = viewportWidth * 0.85;
+                    maxHeight = viewportHeight * 0.7;
+                } else { // Desktop
+                    minWidth = 600;
+                    minHeight = 450;
+                    maxWidth = 1200;
+                    maxHeight = 900;
+                }
+                
+                // Flexible aspect ratio between 4:3 and 16:9
+                const preferredAspectRatio = 4/3;
+                const flexibleAspectMin = 1.2; // 6:5 (taller)
+                const flexibleAspectMax = 1.8; // 16:9 (wider)
+                
+                let canvasWidth, canvasHeight;
+                let targetAspectRatio = preferredAspectRatio;
+                
+                // Try preferred aspect ratio first
+                if (availableWidth / availableHeight > preferredAspectRatio) {
+                    // Container is wider, fit to height
+                    canvasHeight = Math.min(Math.max(availableHeight, minHeight), maxHeight);
+                    canvasWidth = canvasHeight * preferredAspectRatio;
+                } else {
+                    // Container is taller, fit to width
+                    canvasWidth = Math.min(Math.max(availableWidth, minWidth), maxWidth);
+                    canvasHeight = canvasWidth / preferredAspectRatio;
+                }
+                
+                // Check if we need to adjust aspect ratio to fit better
+                if (canvasWidth > availableWidth || canvasHeight > availableHeight) {
+                    // Recalculate with flexible aspect ratio
+                    const availableAspectRatio = availableWidth / availableHeight;
+                    targetAspectRatio = Math.max(flexibleAspectMin, Math.min(flexibleAspectMax, availableAspectRatio));
+                    
+                    if (availableWidth / availableHeight > targetAspectRatio) {
+                        canvasHeight = Math.min(Math.max(availableHeight, minHeight), maxHeight);
+                        canvasWidth = canvasHeight * targetAspectRatio;
+                    } else {
+                        canvasWidth = Math.min(Math.max(availableWidth, minWidth), maxWidth);
+                        canvasHeight = canvasWidth / targetAspectRatio;
+                    }
+                }
+                
+                // Final constraint check - ensure we don't exceed viewport with more conservative limits
+                if (canvasWidth > viewportWidth * 0.90) {
+                    canvasWidth = viewportWidth * 0.90;
+                    canvasHeight = Math.min(canvasWidth / flexibleAspectMin, maxHeight);
+                }
+                if (canvasHeight > viewportHeight * 0.72) {
+                    canvasHeight = viewportHeight * 0.72;
+                    canvasWidth = Math.min(canvasHeight * flexibleAspectMax, maxWidth);
+                }
+                
+                // Ensure minimum viable game area
+                canvasWidth = Math.max(canvasWidth, minWidth);
+                canvasHeight = Math.max(canvasHeight, minHeight);
+                
+                this.canvas.width = Math.floor(canvasWidth);
+                this.canvas.height = Math.floor(canvasHeight);
+                
+                // Center canvas in container with proper spacing
+                this.canvas.style.display = 'block';
+                this.canvas.style.margin = '10px auto';
+                this.canvas.style.maxWidth = '100%';
+                this.canvas.style.maxHeight = 'calc(100vh - 200px)'; // Ensure touch controls visible
+                
+                console.log(`Canvas resized to: ${this.canvas.width}x${this.canvas.height} (aspect: ${(canvasWidth/canvasHeight).toFixed(2)})`);
+                console.log(`Available space: ${availableWidth}x${availableHeight}, Viewport: ${viewportWidth}x${viewportHeight}`);
+            } else {
+                // Fallback with responsive defaults
+                const isMobile = window.innerWidth <= 768;
+                this.canvas.width = isMobile ? 400 : 800;
+                this.canvas.height = isMobile ? 300 : 600;
+            }
+            
+            // Update touch controls positioning after canvas resize
+            if (this.isMobile) {
+                this.updateTouchControlsPositioning();
+            }
         }
     }
     
@@ -603,8 +944,13 @@ class VibeSurvivor {
     hideModalHeader() {
         const header = document.querySelector('#vibe-survivor-modal .vibe-survivor-header');
         if (header) {
-            header.style.display = 'none';
-            console.log('Modal header hidden during gameplay');
+            // Keep header visible during gameplay so X button is accessible
+            // Only hide the title, keep the close button visible
+            const title = header.querySelector('h2');
+            if (title) {
+                title.style.display = 'none';
+            }
+            console.log('Modal header title hidden during gameplay, X button remains visible');
         } else {
             console.log('Modal header not found for hiding');
         }
@@ -614,6 +960,11 @@ class VibeSurvivor {
         const header = document.querySelector('#vibe-survivor-modal .vibe-survivor-header');
         if (header) {
             header.style.display = 'flex';
+            // Also show the title when showing full header
+            const title = header.querySelector('h2');
+            if (title) {
+                title.style.display = 'block';
+            }
             console.log('Modal header shown for menu screens');
         } else {
             console.log('Modal header not found for showing');
@@ -722,8 +1073,11 @@ class VibeSurvivor {
             return;
         }
         
-        // Enable custom cursor for game
-        this.enableCustomCursor();
+        
+        // Setup mobile controls when game starts
+        if (this.isMobile) {
+            this.setupMobileControls();
+        }
         
         this.gameRunning = true;
         console.log('Starting game loop...');
@@ -806,42 +1160,58 @@ class VibeSurvivor {
     updatePlayer() {
         const speed = this.player.speed * (this.player.passives.speed_boost ? 1.3 : 1);
         
-        // WASD movement only
+        // Keyboard WASD movement
+        let moveX = 0, moveY = 0;
+        
         if (this.keys['w'] || this.keys['arrowup']) {
-            this.player.y -= speed;
+            moveY -= 1;
         }
         if (this.keys['s'] || this.keys['arrowdown']) {
-            this.player.y += speed;
+            moveY += 1;
         }
         if (this.keys['a'] || this.keys['arrowleft']) {
-            this.player.x -= speed;
+            moveX -= 1;
         }
         if (this.keys['d'] || this.keys['arrowright']) {
-            this.player.x += speed;
+            moveX += 1;
         }
         
-        // Dash mechanic with Shift key
-        if (this.keys['shift'] && !this.player.dashCooldown) {
+        // Add mobile joystick movement
+        if (this.isMobile && this.touchControls.joystick.active) {
+            moveX += this.touchControls.joystick.moveX;
+            moveY += this.touchControls.joystick.moveY;
+        }
+        
+        // Apply movement
+        this.player.x += moveX * speed;
+        this.player.y += moveY * speed;
+        
+        // Dash mechanic with Spacebar key or mobile dash button
+        const shouldDash = this.keys[' '] || (this.isMobile && this.touchControls.dashButton.pressed);
+        if (shouldDash && !this.player.dashCooldown) {
             const dashDistance = 40;
             let dashX = 0, dashY = 0;
             
-            if (this.keys['w'] || this.keys['arrowup']) dashY -= dashDistance;
-            if (this.keys['s'] || this.keys['arrowdown']) dashY += dashDistance;
-            if (this.keys['a'] || this.keys['arrowleft']) dashX -= dashDistance;
-            if (this.keys['d'] || this.keys['arrowright']) dashX += dashDistance;
-            
-            if (dashX !== 0 || dashY !== 0) {
-                this.player.x += dashX;
-                this.player.y += dashY;
-                this.player.dashCooldown = 60;
-                this.player.invulnerable = 30;
-                this.createDashParticles();
+            // Use current movement direction for dash
+            if (moveX !== 0 || moveY !== 0) {
+                // Normalize the movement direction for consistent dash distance
+                const magnitude = Math.sqrt(moveX * moveX + moveY * moveY);
+                dashX = (moveX / magnitude) * dashDistance;
+                dashY = (moveY / magnitude) * dashDistance;
             } else {
                 // Default forward dash if no direction
-                this.player.y -= dashDistance;
-                this.player.dashCooldown = 60;
-                this.player.invulnerable = 30;
-                this.createDashParticles();
+                dashY = -dashDistance;
+            }
+            
+            this.player.x += dashX;
+            this.player.y += dashY;
+            this.player.dashCooldown = 30;
+            this.player.invulnerable = 30;
+            this.createDashParticles();
+            
+            // Reset mobile dash button state after use
+            if (this.isMobile) {
+                this.touchControls.dashButton.pressed = false;
             }
         }
         
@@ -865,14 +1235,22 @@ class VibeSurvivor {
     }
     
     updatePassives() {
-        // Regeneration
+        // Regeneration - handle both boolean and object cases
         if (this.player.passives.regeneration && this.player.health < this.player.maxHealth) {
-            if (!this.player.passives.regeneration.timer) {
-                this.player.passives.regeneration.timer = 0;
+            // Fix: If regeneration is boolean true, convert to object
+            if (this.player.passives.regeneration === true) {
+                this.player.passives.regeneration = { timer: 0 };
             }
-            if (this.player.passives.regeneration.timer++ >= 120) { // 2 seconds
-                this.player.health = Math.min(this.player.maxHealth, this.player.health + 2);
-                this.player.passives.regeneration.timer = 0;
+            
+            // Ensure regeneration is an object with timer property
+            if (typeof this.player.passives.regeneration === 'object') {
+                if (!this.player.passives.regeneration.timer) {
+                    this.player.passives.regeneration.timer = 0;
+                }
+                if (this.player.passives.regeneration.timer++ >= 60) { // 1 second
+                    this.player.health = Math.min(this.player.maxHealth, this.player.health + 4);
+                    this.player.passives.regeneration.timer = 0;
+                }
             }
         }
     }
@@ -885,6 +1263,180 @@ class VibeSurvivor {
                 weapon.lastFire = 0;
             }
         });
+    }
+    
+    togglePause() {
+        this.isPaused = !this.isPaused;
+        const pauseMenu = document.getElementById('pause-menu');
+        
+        if (this.isPaused) {
+            pauseMenu.style.display = 'flex';
+            this.gameRunning = false; // Stop game updates
+        } else {
+            pauseMenu.style.display = 'none';
+            this.gameRunning = true; // Resume game updates
+        }
+    }
+    
+    exitToMenu() {
+        this.isPaused = false;
+        this.gameRunning = false;
+        
+        // Hide pause menu
+        const pauseMenu = document.getElementById('pause-menu');
+        if (pauseMenu) {
+            pauseMenu.style.display = 'none';
+        }
+        
+        // Show start screen
+        this.showStartScreen();
+        this.resetGame();
+    }
+    
+    detectMobile() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+               ('ontouchstart' in window) ||
+               (navigator.maxTouchPoints > 0);
+    }
+    
+    setupMobileControls() {
+        const mobileControls = document.getElementById('mobile-controls');
+        const joystick = document.getElementById('virtual-joystick');
+        const dashBtn = document.getElementById('mobile-dash-btn');
+        
+        if (mobileControls && this.isMobile) {
+            mobileControls.style.display = 'block';
+        }
+        
+        if (joystick) {
+            this.setupVirtualJoystick(joystick);
+        }
+        
+        if (dashBtn) {
+            this.setupDashButton(dashBtn);
+        }
+    }
+    
+    updateTouchControlsPositioning() {
+        if (!this.isMobile) return;
+        
+        const mobileControls = document.getElementById('mobile-controls');
+        const joystick = document.getElementById('virtual-joystick');
+        const dashBtn = document.getElementById('mobile-dash-btn');
+        const modal = document.querySelector('#vibe-survivor-modal');
+        
+        if (!mobileControls || !modal) return;
+        
+        const modalRect = modal.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const viewportWidth = window.innerWidth;
+        
+        // Calculate safe positioning area
+        const modalBottom = modalRect.bottom;
+        const availableBottomSpace = viewportHeight - modalBottom;
+        const safeBottomMargin = Math.max(20, availableBottomSpace * 0.1);
+        
+        // Position touch controls relative to modal/viewport, not canvas
+        if (joystick) {
+            const joystickSize = Math.min(80, viewportWidth * 0.15); // Responsive size
+            joystick.style.position = 'fixed';
+            joystick.style.bottom = `${safeBottomMargin}px`;
+            joystick.style.left = `${Math.max(20, viewportWidth * 0.05)}px`;
+            joystick.style.width = `${joystickSize}px`;
+            joystick.style.height = `${joystickSize}px`;
+            joystick.style.zIndex = '1000010'; // Above modal content
+        }
+        
+        if (dashBtn) {
+            const dashBtnSize = Math.min(60, viewportWidth * 0.12); // Responsive size
+            dashBtn.style.position = 'fixed';
+            dashBtn.style.bottom = `${safeBottomMargin}px`;
+            dashBtn.style.right = `${Math.max(20, viewportWidth * 0.05)}px`;
+            dashBtn.style.width = `${dashBtnSize}px`;
+            dashBtn.style.height = `${dashBtnSize}px`;
+            dashBtn.style.zIndex = '1000010'; // Above modal content
+            dashBtn.style.fontSize = `${Math.min(12, dashBtnSize * 0.2)}px`;
+        }
+        
+        // Ensure controls don't overlap with modal content
+        if (modalRect.height > viewportHeight * 0.8) {
+            // Modal is very tall, position controls over the modal with higher z-index
+            const controlsOverlayBottom = Math.max(10, viewportHeight * 0.05);
+            
+            if (joystick) {
+                joystick.style.bottom = `${controlsOverlayBottom}px`;
+                joystick.style.backgroundColor = 'rgba(155, 89, 182, 0.9)'; // More opaque
+            }
+            
+            if (dashBtn) {
+                dashBtn.style.bottom = `${controlsOverlayBottom}px`;
+                dashBtn.style.backgroundColor = 'rgba(155, 89, 182, 0.9)'; // More opaque
+            }
+        }
+        
+        console.log(`Touch controls positioned: viewport ${viewportWidth}x${viewportHeight}, modal bottom: ${modalBottom}`);
+    }
+    
+    setupVirtualJoystick(joystick) {
+        const handle = document.getElementById('joystick-handle');
+        const joystickRect = joystick.getBoundingClientRect();
+        const maxDistance = 30; // Maximum distance handle can move from center
+        
+        joystick.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            this.touchControls.joystick.active = true;
+            this.touchControls.joystick.startX = touch.clientX;
+            this.touchControls.joystick.startY = touch.clientY;
+        });
+        
+        joystick.addEventListener('touchmove', (e) => {
+            if (!this.touchControls.joystick.active) return;
+            e.preventDefault();
+            
+            const touch = e.touches[0];
+            const deltaX = touch.clientX - this.touchControls.joystick.startX;
+            const deltaY = touch.clientY - this.touchControls.joystick.startY;
+            
+            // Limit movement to circle
+            const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+            const limitedDistance = Math.min(distance, maxDistance);
+            const angle = Math.atan2(deltaY, deltaX);
+            
+            const limitedX = Math.cos(angle) * limitedDistance;
+            const limitedY = Math.sin(angle) * limitedDistance;
+            
+            // Update handle position
+            handle.style.transform = `translate(calc(-50% + ${limitedX}px), calc(-50% + ${limitedY}px))`;
+            
+            // Convert to movement values (-1 to 1)
+            this.touchControls.joystick.moveX = limitedX / maxDistance;
+            this.touchControls.joystick.moveY = limitedY / maxDistance;
+        });
+        
+        const endTouch = () => {
+            this.touchControls.joystick.active = false;
+            this.touchControls.joystick.moveX = 0;
+            this.touchControls.joystick.moveY = 0;
+            handle.style.transform = 'translate(-50%, -50%)';
+        };
+        
+        joystick.addEventListener('touchend', endTouch);
+        joystick.addEventListener('touchcancel', endTouch);
+    }
+    
+    setupDashButton(dashBtn) {
+        dashBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            this.touchControls.dashButton.pressed = true;
+        });
+        
+        const endDash = () => {
+            this.touchControls.dashButton.pressed = false;
+        };
+        
+        dashBtn.addEventListener('touchend', endDash);
+        dashBtn.addEventListener('touchcancel', endDash);
     }
     
     fireWeapon(weapon) {
@@ -1516,7 +2068,7 @@ class VibeSurvivor {
     }
     
     checkLevelUp() {
-        const xpRequired = this.player.level * 10 + 5;
+        const xpRequired = this.player.level * 5 + 10;
         if (this.player.xp >= xpRequired) {
             this.player.xp -= xpRequired;
             this.player.level++;
@@ -1623,21 +2175,34 @@ class VibeSurvivor {
     }
     
     createLevelUpModal(choices) {
+        // Calculate responsive sizing
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        const isMobile = viewportWidth <= 768;
+        
         const modalHTML = `
-            <div id="levelup-modal" class="levelup-modal">
+            <div id="levelup-modal" class="levelup-modal levelup-modal-responsive">
                 <div class="levelup-title">LEVEL UP! Choose an upgrade:</div>
-                <div class="upgrade-choices">
-                    ${choices.map((choice, index) => `
-                        <div class="upgrade-choice" data-choice="${index}">
-                            <h3>${choice.icon} ${choice.name}</h3>
-                            <p>${choice.description}</p>
-                        </div>
-                    `).join('')}
+                <div class="upgrade-choices-container">
+                    <div class="upgrade-choices">
+                        ${choices.map((choice, index) => `
+                            <div class="upgrade-choice" data-choice="${index}">
+                                <h3>${choice.icon} ${choice.name}</h3>
+                                <p>${choice.description}</p>
+                            </div>
+                        `).join('')}
+                    </div>
                 </div>
             </div>
         `;
         
         document.getElementById('game-screen').insertAdjacentHTML('beforeend', modalHTML);
+        
+        // Apply responsive positioning and sizing after insertion
+        const modal = document.getElementById('levelup-modal');
+        if (modal) {
+            this.applyResponsiveModalStyles(modal, choices.length, isMobile);
+        }
         
         // Add event listeners to choices
         choices.forEach((choice, index) => {
@@ -1648,6 +2213,105 @@ class VibeSurvivor {
                 this.gameLoop();
             });
         });
+    }
+    
+    applyResponsiveModalStyles(modal, choiceCount, isMobile) {
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        
+        // Calculate optimal modal dimensions
+        let modalMaxWidth, modalMaxHeight, choiceWidth, choiceHeight;
+        
+        if (isMobile) {
+            modalMaxWidth = Math.min(viewportWidth * 0.95, 400);
+            modalMaxHeight = viewportHeight * 0.85;
+            choiceWidth = modalMaxWidth - 60; // Account for padding
+            choiceHeight = 'auto';
+        } else {
+            modalMaxWidth = Math.min(viewportWidth * 0.9, 900);
+            modalMaxHeight = viewportHeight * 0.8;
+            choiceWidth = Math.min(200, (modalMaxWidth - 100) / Math.min(choiceCount, 3));
+            choiceHeight = 'auto';
+        }
+        
+        // Apply styles directly to the modal
+        modal.style.cssText += `
+            max-width: ${modalMaxWidth}px !important;
+            max-height: ${modalMaxHeight}px !important;
+            width: auto !important;
+            height: auto !important;
+            position: fixed !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            overflow: visible !important;
+        `;
+        
+        // Style the container for scrolling
+        const container = modal.querySelector('.upgrade-choices-container');
+        if (container) {
+            container.style.cssText = `
+                max-height: ${modalMaxHeight - 120}px;
+                overflow-y: auto;
+                overflow-x: hidden;
+                padding: 0 10px;
+                margin: 10px -10px;
+            `;
+            
+            // Custom scrollbar for better mobile experience
+            container.style.cssText += `
+                scrollbar-width: thin;
+                scrollbar-color: #9B59B6 transparent;
+            `;
+        }
+        
+        // Style the choices grid
+        const choicesGrid = modal.querySelector('.upgrade-choices');
+        if (choicesGrid) {
+            if (isMobile) {
+                // Vertical layout for mobile
+                choicesGrid.style.cssText = `
+                    display: flex !important;
+                    flex-direction: column !important;
+                    gap: 15px !important;
+                    align-items: center !important;
+                `;
+            } else {
+                // Grid layout for desktop
+                choicesGrid.style.cssText = `
+                    display: grid !important;
+                    grid-template-columns: repeat(auto-fit, minmax(${choiceWidth}px, 1fr)) !important;
+                    gap: 20px !important;
+                    justify-content: center !important;
+                `;
+            }
+        }
+        
+        // Style individual choices
+        const choices = modal.querySelectorAll('.upgrade-choice');
+        choices.forEach(choice => {
+            if (isMobile) {
+                choice.style.cssText = `
+                    width: ${choiceWidth}px !important;
+                    min-height: 100px !important;
+                    padding: 15px !important;
+                    font-size: 14px !important;
+                `;
+                
+                const h3 = choice.querySelector('h3');
+                if (h3) h3.style.fontSize = '16px !important';
+                
+                const p = choice.querySelector('p');
+                if (p) p.style.fontSize = '12px !important';
+            } else {
+                choice.style.cssText = `
+                    width: ${choiceWidth}px !important;
+                    min-height: 120px !important;
+                `;
+            }
+        });
+        
+        console.log(`Level up modal sized: ${modalMaxWidth}x${modalMaxHeight}, choices: ${choiceCount}, mobile: ${isMobile}`);
     }
     
     selectUpgrade(choice) {
@@ -2310,7 +2974,7 @@ class VibeSurvivor {
         }
         
         // XP bar
-        const xpRequired = this.player.level * 10 + 5;
+        const xpRequired = this.player.level * 5 + 10;
         const xpPercent = (this.player.xp / xpRequired) * 100;
         const xpFill = document.getElementById('xp-fill');
         const levelText = document.getElementById('level-text');
@@ -2355,8 +3019,6 @@ class VibeSurvivor {
         // CRITICAL FIX: Show modal header for game over screen
         this.showModalHeader();
         
-        // Preserve custom cursor immediately
-        this.preserveCustomCursor();
         
         // IMMEDIATE OVERLAY REMOVAL - before doing anything else
         console.log('=== EMERGENCY OVERLAY REMOVAL ===');
@@ -2371,11 +3033,10 @@ class VibeSurvivor {
                 const opacity = parseFloat(style.opacity);
                 const display = style.display;
                 
-                // Remove elements that are likely invisible overlays (but preserve cursor and header)
+                // Remove elements that are likely invisible overlays (but preserve header)
                 if ((zIndex > 50000 || 
                     (zIndex > 10000 && opacity < 0.1) ||
                     (display !== 'none' && zIndex > 20000 && el.innerHTML.trim() === '')) &&
-                    !el.className.includes('cursor') &&
                     !el.className.includes('vibe-survivor-header')) {
                     console.log('Removing overlay element:', {
                         tag: el.tagName,
@@ -2507,7 +3168,6 @@ class VibeSurvivor {
                 justify-content: center !important;
                 z-index: 999999 !important;
                 font-family: Arial, sans-serif !important;
-                cursor: none !important;
             ">
                 <div style="
                     background: linear-gradient(135deg, #1a1a2e, #16213e) !important;
@@ -2532,13 +3192,13 @@ class VibeSurvivor {
                     <button id="fresh-restart-btn" style="
                         background: #E74C3C !important; color: white !important; border: none !important;
                         padding: 15px 30px !important; font-size: 20px !important; border-radius: 25px !important;
-                        cursor: pointer !important; margin: 0 10px !important; font-weight: bold !important;
+                        margin: 0 10px !important; font-weight: bold !important;
                     ">PLAY AGAIN</button>
                     
                     <button id="fresh-exit-btn" style="
                         background: #9B59B6 !important; color: white !important; border: none !important;
                         padding: 15px 30px !important; font-size: 20px !important; border-radius: 25px !important;
-                        cursor: pointer !important; margin: 0 10px !important; font-weight: bold !important;
+                        margin: 0 10px !important; font-weight: bold !important;
                     ">EXIT</button>
                 </div>
             </div>
@@ -2546,8 +3206,6 @@ class VibeSurvivor {
         
         document.body.insertAdjacentHTML('beforeend', newModalHTML);
         
-        // Ensure custom cursor is preserved after nuclear modal creation
-        this.preserveCustomCursor();
         
         // Attach event listeners to new buttons
         document.getElementById('fresh-restart-btn').addEventListener('click', () => {
@@ -2666,9 +3324,8 @@ class VibeSurvivor {
             potentialOverlays.forEach(overlay => {
                 const zIndex = parseInt(window.getComputedStyle(overlay).zIndex);
                 const opacity = parseFloat(window.getComputedStyle(overlay).opacity);
-                // Remove invisible high z-index elements that might be blocking (but preserve cursor and header)
-                if (zIndex > 10000 && (opacity === 0 || overlay.innerHTML.trim() === '') && 
-                    !overlay.className.includes('cursor') &&
+                // Remove invisible high z-index elements that might be blocking (but preserve header)
+                if (zIndex > 10000 && (opacity === 0 || overlay.innerHTML.trim() === '') &&
                     !overlay.className.includes('vibe-survivor-header')) {
                     console.log('Removing potential overlay:', overlay);
                     overlay.remove();
@@ -2749,8 +3406,10 @@ class VibeSurvivor {
         this.startGame();
     }
     
+
     closeGame() {
         this.gameRunning = false;
+        
         
         // Remove any fresh modals that might exist
         const freshModal = document.getElementById('fresh-game-over-modal');
@@ -2819,7 +3478,7 @@ class VibeSurvivor {
                             color: #9B59B6;
                         ">VIBE SURVIVOR</h1>
                         <p style="font-size: 1.4rem; margin: 15px 0; opacity: 0.9; color: white;">Survive the endless waves!</p>
-                        <p style="font-size: 1rem; color: #9B59B6; margin-top: 25px; font-weight: bold;">Use WASD to move, SHIFT to dash</p>
+                        <p style="font-size: 1rem; color: #9B59B6; margin-top: 25px; font-weight: bold;">Use WASD to move, SPACEBAR to dash</p>
                     </div>
                     <button id="start-survivor" style="
                         background: linear-gradient(135deg, #E74C3C, #C0392B);
@@ -2828,8 +3487,7 @@ class VibeSurvivor {
                         padding: 20px 40px;
                         font-size: 1.3rem;
                         border-radius: 25px;
-                        cursor: pointer;
-                        text-transform: uppercase;
+                                text-transform: uppercase;
                         font-weight: bold;
                         box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
                         transition: transform 0.2s;
@@ -2872,91 +3530,6 @@ class VibeSurvivor {
         console.log('Game reopened and showing start screen');
     }
     
-    // Custom cursor management methods
-    enableCustomCursor() {
-        console.log('Enabling custom cursor...');
-        const cursorElements = document.querySelectorAll('.cursor, .cursor-follower');
-        cursorElements.forEach(cursor => {
-            cursor.style.display = 'block';
-            cursor.style.visibility = 'visible';
-            cursor.style.opacity = '1';
-        });
-        
-        // Make sure cursor is visible in game over screen
-        const gameOverScreen = document.getElementById('survivor-game-over-screen');
-        if (gameOverScreen) {
-            gameOverScreen.style.cursor = 'none'; // Allow custom cursor to show
-        }
-    }
-    
-    disableCustomCursor() {
-        console.log('Disabling custom cursor...');
-        const cursorElements = document.querySelectorAll('.cursor, .cursor-follower');
-        cursorElements.forEach(cursor => {
-            cursor.style.display = 'none';
-        });
-    }
-    
-    preserveCustomCursor() {
-        // Ensure custom cursor remains visible during game over
-        const modal = document.getElementById('vibe-survivor-modal');
-        if (modal) {
-            modal.style.cursor = 'none'; // Allow custom cursor to show through
-        }
-        
-        // Make sure custom cursor elements have higher z-index than modal
-        const cursorElements = document.querySelectorAll('.cursor, .cursor-follower');
-        cursorElements.forEach(cursor => {
-            cursor.style.zIndex = '9999999'; // Higher than modal (999999)
-            cursor.style.position = 'fixed'; // Ensure proper positioning
-            cursor.style.display = 'block';
-            cursor.style.visibility = 'visible';
-            cursor.style.opacity = '1';
-            cursor.style.pointerEvents = 'none';
-        });
-        
-        // Also ensure the nuclear modal allows cursor to show through
-        setTimeout(() => {
-            const nuclearModal = document.getElementById('fresh-game-over-modal');
-            if (nuclearModal) {
-                nuclearModal.style.cursor = 'none';
-                
-                // Re-apply cursor settings to ensure they're on top
-                const cursorElements = document.querySelectorAll('.cursor, .cursor-follower');
-                cursorElements.forEach(cursor => {
-                    cursor.style.zIndex = '9999999'; // Higher than modal (999999)
-                    cursor.style.position = 'fixed';
-                    cursor.style.display = 'block';
-                    cursor.style.visibility = 'visible';
-                    cursor.style.opacity = '1';
-                    cursor.style.pointerEvents = 'none';
-                });
-                
-                console.log('Custom cursor z-index set higher than modal');
-            }
-        }, 100);
-    }
-    
-    enableMainWebsiteCursor() {
-        console.log('Re-enabling main website custom cursor...');
-        
-        // First disable game cursor
-        this.disableCustomCursor();
-        
-        // Re-enable main website custom cursor elements
-        const mainCursorElements = document.querySelectorAll('.cursor, .cursor-follower');
-        mainCursorElements.forEach(cursor => {
-            cursor.style.display = 'block';
-            cursor.style.visibility = 'visible';
-            cursor.style.opacity = '1';
-            cursor.style.zIndex = '9999'; // Reset to normal z-index for main site
-        });
-        
-        // Ensure body has cursor: none to allow custom cursor
-        document.body.style.cursor = 'none';
-        
-        console.log('Main website custom cursor re-enabled');
-    }
     
     cleanRestart() {
         console.log('Executing clean restart...');
@@ -2992,8 +3565,6 @@ class VibeSurvivor {
             }
         });
         
-        // Re-enable main website custom cursor before exit
-        this.enableMainWebsiteCursor();
         
         // Notify Game Manager that we've exited
         if (window.gameManager && window.gameManager.currentGame === 'vibe-survivor') {
