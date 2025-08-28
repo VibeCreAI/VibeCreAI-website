@@ -56,7 +56,7 @@ class GameManager {
             this.vibeRunner.launchGame();
         } else {
             console.error('Vibe Runner not available');
-            this.showGameNotReadyMessage('Vibe Runner');
+            this.showLoadingScreen('Vibe Runner');
         }
     }
     
@@ -105,15 +105,15 @@ class GameManager {
                     this.currentGame = 'vibe-survivor';
                     this.vibeSurvivor.launchGame();
                 } else {
-                    console.error('Vibe Survivor failed to initialize');
-                    this.showGameNotReadyMessage('Vibe Survivor');
+                    // Show loading screen instead of error message
+                    this.showLoadingScreen('Vibe Survivor');
                 }
             }, 100);
         };
         
         script.onerror = () => {
-            console.error('Failed to load Vibe Survivor');
-            this.showGameNotReadyMessage('Vibe Survivor');
+            // Show loading screen for network issues
+            this.showLoadingScreen('Vibe Survivor');
         };
         
         document.head.appendChild(script);
@@ -143,91 +143,133 @@ class GameManager {
         this.currentGame = null;
     }
     
-    showGameNotReadyMessage(gameName) {
-        // Create a temporary message overlay
-        const messageDiv = document.createElement('div');
-        messageDiv.className = 'game-not-ready-message';
-        messageDiv.innerHTML = `
-            <div class="message-content">
-                <h3>🚧 ${gameName} Not Ready Yet! 🚧</h3>
-                <p>This game is still being prepared. Please try again in a moment!</p>
-                <button class="message-close-btn">OK</button>
+    showLoadingScreen(gameName) {
+        // Create a professional loading screen overlay
+        const loadingDiv = document.createElement('div');
+        loadingDiv.className = 'game-loading-screen';
+        loadingDiv.innerHTML = `
+            <div class="loading-content">
+                <div class="loading-logo">🎮</div>
+                <h3>Loading ${gameName}...</h3>
+                <div class="loading-progress">
+                    <div class="loading-bar">
+                        <div class="loading-fill"></div>
+                    </div>
+                    <p class="loading-text">Preparing your gaming experience...</p>
+                </div>
             </div>
         `;
         
-        const messageStyle = document.createElement('style');
-        messageStyle.textContent = `
-            .game-not-ready-message {
+        const loadingStyle = document.createElement('style');
+        loadingStyle.textContent = `
+            .game-loading-screen {
                 position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                background: linear-gradient(135deg, #1a0a0a, #2a0a1a);
-                border: 2px solid #ff6b6b;
-                border-radius: 15px;
-                padding: 30px;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(135deg, #0a0a2a, #1a0a3a);
+                display: flex;
+                align-items: center;
+                justify-content: center;
                 z-index: 100000;
-                animation: messageSlideIn 0.5s ease;
-                box-shadow: 0 0 40px rgba(255, 107, 107, 0.5);
+                animation: loadingFadeIn 0.5s ease;
             }
             
-            .message-content h3 {
-                color: #ff6b6b;
-                margin-bottom: 15px;
+            .loading-content {
                 text-align: center;
-                font-size: 20px;
-                text-shadow: 0 0 20px rgba(255, 107, 107, 0.8);
-            }
-            
-            .message-content p {
                 color: #fff;
+                max-width: 400px;
+                padding: 40px;
+            }
+            
+            .loading-logo {
+                font-size: 60px;
                 margin-bottom: 20px;
-                text-align: center;
+                animation: loadingPulse 1.5s ease-in-out infinite;
+            }
+            
+            .loading-content h3 {
+                color: #00d4ff;
+                margin-bottom: 30px;
+                font-size: 24px;
+                text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+            }
+            
+            .loading-progress {
+                margin-bottom: 20px;
+            }
+            
+            .loading-bar {
+                width: 100%;
+                height: 8px;
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 4px;
+                overflow: hidden;
+                margin-bottom: 15px;
+            }
+            
+            .loading-fill {
+                height: 100%;
+                background: linear-gradient(90deg, #00d4ff, #0099ff);
+                border-radius: 4px;
+                width: 0%;
+                animation: loadingProgress 2s ease-in-out infinite;
+                box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+            }
+            
+            .loading-text {
+                color: rgba(255, 255, 255, 0.7);
                 font-size: 14px;
-                opacity: 0.9;
+                margin: 0;
+                animation: loadingText 2s ease-in-out infinite;
             }
             
-            .message-close-btn {
-                display: block;
-                margin: 0 auto;
-                padding: 10px 25px;
-                border: 2px solid #ff6b6b;
-                background: transparent;
-                color: #ff6b6b;
-                font-weight: bold;
-                cursor: pointer;
-                transition: all 0.3s ease;
-                font-size: 14px;
-                border-radius: 20px;
+            @keyframes loadingFadeIn {
+                0% { opacity: 0; }
+                100% { opacity: 1; }
             }
             
-            .message-close-btn:hover {
-                background: rgba(255, 107, 107, 0.2);
-                box-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
+            @keyframes loadingPulse {
+                0%, 100% { transform: scale(1); opacity: 0.8; }
+                50% { transform: scale(1.1); opacity: 1; }
             }
             
-            @keyframes messageSlideIn {
-                0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
-                100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            @keyframes loadingProgress {
+                0% { width: 0%; }
+                50% { width: 70%; }
+                100% { width: 100%; }
+            }
+            
+            @keyframes loadingText {
+                0%, 100% { opacity: 0.7; }
+                50% { opacity: 1; }
             }
         `;
         
-        document.head.appendChild(messageStyle);
-        document.body.appendChild(messageDiv);
+        document.head.appendChild(loadingStyle);
+        document.body.appendChild(loadingDiv);
         
-        // Add close button functionality
-        messageDiv.querySelector('.message-close-btn').addEventListener('click', () => {
-            messageDiv.remove();
-            messageStyle.remove();
-        });
-        
-        // Auto-close after 3 seconds
+        // Auto-close after 3 seconds with fade out
         setTimeout(() => {
-            if (messageDiv.parentNode) {
-                messageDiv.remove();
-                messageStyle.remove();
-            }
+            loadingDiv.style.animation = 'loadingFadeOut 0.5s ease forwards';
+            setTimeout(() => {
+                if (loadingDiv.parentNode) {
+                    loadingDiv.remove();
+                    loadingStyle.remove();
+                }
+            }, 500);
         }, 3000);
+        
+        // Add fade out animation
+        const fadeOutStyle = document.createElement('style');
+        fadeOutStyle.textContent = `
+            @keyframes loadingFadeOut {
+                0% { opacity: 1; }
+                100% { opacity: 0; }
+            }
+        `;
+        document.head.appendChild(fadeOutStyle);
     }
 }
 
