@@ -204,6 +204,23 @@ class VibeSurvivor {
         const styles = document.createElement('style');
         styles.id = 'vibe-survivor-styles';
         styles.textContent = `
+            :root {
+                --header-height: 60px;
+                --bottom-ui-height-desktop: 130px;
+                --bottom-ui-height-mobile: 130px;
+                --bottom-ui-height-tablet: 130px;
+                --canvas-margin: 80px;
+                --safe-zone-mobile: 60px;
+                --touch-control-size: 100px;
+            }
+            
+            /* Tablet breakpoint */
+            @media screen and (min-width: 481px) and (max-width: 1024px) {
+                #survivor-canvas {
+                    height: calc(100vh - var(--header-height) - var(--bottom-ui-height-tablet) - var(--canvas-margin));
+                }
+            }
+            
             @keyframes neonPulse {
                 0%, 100% { opacity: 1; }
                 50% { opacity: 0.8; }
@@ -224,10 +241,10 @@ class VibeSurvivor {
             
             .vibe-survivor-modal {
                 position: fixed;
-                top: 0;
+                top: var(--header-height);
                 left: 0;
                 width: 100%;
-                height: 100%;
+                height: calc(100vh - var(--header-height));
                 background: rgba(0, 0, 0, 0.95);
                 backdrop-filter: blur(10px);
                 display: flex;
@@ -242,9 +259,9 @@ class VibeSurvivor {
                 border-radius: 20px;
                 padding: 0;
                 width: 90%;
-                max-width: 1000px;
-                height: 90vh;
-                max-height: 90vh;
+                max-width: 1500px;
+                height: calc(90vh - var(--header-height));
+                max-height: calc(90vh - var(--header-height));
                 display: flex;
                 flex-direction: column;
                 border: 2px solid #00ffff;
@@ -265,7 +282,7 @@ class VibeSurvivor {
                 visibility: visible !important;
                 opacity: 1 !important;
                 background: rgba(0, 20, 40, 0.5);
-                min-height: 70px;
+                min-height: 65px;
             }
 
             .vibe-survivor-header h2 {
@@ -305,13 +322,14 @@ class VibeSurvivor {
             }
 
             .vibe-survivor-container {
-                height: calc(100% - 90px) !important;
+                height: calc(100% - var(--header-height)) !important;
                 position: relative !important;
                 width: 100% !important;
                 display: block !important;
                 visibility: visible !important;
                 overflow: hidden !important;
                 background: transparent;
+                top: 10px;
             }
 
             .vibe-survivor-screen {
@@ -421,9 +439,21 @@ class VibeSurvivor {
                 border: 2px solid #00ffff;
                 border-radius: 10px;
                 box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
-                max-width: 100%;
-                max-height: 100%;
+                width: calc(100% - 40px);
+                height: calc(100vh - var(--header-height) - var(--bottom-ui-height-desktop) - var(--canvas-margin));
+                max-width: calc(100% - 40px);
                 object-fit: contain;
+                display: block;
+                margin: 10px auto 0;
+            }
+            
+            @media screen and (max-width: 480px) {
+                #survivor-canvas {
+                    width: calc(100% - 20px);
+                    height: calc(100vh - var(--header-height) - var(--bottom-ui-height-mobile) - var(--canvas-margin));
+                    max-width: calc(100% - 20px);
+                    margin: 10px auto 0;
+                }
             }
 
             /* Reorganized header-style UI matching Vibe Runner */
@@ -432,8 +462,9 @@ class VibeSurvivor {
                 bottom: 20px;
                 left: 20px;
                 right: 20px;
-                display: flex;
-                justify-content: space-between;
+                display: grid;
+                grid-template-columns: 1fr auto 1fr;
+                grid-template-areas: "stats time weapon";
                 align-items: center;
                 pointer-events: none;
                 z-index: 100;
@@ -443,6 +474,24 @@ class VibeSurvivor {
                 border: 1px solid rgba(0, 255, 255, 0.3);
                 backdrop-filter: blur(5px);
                 box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+            }
+            
+            /* Grid area assignments */
+            .survivor-stats { 
+                grid-area: stats; 
+                justify-self: center;
+                text-align: center;
+            }
+            .time-display { grid-area: time; justify-self: center; }
+            .weapon-display { 
+                grid-area: weapon; 
+                justify-self: center;
+                text-align: center;
+                position: static;
+                margin: 0;
+                top: auto;
+                right: auto;
+                left: auto;
             }
 
             .distance-meter, .level-display {
@@ -472,6 +521,15 @@ class VibeSurvivor {
                 align-items: center;
                 gap: 20px;
             }
+            
+            /* Mobile-specific stats layout */
+            @media screen and (max-width: 800px) {
+                .survivor-stats {
+                    gap: 10px;
+                    flex-wrap: wrap;
+                    justify-content: space-between;
+                }
+            }
 
             .health-bar, .xp-bar {
                 position: relative;
@@ -481,6 +539,14 @@ class VibeSurvivor {
                 border-radius: 8px;
                 overflow: hidden;
                 border: 1px solid #00ffff;
+            }
+            
+            /* Mobile-specific bar sizing */
+            @media screen and (max-width: 480px) {
+                .health-bar, .xp-bar {
+                    width: 100px;
+                    height: 14px;
+                }
             }
 
             .health-fill {
@@ -517,26 +583,32 @@ class VibeSurvivor {
                 text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
                 font-family: 'Courier New', monospace;
             }
-
-            .weapon-display {
-                position: absolute;
-                top: 60px;
-                right: 20px;
-                background: rgba(0, 20, 40, 0.8);
-                padding: 8px 12px;
-                border-radius: 8px;
-                border: 1px solid rgba(0, 255, 255, 0.3);
-                backdrop-filter: blur(5px);
-                max-width: 200px;
-                box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+            
+            /* Mobile-specific time display */
+            @media screen and (max-width: 480px) {
+                .time-display {
+                    font-size: 16px;
+                    align-self: center;
+                    margin: 2px 0;
+                }
             }
 
+            /* Weapon display positioning handled by grid layout - absolute positioning removed */
+
             .weapon-item {
-                display: flex;
+                display: inline-flex;
                 align-items: center;
-                margin: 3px 0;
+                margin: 2px 4px;
                 color: white;
                 font-size: 11px;
+                background: rgba(0, 20, 40, 0.8);
+                padding: 4px 8px;
+                border-radius: 6px;
+                border: 1px solid rgba(0, 255, 255, 0.3);
+                max-width: 120px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
 
             .weapon-icon {
@@ -712,15 +784,16 @@ class VibeSurvivor {
 
             .virtual-joystick {
                 position: absolute;
-                bottom: 40px;
-                left: 40px;
-                width: 100px;
-                height: 100px;
-                background: rgba(0, 255, 255, 0.3);
-                border: 2px solid rgba(0, 255, 255, 0.6);
+                bottom: 100px;
+                left: 80px;
+                width: 80px;
+                height: 80px;
+                background: rgba(0, 255, 255, 0.2);
+                border: 1px solid rgba(0, 255, 255, 0.4);
                 border-radius: 50%;
                 pointer-events: auto;
                 touch-action: none;
+                backdrop-filter: blur(2px);
             }
 
             .joystick-handle {
@@ -738,23 +811,24 @@ class VibeSurvivor {
 
             .mobile-dash-btn {
                 position: absolute;
-                bottom: 40px;
-                right: 40px;
-                width: 80px;
-                height: 80px;
-                background: rgba(0, 255, 255, 0.8);
-                border: 2px solid #00ffff;
+                bottom: 100px;
+                right: 80px;
+                width: 60px;
+                height: 60px;
+                background: rgba(0, 255, 255, 0.3);
+                border: 1px solid rgba(0, 255, 255, 0.5);
                 border-radius: 50%;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 color: white;
                 font-weight: bold;
-                font-size: 12px;
+                font-size: 10px;
                 pointer-events: auto;
                 touch-action: none;
                 user-select: none;
-                box-shadow: 0 0 20px rgba(0, 255, 255, 0.6);
+                box-shadow: 0 0 10px rgba(0, 255, 255, 0.4);
+                backdrop-filter: blur(2px);
             }
 
             .mobile-dash-btn:active {
@@ -812,21 +886,46 @@ class VibeSurvivor {
                 }
                 
                 .survivor-ui {
+                    /* Mobile safe zone layout - avoid touch control areas */
                     position: fixed !important;
                     bottom: 15px !important;
-                    left: 15px !important;
-                    right: 15px !important;
+                    left: 200px !important;  /* Safe zone: avoid joystick (left 40-140px) */
+                    right: 200px !important; /* Safe zone: avoid dash button (right 40-140px) */
                     top: auto !important;
                     margin: 0 !important;
-                    flex-direction: column !important;
+                    display: grid !important;
+                    grid-template-columns: 1fr !important;
+                    grid-template-areas: 
+                        "stats"
+                        "time"
+                        "weapon" !important;
+                    gap: 4px !important;
+                    padding: 6px 8px !important;
+                    max-height: 100px !important;
+                    overflow: hidden !important;
+                    text-align: center !important;
+                }
+                
+                .survivor-stats {
+                    grid-area: stats !important;
                     gap: 8px !important;
-                    padding: 10px 12px !important;
+                    justify-content: center !important;
+                }
+                
+                .time-display {
+                    grid-area: time !important;
+                    justify-self: center !important;
+                    font-size: 14px !important;
                 }
                 
                 .weapon-display {
-                    top: 120px !important;
-                    right: 15px !important;
-                    left: auto !important;
+                    /* Place in safe zone - centered between touch controls */
+                    position: static !important;
+                    margin: 0 auto !important;
+                    display: flex !important;
+                    justify-content: center !important;
+                    align-items: center !important;
+                    max-width: calc(100% - 40px) !important;
                 }
                 
                 .distance-meter, .level-display {
@@ -838,24 +937,7 @@ class VibeSurvivor {
                 }
             }
                 
-                .close-btn { 
-                    position: absolute !important;
-                    top: 15px !important; 
-                    right: 15px !important; 
-                    width: 32px; 
-                    height: 32px; 
-                    font-size: 18px; 
-                }
-                
-                .survivor-ui {
-                    position: fixed;
-                    bottom: 15px;
-                    left: 15px;
-                    right: 15px;
-                    margin: 0;
-                    flex-direction: column;
-                    gap: 8px;
-                }
+                /* Duplicate CSS rules removed and consolidated above */
                 
                 .distance-meter, .level-display {
                     gap: 8px;
@@ -870,9 +952,24 @@ class VibeSurvivor {
                     font-size: 24px;
                 }
                 
-                .weapon-display {
-                    position: static;
-                    margin: 5px 10px;
+                /* Duplicate rule removed - weapon display handled in main mobile section */
+            }
+            
+            /* Tablet responsive adjustments */
+            @media screen and (min-width: 481px) and (max-width: 1024px) {
+                .survivor-ui {
+                    bottom: 25px;
+                    left: 25px;
+                    right: 25px;
+                    padding: 10px 12px;
+                }
+                
+                .health-bar, .xp-bar {
+                    width: 120px;
+                }
+                
+                .time-display {
+                    font-size: 16px;
                 }
             }
 
@@ -1003,57 +1100,40 @@ class VibeSurvivor {
     }
     
     resizeCanvas() {
-    if (this.canvas) {
-        const container = this.canvas.parentElement;
-        if (container) {
-            // Simple approach: fill window without overlapping header/footer
+        if (this.canvas) {
+            // Calculate available space with proper fallbacks
             const viewportWidth = window.innerWidth;
             const viewportHeight = window.innerHeight;
+            const isMobile = viewportWidth <= 480;
             
-            // Calculate space taken by header and UI elements
-            const modal = document.querySelector('.vibe-survivor-content');
-            let headerHeight = 100; // Adjusted header height
-            // Reserve space for fixed bottom UI that is now outside canvas area
-            let bottomUIHeight = 100; // Reserve space for fixed bottom UI
+            // Define space reserves
+            const headerHeight = 220;
+            const bottomUIHeight = isMobile ? 120 : 80;
+            const margin = 80;
             
-            if (modal) {
-                const header = modal.querySelector('.vibe-survivor-header');
-                if (header) {
-                    headerHeight = header.offsetHeight;
-                }
-            }
+            // Calculate canvas dimensions
+            const availableWidth = Math.max(viewportWidth - margin, 320);
+            const availableHeight = Math.max(viewportHeight - headerHeight - bottomUIHeight - 40, 240);
             
-            // Calculate available space
-            const availableWidth = viewportWidth - 20; // Small side padding
-            const availableHeight = viewportHeight - headerHeight - bottomUIHeight;
+            // Set canvas size
+            this.canvas.width = availableWidth;
+            this.canvas.height = availableHeight;
             
-            // Set canvas to fill available space with desktop limits
-            const maxWidth = window.innerWidth <= 768 ? availableWidth : Math.min(availableWidth, 1200);
-            const maxHeight = window.innerWidth <= 768 ? availableHeight : Math.min(availableHeight, 800);
-            
-            this.canvas.width = Math.max(maxWidth, 320); // Minimum width
-            this.canvas.height = Math.max(maxHeight, 240); // Minimum height
-            
-            // Simple canvas styling
+            // Apply CSS sizing to match
+            this.canvas.style.width = `${availableWidth}px`;
+            this.canvas.style.height = `${availableHeight}px`;
             this.canvas.style.display = 'block';
-            this.canvas.style.margin = '0 auto';
-            this.canvas.style.imageRendering = 'pixelated';
+            this.canvas.style.margin = '10px auto';
             
-            console.log(`Canvas resized to: ${this.canvas.width}x${this.canvas.height}`);
+            console.log(`Canvas sized to: ${this.canvas.width}x${this.canvas.height}`);
             console.log(`Available space: ${availableWidth}x${availableHeight}, Viewport: ${viewportWidth}x${viewportHeight}`);
-        } else {
-            // Fallback sizing
-            const isMobile = window.innerWidth <= 768;
-            this.canvas.width = isMobile ? 400 : 800;
-            this.canvas.height = isMobile ? 300 : 500;
-        }
-        
-        // Update touch controls positioning after canvas resize
-        if (this.isMobile) {
-            this.updateTouchControlsPositioning();
+            
+            // Update touch controls positioning after canvas resize
+            if (this.isMobile) {
+                this.updateTouchControlsPositioning();
+            }
         }
     }
-}
     
     // Modal header management methods
     hideModalHeader() {
@@ -1455,14 +1535,14 @@ class VibeSurvivor {
         // Calculate safe positioning area
         const modalBottom = modalRect.bottom;
         const availableBottomSpace = viewportHeight - modalBottom;
-        const safeBottomMargin = Math.max(20, availableBottomSpace * 0.1);
+        const safeBottomMargin = 200;
         
         // Position touch controls relative to modal/viewport, not canvas
         if (joystick) {
-            const joystickSize = Math.min(80, viewportWidth * 0.15); // Responsive size
+            const joystickSize = Math.min(120, viewportWidth * 0.15); // Responsive size
             joystick.style.position = 'fixed';
             joystick.style.bottom = `${safeBottomMargin}px`;
-            joystick.style.left = `${Math.max(20, viewportWidth * 0.05)}px`;
+            joystick.style.left = `${Math.max(40, viewportWidth * 0.05)}px`;
             joystick.style.width = `${joystickSize}px`;
             joystick.style.height = `${joystickSize}px`;
             joystick.style.zIndex = '1000010'; // Above modal content
@@ -1472,7 +1552,7 @@ class VibeSurvivor {
             const dashBtnSize = Math.min(60, viewportWidth * 0.12); // Responsive size
             dashBtn.style.position = 'fixed';
             dashBtn.style.bottom = `${safeBottomMargin}px`;
-            dashBtn.style.right = `${Math.max(20, viewportWidth * 0.05)}px`;
+            dashBtn.style.right = `${Math.max(40, viewportWidth * 0.05)}px`;
             dashBtn.style.width = `${dashBtnSize}px`;
             dashBtn.style.height = `${dashBtnSize}px`;
             dashBtn.style.zIndex = '1000010'; // Above modal content
@@ -1482,7 +1562,7 @@ class VibeSurvivor {
         // Ensure controls don't overlap with modal content
         if (modalRect.height > viewportHeight * 0.8) {
             // Modal is very tall, position controls over the modal with higher z-index
-            const controlsOverlayBottom = Math.max(10, viewportHeight * 0.05);
+            const controlsOverlayBottom = Math.max(100, viewportHeight * 0.05);
             
             if (joystick) {
                 joystick.style.bottom = `${controlsOverlayBottom}px`;
@@ -2659,12 +2739,16 @@ class VibeSurvivor {
     
     const gridSize = 60;
     
-    // Calculate visible world area based on camera position with larger buffer
-    const bufferSize = Math.max(this.canvas.width, this.canvas.height);
-    const startX = Math.floor((this.camera.x - bufferSize) / gridSize) * gridSize;
-    const endX = Math.ceil((this.camera.x + bufferSize) / gridSize) * gridSize;
-    const startY = Math.floor((this.camera.y - bufferSize) / gridSize) * gridSize;
-    const endY = Math.ceil((this.camera.y + bufferSize) / gridSize) * gridSize;
+    // Calculate visible world area based on camera position, ensuring full canvas coverage
+    const halfCanvasWidth = this.canvas.width / 1;
+    const halfCanvasHeight = this.canvas.height / 1;
+    
+    // Calculate grid bounds to ensure complete canvas coverage with extra margin
+    const margin = gridSize * 10;
+    const startX = Math.floor((this.camera.x - halfCanvasWidth - margin) / gridSize) * gridSize;
+    const endX = Math.ceil((this.camera.x + halfCanvasWidth + margin) / gridSize) * gridSize;
+    const startY = Math.floor((this.camera.y - halfCanvasHeight - margin) / gridSize) * gridSize;
+    const endY = Math.ceil((this.camera.y + halfCanvasHeight + margin) / gridSize) * gridSize;
     
     // Draw vertical lines in world coordinates
     for (let x = startX; x <= endX; x += gridSize) {
