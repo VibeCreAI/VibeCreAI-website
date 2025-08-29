@@ -204,39 +204,58 @@ class VibeSurvivor {
         const styles = document.createElement('style');
         styles.id = 'vibe-survivor-styles';
         styles.textContent = `
+            @keyframes neonPulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.8; }
+            }
+            
+            @keyframes glowPulse {
+                0%, 100% { 
+                    box-shadow: 0 0 20px rgba(0, 255, 255, 0.8),
+                               0 0 40px rgba(0, 255, 255, 0.5),
+                               0 0 60px rgba(0, 255, 255, 0.3);
+                }
+                50% { 
+                    box-shadow: 0 0 30px rgba(0, 255, 255, 1),
+                               0 0 60px rgba(0, 255, 255, 0.7),
+                               0 0 90px rgba(0, 255, 255, 0.5);
+                }
+            }
+            
             .vibe-survivor-modal {
                 position: fixed;
                 top: 0;
                 left: 0;
                 width: 100%;
                 height: 100%;
-                background: rgba(0, 0, 0, 0.9);
+                background: rgba(0, 0, 0, 0.95);
+                backdrop-filter: blur(10px);
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 z-index: 10000;
-                backdrop-filter: blur(5px);
+                animation: fadeIn 0.3s ease;
             }
 
             .vibe-survivor-content {
-                background: linear-gradient(135deg, #1a1a2e, #16213e);
-                border: 2px solid #9B59B6;
-                border-radius: 15px;
-                width: 95vw;
-                max-width: 95vw;
+                background: linear-gradient(135deg, #0a0a1a 0%, #1a0a2a 100%);
+                border-radius: 20px;
+                padding: 0;
+                width: 90%;
+                max-width: 1000px;
                 height: 90vh;
                 max-height: 90vh;
-                position: relative;
-                overflow: hidden;
-                box-shadow: 0 0 30px rgba(155, 89, 182, 0.3);
                 display: flex;
                 flex-direction: column;
+                border: 2px solid #00ffff;
+                box-shadow: 0 0 40px rgba(0, 255, 255, 0.3),
+                           inset 0 0 20px rgba(0, 255, 255, 0.1);
+                overflow: hidden;
             }
 
             .vibe-survivor-header {
-                background: rgba(155, 89, 182, 0.2);
-                padding: 15px 20px;
-                border-bottom: 1px solid #9B59B6;
+                padding: 20px;
+                border-bottom: 2px solid rgba(0, 255, 255, 0.3);
                 display: flex !important;
                 justify-content: space-between;
                 align-items: center;
@@ -245,46 +264,54 @@ class VibeSurvivor {
                 pointer-events: auto !important;
                 visibility: visible !important;
                 opacity: 1 !important;
+                background: rgba(0, 20, 40, 0.5);
+                min-height: 70px;
             }
 
             .vibe-survivor-header h2 {
-                color: #9B59B6;
+                color: #00ffff;
                 margin: 0;
                 font-family: 'Arial', sans-serif;
                 font-weight: bold;
-                text-shadow: 0 0 10px rgba(155, 89, 182, 0.5);
+                text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
             }
 
             .close-btn {
-                background: none;
-                border: 2px solid #9B59B6;
-                color: #9B59B6;
-                font-size: 24px;
-                width: 35px;
-                height: 35px;
+                background: rgba(255, 0, 255, 0.1);
+                border: 2px solid #ff00ff;
+                color: #ff00ff;
+                width: 40px;
+                height: 40px;
                 border-radius: 50%;
+                font-size: 24px;
+                font-weight: bold;
+                transition: all 0.3s ease;
+                position: absolute !important;
+                top: 15px !important;
+                right: 15px !important;
+                z-index: 999999 !important;
+                pointer-events: auto !important;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                transition: all 0.3s ease;
-                position: relative !important;
-                z-index: 999999 !important;
-                pointer-events: auto !important;
+                flex-shrink: 0;
             }
 
             .close-btn:hover {
-                background: #9B59B6;
-                color: white;
-                transform: scale(1.1);
+                background: #ff00ff;
+                color: #fff;
+                transform: rotate(90deg);
+                box-shadow: 0 0 20px rgba(255, 0, 255, 0.8);
             }
 
             .vibe-survivor-container {
-                height: calc(100% - 70px) !important;
+                height: calc(100% - 90px) !important;
                 position: relative !important;
                 width: 100% !important;
                 display: block !important;
                 visibility: visible !important;
                 overflow: hidden !important;
+                background: transparent;
             }
 
             .vibe-survivor-screen {
@@ -299,7 +326,7 @@ class VibeSurvivor {
                 flex-direction: column !important;
                 z-index: 100 !important;
                 background: transparent !important;
-                overflow-y: auto !important;
+                overflow: hidden !important;
             }
 
             .vibe-survivor-screen.active {
@@ -315,124 +342,161 @@ class VibeSurvivor {
             }
 
             .survivor-title h1 {
-                font-size: 3rem;
-                margin: 0 0 10px 0;
-                text-shadow: 0 0 20px rgba(155, 89, 182, 0.8);
-                color: #9B59B6;
+                color: #00ffff;
+                font-size: 32px;
+                margin-bottom: 20px;
+                text-shadow: 0 0 20px rgba(0, 255, 255, 0.8),
+                            0 0 40px rgba(0, 255, 255, 0.5);
+                font-family: 'Arial Black', sans-serif;
+                animation: neonPulse 2s ease-in-out infinite;
             }
 
             .survivor-title p {
-                font-size: 1.2rem;
-                margin: 10px 0;
-                opacity: 0.8;
+                color: rgba(255, 255, 255, 0.8);
+                margin-bottom: 30px;
+                font-size: 16px;
+                font-family: 'Courier New', monospace;
             }
 
             .controls-info {
-                font-size: 0.9rem !important;
-                color: #9B59B6 !important;
+                color: rgba(255, 255, 255, 0.8) !important;
                 margin-top: 20px !important;
+                font-size: 16px !important;
+                font-family: 'Courier New', monospace !important;
             }
 
             .survivor-btn {
-                background: linear-gradient(135deg, #9B59B6, #8E44AD);
-                color: white;
-                border: none;
-                padding: 15px 30px;
-                font-size: 1.1rem;
-                border-radius: 25px;
-                margin: 10px;
+                padding: 12px 40px;
+                background: transparent;
+                border: 2px solid #00ffff;
+                color: #00ffff;
+                font-weight: bold;
+                font-size: 18px;
                 transition: all 0.3s ease;
                 text-transform: uppercase;
-                font-weight: bold;
-                box-shadow: 0 4px 15px rgba(155, 89, 182, 0.3);
+                letter-spacing: 2px;
+                font-family: 'Arial', sans-serif;
+                border-radius: 30px;
+                position: relative;
+                overflow: hidden;
+                margin: 10px;
+            }
+
+            .survivor-btn::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(90deg, transparent, #00ffff, transparent);
+                transition: left 0.5s ease;
             }
 
             .survivor-btn:hover {
+                background: rgba(0, 255, 255, 0.1);
+                box-shadow: 0 0 30px rgba(0, 255, 255, 0.8),
+                           inset 0 0 20px rgba(0, 255, 255, 0.2);
                 transform: translateY(-2px);
-                box-shadow: 0 6px 20px rgba(155, 89, 182, 0.4);
+            }
+
+            .survivor-btn:hover::before {
+                left: 100%;
             }
 
             .survivor-btn.primary {
-                background: linear-gradient(135deg, #E74C3C, #C0392B);
-                box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+                background: transparent;
+                border: 2px solid #ff00ff;
+                color: #ff00ff;
+                box-shadow: 0 0 15px rgba(255, 0, 255, 0.3);
             }
 
             .survivor-btn.primary:hover {
-                box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+                background: rgba(255, 0, 255, 0.1);
+                box-shadow: 0 0 20px rgba(255, 0, 255, 0.8);
             }
 
             #survivor-canvas {
-                background: #0a0a0a;
-                border: 2px solid #9B59B6;
+                background: #000;
+                border: 2px solid #00ffff;
                 border-radius: 10px;
-                box-shadow: 0 0 20px rgba(155, 89, 182, 0.2);
+                box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+                max-width: 100%;
+                max-height: 100%;
+                object-fit: contain;
             }
 
+            /* Reorganized header-style UI matching Vibe Runner */
             .survivor-ui {
-                position: absolute;
-                top: 20px;
+                position: fixed;
+                bottom: 20px;
                 left: 20px;
                 right: 20px;
                 display: flex;
                 justify-content: space-between;
-                align-items: flex-start;
+                align-items: center;
                 pointer-events: none;
                 z-index: 100;
+                background: rgba(0, 20, 40, 0.9);
+                border-radius: 10px;
+                padding: 12px 15px;
+                border: 1px solid rgba(0, 255, 255, 0.3);
+                backdrop-filter: blur(5px);
+                box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
             }
 
-            /* Mobile responsive positioning to prevent overlay */
-            @media screen and (max-width: 480px) {
-                .survivor-ui {
-                    position: relative;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    margin: 10px;
-                    margin-bottom: 5px;
-                }
-                
-                .survivor-stats {
-                    position: static;
-                    margin-bottom: 5px;
-                }
-                
-                .weapon-display {
-                    position: static;
-                    margin-top: 5px;
-                }
+            .distance-meter, .level-display {
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                font-family: 'Courier New', monospace;
+            }
+
+            .distance-label, .level-label {
+                color: rgba(0, 255, 255, 0.7);
+                font-size: 14px;
+                letter-spacing: 2px;
+                text-transform: uppercase;
+            }
+
+            .distance-value, .level-value {
+                color: #00ffff;
+                font-size: 24px;
+                font-weight: bold;
+                text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+                min-width: 80px;
             }
 
             .survivor-stats {
-                background: rgba(0, 0, 0, 0.7);
-                padding: 8px 12px;
-                border-radius: 8px;
-                border: 1px solid #9B59B6;
-                backdrop-filter: blur(5px);
-                max-height: 120px;
+                display: flex;
+                align-items: center;
+                gap: 20px;
             }
 
             .health-bar, .xp-bar {
                 position: relative;
-                width: 200px;
-                height: 20px;
+                width: 150px;
+                height: 16px;
                 background: rgba(255, 255, 255, 0.1);
-                border-radius: 10px;
-                margin: 5px 0;
+                border-radius: 8px;
                 overflow: hidden;
+                border: 1px solid #00ffff;
             }
 
             .health-fill {
                 height: 100%;
-                background: linear-gradient(90deg, #E74C3C, #C0392B);
-                border-radius: 10px;
+                background: linear-gradient(90deg, #ff0066, #ff3399);
+                border-radius: 8px;
                 transition: width 0.3s ease;
+                box-shadow: 0 0 10px rgba(255, 0, 102, 0.5);
             }
 
             .xp-fill {
                 height: 100%;
-                background: linear-gradient(90deg, #9B59B6, #8E44AD);
-                border-radius: 10px;
+                background: linear-gradient(90deg, #00ffff, #66ffff);
+                border-radius: 8px;
                 transition: width 0.3s ease;
+                box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
             }
 
             .health-bar span, .xp-bar span {
@@ -441,26 +505,51 @@ class VibeSurvivor {
                 left: 50%;
                 transform: translate(-50%, -50%);
                 color: white;
-                font-size: 12px;
+                font-size: 10px;
                 font-weight: bold;
                 text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
             }
 
             .time-display {
-                color: #9B59B6;
+                color: #00ffff;
                 font-size: 18px;
                 font-weight: bold;
-                text-shadow: 0 0 10px rgba(155, 89, 182, 0.5);
-                margin-top: 10px;
+                text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+                font-family: 'Courier New', monospace;
             }
 
             .weapon-display {
-                background: rgba(0, 0, 0, 0.7);
-                padding: 10px;
-                border-radius: 10px;
-                border: 1px solid #9B59B6;
+                position: absolute;
+                top: 60px;
+                right: 20px;
+                background: rgba(0, 20, 40, 0.8);
+                padding: 8px 12px;
+                border-radius: 8px;
+                border: 1px solid rgba(0, 255, 255, 0.3);
                 backdrop-filter: blur(5px);
-                max-width: 250px;
+                max-width: 200px;
+                box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+            }
+
+            .weapon-item {
+                display: flex;
+                align-items: center;
+                margin: 3px 0;
+                color: white;
+                font-size: 11px;
+            }
+
+            .weapon-icon {
+                width: 16px;
+                height: 16px;
+                background: #00ffff;
+                border-radius: 2px;
+                margin-right: 6px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 8px;
+                box-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
             }
 
             .pause-menu {
@@ -478,19 +567,19 @@ class VibeSurvivor {
             }
 
             .pause-content {
-                background: linear-gradient(135deg, #1a1a2e, #16213e);
-                border: 2px solid #9B59B6;
+                background: linear-gradient(135deg, #0a0a1a, #1a0a2a);
+                border: 2px solid #00ffff;
                 border-radius: 15px;
                 padding: 40px;
                 text-align: center;
-                box-shadow: 0 0 30px rgba(155, 89, 182, 0.5);
+                box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
             }
 
             .pause-content h2 {
-                color: #9B59B6;
+                color: #00ffff;
                 font-size: 2rem;
                 margin-bottom: 30px;
-                text-shadow: 0 0 20px rgba(155, 89, 182, 0.8);
+                text-shadow: 0 0 20px rgba(0, 255, 255, 0.8);
             }
 
             .pause-buttons {
@@ -506,132 +595,49 @@ class VibeSurvivor {
                 margin: 0;
             }
 
-            /* Mobile Touch Controls */
-            .mobile-controls {
-                position: absolute;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                pointer-events: none;
-                z-index: 15000;
-            }
-
-            .virtual-joystick {
-                position: absolute;
-                bottom: 40px;
-                left: 40px;
-                width: 100px;
-                height: 100px;
-                background: rgba(155, 89, 182, 0.3);
-                border: 2px solid rgba(155, 89, 182, 0.6);
-                border-radius: 50%;
-                pointer-events: auto;
-                touch-action: none;
-            }
-
-            .joystick-handle {
-                position: absolute;
-                width: 40px;
-                height: 40px;
-                background: #9B59B6;
-                border-radius: 50%;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                box-shadow: 0 0 10px rgba(155, 89, 182, 0.8);
-                transition: all 0.1s ease;
-            }
-
-            .mobile-dash-btn {
-                position: absolute;
-                bottom: 40px;
-                right: 40px;
-                width: 80px;
-                height: 80px;
-                background: rgba(155, 89, 182, 0.8);
-                border: 2px solid #9B59B6;
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                color: white;
-                font-weight: bold;
-                font-size: 12px;
-                pointer-events: auto;
-                touch-action: none;
-                user-select: none;
-                box-shadow: 0 0 20px rgba(155, 89, 182, 0.6);
-            }
-
-            .mobile-dash-btn:active {
-                background: #9B59B6;
-                transform: scale(0.9);
-            }
-
-            /* Show mobile controls only on touch devices */
-            @media (hover: none) and (pointer: coarse) {
-                .mobile-controls {
-                    display: block !important;
-                }
-            }
-
-            /* Responsive canvas and screen styles */
-            .vibe-survivor-screen {
-                display: none;
-                width: 100%;
-                height: 100%;
-                position: relative;
-                flex: 1;
-                min-height: 0;
-            }
-
-            .vibe-survivor-screen.active {
-                display: flex;
-                flex-direction: column;
-            }
-
-            #survivor-canvas {
-                max-width: 100%;
-                max-height: 100%;
-                object-fit: contain;
-                background: #0a0a0a;
-            }
-
-            .weapon-item {
-                display: flex;
-                align-items: center;
-                margin: 5px 0;
-                color: white;
-                font-size: 12px;
-            }
-
-            .weapon-icon {
-                width: 20px;
-                height: 20px;
-                background: #9B59B6;
-                border-radius: 3px;
-                margin-right: 8px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 10px;
-            }
-
             .survivor-game-over {
                 text-align: center;
                 color: white;
+                background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(0, 20, 40, 0.95));
+                padding: 40px;
+                border-radius: 20px;
+                border: 2px solid #00ffff;
+                box-shadow: 0 0 40px rgba(0, 255, 255, 0.4),
+                           inset 0 0 30px rgba(0, 255, 255, 0.1);
+                backdrop-filter: blur(10px);
+                max-width: 500px;
+                margin: 0 auto;
             }
 
             .survivor-game-over h2 {
-                color: #E74C3C;
-                font-size: 2.5rem;
-                margin-bottom: 30px;
-                text-shadow: 0 0 20px rgba(231, 76, 60, 0.8);
+                color: #ff0066;
+                font-size: 36px;
+                margin-bottom: 25px;
+                text-shadow: 0 0 20px rgba(255, 0, 102, 0.8),
+                            0 0 40px rgba(255, 0, 102, 0.5);
+                font-family: 'Arial Black', sans-serif;
+                animation: neonPulse 2s ease-in-out infinite;
+            }
+
+            .final-stats {
+                margin: 20px 0 30px;
+                font-family: 'Courier New', monospace;
+            }
+
+            .stat-row {
+                display: flex;
+                justify-content: space-between;
+                margin: 10px 0;
+                font-size: 18px;
+                color: #00ffff;
+                min-width: 250px;
             }
 
             .survivor-buttons {
                 margin-top: 30px;
+                display: flex;
+                gap: 15px;
+                justify-content: center;
             }
 
             .levelup-modal {
@@ -639,21 +645,21 @@ class VibeSurvivor {
                 top: 50%;
                 left: 50%;
                 transform: translate(-50%, -50%);
-                background: linear-gradient(135deg, #1a1a2e, #16213e);
-                border: 2px solid #9B59B6;
+                background: linear-gradient(135deg, #0a0a1a, #1a0a2a);
+                border: 2px solid #00ffff;
                 border-radius: 15px;
                 padding: 30px;
                 z-index: 1000;
-                box-shadow: 0 0 30px rgba(155, 89, 182, 0.5);
+                box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
                 backdrop-filter: blur(10px);
             }
 
             .levelup-title {
                 text-align: center;
-                color: #9B59B6;
+                color: #00ffff;
                 font-size: 1.8rem;
                 margin-bottom: 20px;
-                text-shadow: 0 0 10px rgba(155, 89, 182, 0.5);
+                text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
             }
 
             .upgrade-choices {
@@ -664,8 +670,8 @@ class VibeSurvivor {
             }
 
             .upgrade-choice {
-                background: rgba(155, 89, 182, 0.1);
-                border: 2px solid #9B59B6;
+                background: rgba(0, 255, 255, 0.1);
+                border: 2px solid #00ffff;
                 border-radius: 10px;
                 padding: 20px;
                 width: 200px;
@@ -674,13 +680,13 @@ class VibeSurvivor {
             }
 
             .upgrade-choice:hover {
-                background: rgba(155, 89, 182, 0.2);
+                background: rgba(0, 255, 255, 0.2);
                 transform: scale(1.05);
-                box-shadow: 0 0 15px rgba(155, 89, 182, 0.4);
+                box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
             }
 
             .upgrade-choice h3 {
-                color: #9B59B6;
+                color: #00ffff;
                 margin: 0 0 10px 0;
                 font-size: 1.2rem;
             }
@@ -692,8 +698,77 @@ class VibeSurvivor {
                 opacity: 0.9;
             }
 
+            /* Mobile Touch Controls */
+            .mobile-controls {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                pointer-events: none;
+                z-index: 15000;
+                background: transparent !important;
+            }
+
+            .virtual-joystick {
+                position: absolute;
+                bottom: 40px;
+                left: 40px;
+                width: 100px;
+                height: 100px;
+                background: rgba(0, 255, 255, 0.3);
+                border: 2px solid rgba(0, 255, 255, 0.6);
+                border-radius: 50%;
+                pointer-events: auto;
+                touch-action: none;
+            }
+
+            .joystick-handle {
+                position: absolute;
+                width: 40px;
+                height: 40px;
+                background: #00ffff;
+                border-radius: 50%;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                box-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+                transition: all 0.1s ease;
+            }
+
+            .mobile-dash-btn {
+                position: absolute;
+                bottom: 40px;
+                right: 40px;
+                width: 80px;
+                height: 80px;
+                background: rgba(0, 255, 255, 0.8);
+                border: 2px solid #00ffff;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-weight: bold;
+                font-size: 12px;
+                pointer-events: auto;
+                touch-action: none;
+                user-select: none;
+                box-shadow: 0 0 20px rgba(0, 255, 255, 0.6);
+            }
+
+            .mobile-dash-btn:active {
+                background: #00ffff;
+                transform: scale(0.9);
+            }
+
             .vibe-survivor-hidden {
                 display: none !important;
+            }
+
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
             }
 
             @keyframes pulse {
@@ -703,6 +778,109 @@ class VibeSurvivor {
 
             .pulse {
                 animation: pulse 0.3s ease-in-out;
+            }
+
+            /* Mobile responsive positioning */
+            @media screen and (max-width: 480px) {
+                .vibe-survivor-content {
+                    width: 95%;
+                    height: 95%;
+                    border-radius: 10px;
+                }
+                
+                .vibe-survivor-header {
+                    position: relative !important;
+                    display: flex !important;
+                    flex-direction: row !important;
+                    justify-content: space-between !important;
+                    align-items: center !important;
+                    padding: 10px 15px !important;
+                    top: auto !important;
+                    left: auto !important;
+                    right: auto !important;
+                    bottom: auto !important;
+                }
+                
+                .close-btn { 
+                    position: absolute !important;
+                    top: 15px !important; 
+                    right: 15px !important; 
+                    width: 32px; 
+                    height: 32px; 
+                    font-size: 18px; 
+                    margin: 0 !important;
+                }
+                
+                .survivor-ui {
+                    position: fixed !important;
+                    bottom: 15px !important;
+                    left: 15px !important;
+                    right: 15px !important;
+                    top: auto !important;
+                    margin: 0 !important;
+                    flex-direction: column !important;
+                    gap: 8px !important;
+                    padding: 10px 12px !important;
+                }
+                
+                .weapon-display {
+                    top: 120px !important;
+                    right: 15px !important;
+                    left: auto !important;
+                }
+                
+                .distance-meter, .level-display {
+                    font-size: 12px !important;
+                }
+                
+                .distance-value, .level-value {
+                    font-size: 18px !important;
+                }
+            }
+                
+                .close-btn { 
+                    position: absolute !important;
+                    top: 15px !important; 
+                    right: 15px !important; 
+                    width: 32px; 
+                    height: 32px; 
+                    font-size: 18px; 
+                }
+                
+                .survivor-ui {
+                    position: fixed;
+                    bottom: 15px;
+                    left: 15px;
+                    right: 15px;
+                    margin: 0;
+                    flex-direction: column;
+                    gap: 8px;
+                }
+                
+                .distance-meter, .level-display {
+                    gap: 8px;
+                }
+                
+                .distance-value, .level-value {
+                    font-size: 16px;
+                    min-width: 60px;
+                }
+
+                .survivor-title h1 {
+                    font-size: 24px;
+                }
+                
+                .weapon-display {
+                    position: static;
+                    margin: 5px 10px;
+                }
+            }
+
+            /* Show mobile controls only on touch devices */
+            @media (hover: none) and (pointer: coarse) {
+                .mobile-controls {
+                    display: block !important;
+                }
             }
         `;
         
@@ -739,7 +917,9 @@ class VibeSurvivor {
         // Keyboard controls
         document.addEventListener('keydown', (e) => {
             if (this.gameRunning) {
+                // Store both lowercase and original case for arrow keys
                 this.keys[e.key.toLowerCase()] = true;
+                this.keys[e.key] = true;
                 
                 // Prevent default for game keys to avoid page scrolling
                 if (e.key === ' ' || 
@@ -763,6 +943,7 @@ class VibeSurvivor {
         
         document.addEventListener('keyup', (e) => {
             this.keys[e.key.toLowerCase()] = false;
+            this.keys[e.key] = false;
         });
         
         window.addEventListener('resize', () => this.resizeCanvas());
@@ -822,134 +1003,74 @@ class VibeSurvivor {
     }
     
     resizeCanvas() {
-        if (this.canvas) {
-            const container = this.canvas.parentElement;
-            if (container) {
-                // Get viewport constraints first
-                const viewportWidth = window.innerWidth;
-                const viewportHeight = window.innerHeight;
-                
-                // Calculate actual available space in container
-                const containerRect = container.getBoundingClientRect();
-                let availableWidth = containerRect.width;
-                let availableHeight = containerRect.height;
-                
-                // Account for modal header and other UI elements
-                const modal = document.querySelector('#vibe-survivor-modal');
-                if (modal) {
-                    const header = modal.querySelector('.vibe-survivor-header');
-                    const headerHeight = header ? header.offsetHeight : 60; // fallback to 60px
-                    
-                    // Account for padding, margins, and touch controls space - increased for better spacing
-                    const reservedHeight = headerHeight + 160; // header + touch controls + padding + stats + extra margin
-                    const reservedWidth = 60; // side padding increased
-                    
-                    availableWidth = Math.min(availableWidth - reservedWidth, viewportWidth * 0.88);
-                    availableHeight = Math.min(availableHeight - reservedHeight, viewportHeight * 0.70);
+    if (this.canvas) {
+        const container = this.canvas.parentElement;
+        if (container) {
+            // Simple approach: fill window without overlapping header/footer
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            
+            // Calculate space taken by header and UI elements
+            const modal = document.querySelector('.vibe-survivor-content');
+            let headerHeight = 100; // Adjusted header height
+            // Reserve space for fixed bottom UI that is now outside canvas area
+            let bottomUIHeight = 100; // Reserve space for fixed bottom UI
+            
+            if (modal) {
+                const header = modal.querySelector('.vibe-survivor-header');
+                if (header) {
+                    headerHeight = header.offsetHeight;
                 }
-                
-                // Set responsive minimum sizes based on screen size
-                let minWidth, minHeight, maxWidth, maxHeight;
-                if (viewportWidth <= 480) { // Mobile
-                    minWidth = 320;
-                    minHeight = 240;
-                    maxWidth = viewportWidth * 0.9;
-                    maxHeight = viewportHeight * 0.6;
-                } else if (viewportWidth <= 768) { // Tablet
-                    minWidth = 480;
-                    minHeight = 360;
-                    maxWidth = viewportWidth * 0.85;
-                    maxHeight = viewportHeight * 0.7;
-                } else { // Desktop
-                    minWidth = 600;
-                    minHeight = 450;
-                    maxWidth = 1200;
-                    maxHeight = 900;
-                }
-                
-                // Flexible aspect ratio between 4:3 and 16:9
-                const preferredAspectRatio = 4/3;
-                const flexibleAspectMin = 1.2; // 6:5 (taller)
-                const flexibleAspectMax = 1.8; // 16:9 (wider)
-                
-                let canvasWidth, canvasHeight;
-                let targetAspectRatio = preferredAspectRatio;
-                
-                // Try preferred aspect ratio first
-                if (availableWidth / availableHeight > preferredAspectRatio) {
-                    // Container is wider, fit to height
-                    canvasHeight = Math.min(Math.max(availableHeight, minHeight), maxHeight);
-                    canvasWidth = canvasHeight * preferredAspectRatio;
-                } else {
-                    // Container is taller, fit to width
-                    canvasWidth = Math.min(Math.max(availableWidth, minWidth), maxWidth);
-                    canvasHeight = canvasWidth / preferredAspectRatio;
-                }
-                
-                // Check if we need to adjust aspect ratio to fit better
-                if (canvasWidth > availableWidth || canvasHeight > availableHeight) {
-                    // Recalculate with flexible aspect ratio
-                    const availableAspectRatio = availableWidth / availableHeight;
-                    targetAspectRatio = Math.max(flexibleAspectMin, Math.min(flexibleAspectMax, availableAspectRatio));
-                    
-                    if (availableWidth / availableHeight > targetAspectRatio) {
-                        canvasHeight = Math.min(Math.max(availableHeight, minHeight), maxHeight);
-                        canvasWidth = canvasHeight * targetAspectRatio;
-                    } else {
-                        canvasWidth = Math.min(Math.max(availableWidth, minWidth), maxWidth);
-                        canvasHeight = canvasWidth / targetAspectRatio;
-                    }
-                }
-                
-                // Final constraint check - ensure we don't exceed viewport with more conservative limits
-                if (canvasWidth > viewportWidth * 0.90) {
-                    canvasWidth = viewportWidth * 0.90;
-                    canvasHeight = Math.min(canvasWidth / flexibleAspectMin, maxHeight);
-                }
-                if (canvasHeight > viewportHeight * 0.72) {
-                    canvasHeight = viewportHeight * 0.72;
-                    canvasWidth = Math.min(canvasHeight * flexibleAspectMax, maxWidth);
-                }
-                
-                // Ensure minimum viable game area
-                canvasWidth = Math.max(canvasWidth, minWidth);
-                canvasHeight = Math.max(canvasHeight, minHeight);
-                
-                this.canvas.width = Math.floor(canvasWidth);
-                this.canvas.height = Math.floor(canvasHeight);
-                
-                // Center canvas in container with proper spacing
-                this.canvas.style.display = 'block';
-                this.canvas.style.margin = '10px auto';
-                this.canvas.style.maxWidth = '100%';
-                this.canvas.style.maxHeight = 'calc(100vh - 200px)'; // Ensure touch controls visible
-                
-                console.log(`Canvas resized to: ${this.canvas.width}x${this.canvas.height} (aspect: ${(canvasWidth/canvasHeight).toFixed(2)})`);
-                console.log(`Available space: ${availableWidth}x${availableHeight}, Viewport: ${viewportWidth}x${viewportHeight}`);
-            } else {
-                // Fallback with responsive defaults
-                const isMobile = window.innerWidth <= 768;
-                this.canvas.width = isMobile ? 400 : 800;
-                this.canvas.height = isMobile ? 300 : 600;
             }
             
-            // Update touch controls positioning after canvas resize
-            if (this.isMobile) {
-                this.updateTouchControlsPositioning();
-            }
+            // Calculate available space
+            const availableWidth = viewportWidth - 20; // Small side padding
+            const availableHeight = viewportHeight - headerHeight - bottomUIHeight;
+            
+            // Set canvas to fill available space with desktop limits
+            const maxWidth = window.innerWidth <= 768 ? availableWidth : Math.min(availableWidth, 1200);
+            const maxHeight = window.innerWidth <= 768 ? availableHeight : Math.min(availableHeight, 800);
+            
+            this.canvas.width = Math.max(maxWidth, 320); // Minimum width
+            this.canvas.height = Math.max(maxHeight, 240); // Minimum height
+            
+            // Simple canvas styling
+            this.canvas.style.display = 'block';
+            this.canvas.style.margin = '0 auto';
+            this.canvas.style.imageRendering = 'pixelated';
+            
+            console.log(`Canvas resized to: ${this.canvas.width}x${this.canvas.height}`);
+            console.log(`Available space: ${availableWidth}x${availableHeight}, Viewport: ${viewportWidth}x${viewportHeight}`);
+        } else {
+            // Fallback sizing
+            const isMobile = window.innerWidth <= 768;
+            this.canvas.width = isMobile ? 400 : 800;
+            this.canvas.height = isMobile ? 300 : 500;
+        }
+        
+        // Update touch controls positioning after canvas resize
+        if (this.isMobile) {
+            this.updateTouchControlsPositioning();
         }
     }
+}
     
     // Modal header management methods
     hideModalHeader() {
         const header = document.querySelector('#vibe-survivor-modal .vibe-survivor-header');
         if (header) {
             // Keep header visible during gameplay so X button is accessible
-            // Only hide the title, keep the close button visible
+            // Only hide the title, keep the close button visible and maintain layout
             const title = header.querySelector('h2');
             if (title) {
                 title.style.display = 'none';
             }
+            
+            // Ensure header maintains proper flexbox layout with space-between
+            header.style.display = 'flex';
+            header.style.justifyContent = 'space-between';
+            header.style.alignItems = 'center';
+            
             console.log('Modal header title hidden during gameplay, X button remains visible');
         } else {
             console.log('Modal header not found for hiding');
@@ -1365,12 +1486,12 @@ class VibeSurvivor {
             
             if (joystick) {
                 joystick.style.bottom = `${controlsOverlayBottom}px`;
-                joystick.style.backgroundColor = 'rgba(155, 89, 182, 0.9)'; // More opaque
+                joystick.style.backgroundColor = 'transparent'; // Transparent background
             }
             
             if (dashBtn) {
                 dashBtn.style.bottom = `${controlsOverlayBottom}px`;
-                dashBtn.style.backgroundColor = 'rgba(155, 89, 182, 0.9)'; // More opaque
+                dashBtn.style.backgroundColor = 'transparent'; // Transparent background
             }
         }
         
@@ -2006,18 +2127,7 @@ class VibeSurvivor {
     }
     
     updateParticles() {
-        this.particles.forEach((particle, index) => {
-            particle.x += particle.vx;
-            particle.y += particle.vy;
-            particle.vx *= particle.friction || 0.95;
-            particle.vy *= particle.friction || 0.95;
-            particle.life--;
-            particle.alpha = particle.life / particle.maxLife;
-            
-            if (particle.life <= 0) {
-                this.particles.splice(index, 1);
-            }
-        });
+        // Particles completely removed for performance
     }
     
     updateXPOrbs() {
@@ -2464,23 +2574,7 @@ class VibeSurvivor {
     }
     
     createExplosion(x, y, radius, damage) {
-        // Create explosion particles
-        for (let i = 0; i < 12; i++) {
-            const angle = (Math.PI * 2 * i) / 12;
-            this.particles.push({
-                x: x,
-                y: y,
-                vx: Math.cos(angle) * 3,
-                vy: Math.sin(angle) * 3,
-                color: '#FF6B35',
-                life: 40,
-                maxLife: 40,
-                size: 4,
-                alpha: 1
-            });
-        }
-        
-        // Damage enemies in radius
+        // Damage enemies in radius (particles removed for performance)
         this.enemies.forEach(enemy => {
             const dx = enemy.x - x;
             const dy = enemy.y - y;
@@ -2488,89 +2582,29 @@ class VibeSurvivor {
             
             if (distance <= radius) {
                 enemy.health -= damage * (1 - distance / radius);
-                this.createHitParticles(enemy.x, enemy.y, '#FF6B35');
+                // No particles for hit effects
             }
         });
     }
     
     createHitParticles(x, y, color) {
-        for (let i = 0; i < 6; i++) {
-            this.particles.push({
-                x: x,
-                y: y,
-                vx: (Math.random() - 0.5) * 4,
-                vy: (Math.random() - 0.5) * 4,
-                color: color,
-                life: 30,
-                maxLife: 30,
-                size: 2,
-                alpha: 1
-            });
-        }
+        // Particles removed for performance
     }
     
     createDashParticles() {
-        for (let i = 0; i < 8; i++) {
-            this.particles.push({
-                x: this.player.x + (Math.random() - 0.5) * 20,
-                y: this.player.y + (Math.random() - 0.5) * 20,
-                vx: (Math.random() - 0.5) * 2,
-                vy: (Math.random() - 0.5) * 2,
-                color: '#9B59B6',
-                life: 40,
-                maxLife: 40,
-                size: 3,
-                alpha: 1
-            });
-        }
+        // Particles removed for performance
     }
     
     createCriticalParticles(x, y) {
-        for (let i = 0; i < 8; i++) {
-            this.particles.push({
-                x: x,
-                y: y,
-                vx: (Math.random() - 0.5) * 6,
-                vy: (Math.random() - 0.5) * 6,
-                color: '#FFD700',
-                life: 50,
-                maxLife: 50,
-                size: 4,
-                alpha: 1
-            });
-        }
+        // Particles removed for performance
     }
     
     createTeleportParticles(x, y) {
-        for (let i = 0; i < 10; i++) {
-            this.particles.push({
-                x: x,
-                y: y,
-                vx: (Math.random() - 0.5) * 4,
-                vy: (Math.random() - 0.5) * 4,
-                color: '#9B59B6',
-                life: 60,
-                maxLife: 60,
-                size: 2,
-                alpha: 1
-            });
-        }
+        // Particles removed for performance
     }
     
     createDeathParticles(x, y, color) {
-        for (let i = 0; i < 12; i++) {
-            this.particles.push({
-                x: x,
-                y: y,
-                vx: (Math.random() - 0.5) * 6,
-                vy: (Math.random() - 0.5) * 6,
-                color: color,
-                life: 60,
-                maxLife: 60,
-                size: 3,
-                alpha: 1
-            });
-        }
+        // Particles removed for performance
     }
     
     showUpgradeNotification(title) {
@@ -2619,79 +2653,101 @@ class VibeSurvivor {
     }
     
     drawGrid() {
-        const gridSize = 40;
-        this.ctx.strokeStyle = 'rgba(155, 89, 182, 0.1)';
-        this.ctx.lineWidth = 1;
-        
-        // Calculate visible grid area based on camera position
-        const startX = Math.floor(this.camera.x / gridSize) * gridSize;
-        const startY = Math.floor(this.camera.y / gridSize) * gridSize;
-        const endX = startX + this.canvas.width + gridSize;
-        const endY = startY + this.canvas.height + gridSize;
-        
-        // Draw vertical lines
-        for (let x = startX; x < endX; x += gridSize) {
-            this.ctx.beginPath();
-            this.ctx.moveTo(x, startY);
-            this.ctx.lineTo(x, endY);
-            this.ctx.stroke();
-        }
-        
-        // Draw horizontal lines
-        for (let y = startY; y < endY; y += gridSize) {
-            this.ctx.beginPath();
-            this.ctx.moveTo(startX, y);
-            this.ctx.lineTo(endX, y);
-            this.ctx.stroke();
-        }
-        
-        // Add some procedural elements - scattered dots for variety
-        this.ctx.fillStyle = 'rgba(155, 89, 182, 0.05)';
-        const dotSpacing = 120;
-        const dotStartX = Math.floor(this.camera.x / dotSpacing) * dotSpacing;
-        const dotStartY = Math.floor(this.camera.y / dotSpacing) * dotSpacing;
-        
-        for (let x = dotStartX; x < endX; x += dotSpacing) {
-            for (let y = dotStartY; y < endY; y += dotSpacing) {
-                // Use position-based randomness for consistent pattern
-                const seed = (x / dotSpacing) * 1000 + (y / dotSpacing);
-                if (Math.sin(seed) > 0.7) {
-                    this.ctx.beginPath();
-                    this.ctx.arc(x, y, 2, 0, Math.PI * 2);
-                    this.ctx.fill();
-                }
-            }
-        }
+    // Set grid styling with light gray color
+    this.ctx.strokeStyle = 'rgba(200, 200, 200, 0.3)';
+    this.ctx.lineWidth = 1;
+    
+    const gridSize = 60;
+    
+    // Calculate visible world area based on camera position with larger buffer
+    const bufferSize = Math.max(this.canvas.width, this.canvas.height);
+    const startX = Math.floor((this.camera.x - bufferSize) / gridSize) * gridSize;
+    const endX = Math.ceil((this.camera.x + bufferSize) / gridSize) * gridSize;
+    const startY = Math.floor((this.camera.y - bufferSize) / gridSize) * gridSize;
+    const endY = Math.ceil((this.camera.y + bufferSize) / gridSize) * gridSize;
+    
+    // Draw vertical lines in world coordinates
+    for (let x = startX; x <= endX; x += gridSize) {
+        this.ctx.beginPath();
+        this.ctx.moveTo(x, startY);
+        this.ctx.lineTo(x, endY);
+        this.ctx.stroke();
     }
+    
+    // Draw horizontal lines in world coordinates
+    for (let y = startY; y <= endY; y += gridSize) {
+        this.ctx.beginPath();
+        this.ctx.moveTo(startX, y);
+        this.ctx.lineTo(endX, y);
+        this.ctx.stroke();
+    }
+}
     
     drawPlayer() {
         this.ctx.save();
         
-        // Draw trail
+        // Calculate movement direction for arrow orientation
+        // Support both WASD and arrow keys
+        let movementAngle = 0;
+        const up = this.keys.w || this.keys.ArrowUp;
+        const down = this.keys.s || this.keys.ArrowDown;
+        const left = this.keys.a || this.keys.ArrowLeft;
+        const right = this.keys.d || this.keys.ArrowRight;
+        
+        if (up && right) {
+            movementAngle = -45; // Up-right
+        } else if (up && left) {
+            movementAngle = -135; // Up-left
+        } else if (down && right) {
+            movementAngle = 45; // Down-right
+        } else if (down && left) {
+            movementAngle = 135; // Down-left
+        } else if (up) {
+            movementAngle = -90; // Up
+        } else if (down) {
+            movementAngle = 90; // Down
+        } else if (right) {
+            movementAngle = 0; // Right
+        } else if (left) {
+            movementAngle = 180; // Left
+        }
+        
+        // Smooth angle transition
+        if (this.player.angle === undefined) this.player.angle = 0;
+        let angleDiff = movementAngle - this.player.angle;
+        if (angleDiff > 180) angleDiff -= 360;
+        if (angleDiff < -180) angleDiff += 360;
+        this.player.angle += angleDiff * 0.2;
+        
+        // Draw trail with neon cyan segments
         if (this.player.trail.length > 1) {
-            this.ctx.strokeStyle = '#9B59B6';
+            this.ctx.strokeStyle = '#00ffff';
             this.ctx.lineWidth = 3;
-            this.ctx.globalAlpha = 0.3;
+            this.ctx.globalAlpha = 0.7;
+            this.ctx.shadowBlur = 10;
+            this.ctx.shadowColor = '#00ffff';
             
             this.ctx.beginPath();
             this.ctx.moveTo(this.player.trail[0].x, this.player.trail[0].y);
             for (let i = 1; i < this.player.trail.length; i++) {
+                const alpha = i / this.player.trail.length;
+                this.ctx.globalAlpha = alpha * 0.7;
                 this.ctx.lineTo(this.player.trail[i].x, this.player.trail[i].y);
             }
             this.ctx.stroke();
         }
         
-        // Draw player
+        // Reset for player drawing
         this.ctx.globalAlpha = this.player.invulnerable > 0 ? 0.5 : 1;
         
-        // Glow effect
+        // Neon glow effect
         const glowSize = 20 + Math.sin(this.player.glow) * 5;
         const gradient = this.ctx.createRadialGradient(
             this.player.x, this.player.y, 0,
             this.player.x, this.player.y, glowSize
         );
-        gradient.addColorStop(0, 'rgba(155, 89, 182, 0.4)');
-        gradient.addColorStop(1, 'rgba(155, 89, 182, 0)');
+        gradient.addColorStop(0, 'rgba(0, 255, 255, 0.4)');
+        gradient.addColorStop(1, 'rgba(0, 255, 255, 0)');
         
         this.ctx.fillStyle = gradient;
         this.ctx.fillRect(
@@ -2701,77 +2757,242 @@ class VibeSurvivor {
             glowSize * 2
         );
         
-        // Player body
-        this.ctx.fillStyle = '#9B59B6';
-        this.ctx.strokeStyle = '#FFFFFF';
+        // Draw arrow player
+        this.ctx.save();
+        this.ctx.translate(this.player.x, this.player.y);
+        this.ctx.rotate(this.player.angle * Math.PI / 180);
+        
+        // Main glow effect
+        this.ctx.shadowBlur = 20;
+        this.ctx.shadowColor = '#00ffff';
+        
+        // Arrow body
+        this.ctx.strokeStyle = '#00ffff';
+        this.ctx.fillStyle = 'rgba(0, 255, 255, 0.2)';
         this.ctx.lineWidth = 2;
         
+        const size = this.player.radius;
         this.ctx.beginPath();
-        this.ctx.arc(this.player.x, this.player.y, this.player.radius, 0, Math.PI * 2);
+        this.ctx.moveTo(size, 0); // Arrow tip
+        this.ctx.lineTo(-size, -size);
+        this.ctx.lineTo(-size / 2, 0);
+        this.ctx.lineTo(-size, size);
+        this.ctx.closePath();
+        
         this.ctx.fill();
         this.ctx.stroke();
         
+        // Inner glow
+        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+        this.ctx.lineWidth = 1;
+        this.ctx.shadowBlur = 5;
+        this.ctx.beginPath();
+        this.ctx.moveTo(size / 2, 0);
+        this.ctx.lineTo(-size / 2, -size / 2);
+        this.ctx.lineTo(-size / 4, 0);
+        this.ctx.lineTo(-size / 2, size / 2);
+        this.ctx.closePath();
+        this.ctx.stroke();
+        
+        this.ctx.restore();
         this.ctx.restore();
     }
     
     drawEnemies() {
         this.enemies.forEach(enemy => {
+            // Render all enemies to prevent invisible hit issues
+            // Performance culling removed to fix visibility problems
             this.ctx.save();
             this.ctx.translate(enemy.x, enemy.y);
             this.ctx.rotate(enemy.angle);
             
-            // Enemy glow
+            // Define neon colors based on enemy type
+            let enemyColor, glowColor;
+            switch (enemy.behavior) {
+                case 'tank':
+                    enemyColor = '#ff0040'; // Neon red
+                    glowColor = '#ff0040';
+                    break;
+                case 'flyer':
+                    enemyColor = '#0080ff'; // Neon blue
+                    glowColor = '#0080ff';
+                    break;
+                case 'phantom':
+                    enemyColor = '#ffff00'; // Neon yellow (dodging enemy)
+                    glowColor = '#ffff00';
+                    break;
+                case 'boss':
+                    enemyColor = '#00ff80'; // Neon green
+                    glowColor = '#00ff80';
+                    break;
+                default:
+                    // Differentiate by enemy size - smallest gets yellow (dodge ability), larger gets pink
+                    if (enemy.radius <= 8) {
+                        enemyColor = '#ffff00'; // Yellow neon (smallest, dodge ability)
+                        glowColor = '#ffff00';
+                    } else {
+                        enemyColor = '#ff00ff'; // Pink neon (larger default)
+                        glowColor = '#ff00ff';
+                    }
+                    break;
+            }
+            
+            // Enemy glow effect
             const gradient = this.ctx.createRadialGradient(0, 0, 0, 0, 0, enemy.radius * 2);
-            gradient.addColorStop(0, enemy.color + '40');
-            gradient.addColorStop(1, enemy.color + '00');
+            gradient.addColorStop(0, enemyColor + '40');
+            gradient.addColorStop(1, enemyColor + '00');
             this.ctx.fillStyle = gradient;
             this.ctx.fillRect(-enemy.radius * 2, -enemy.radius * 2, enemy.radius * 4, enemy.radius * 4);
             
-            // Enemy body
-            this.ctx.fillStyle = enemy.color;
-            this.ctx.strokeStyle = '#FFFFFF';
-            this.ctx.lineWidth = 1;
+            // Neon wireframe styling
+            this.ctx.shadowBlur = 20;
+            this.ctx.shadowColor = enemyColor;
+            this.ctx.strokeStyle = enemyColor;
+            this.ctx.lineWidth = 2;
+            this.ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
             
-            // Different shapes for different enemy types
+            // Different wireframe shapes for different enemy types
             switch (enemy.behavior) {
                 case 'tank':
-                    this.ctx.fillRect(-enemy.radius, -enemy.radius, enemy.radius * 2, enemy.radius * 2);
+                    // Wireframe square
                     this.ctx.strokeRect(-enemy.radius, -enemy.radius, enemy.radius * 2, enemy.radius * 2);
+                    
+                    // Inner grid pattern
+                    this.ctx.strokeStyle = enemyColor + '80';
+                    this.ctx.lineWidth = 1;
+                    for (let i = -enemy.radius + 10; i < enemy.radius; i += 10) {
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(i, -enemy.radius);
+                        this.ctx.lineTo(i, enemy.radius);
+                        this.ctx.stroke();
+                        
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(-enemy.radius, i);
+                        this.ctx.lineTo(enemy.radius, i);
+                        this.ctx.stroke();
+                    }
                     break;
+                    
                 case 'flyer':
+                    // Wireframe triangle
                     this.ctx.beginPath();
                     this.ctx.moveTo(0, -enemy.radius);
                     this.ctx.lineTo(enemy.radius, enemy.radius);
                     this.ctx.lineTo(-enemy.radius, enemy.radius);
                     this.ctx.closePath();
-                    this.ctx.fill();
+                    this.ctx.stroke();
+                    
+                    // Inner wireframe lines
+                    this.ctx.strokeStyle = enemyColor + '80';
+                    this.ctx.lineWidth = 1;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(0, -enemy.radius / 2);
+                    this.ctx.lineTo(enemy.radius / 2, enemy.radius / 2);
+                    this.ctx.lineTo(-enemy.radius / 2, enemy.radius / 2);
+                    this.ctx.closePath();
+                    this.ctx.stroke();
+                    
+                    // Center lines
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(0, -enemy.radius);
+                    this.ctx.lineTo(0, enemy.radius / 3);
                     this.ctx.stroke();
                     break;
+                    
                 case 'phantom':
                     this.ctx.globalAlpha = 0.7;
+                    // Wireframe hexagon with animation
                     this.ctx.beginPath();
                     for (let i = 0; i < 6; i++) {
                         const angle = (Math.PI * 2 * i) / 6;
                         const radius = enemy.radius + Math.sin(this.frameCount * 0.1 + i) * 2;
+                        const x = Math.cos(angle) * radius;
+                        const y = Math.sin(angle) * radius;
                         if (i === 0) {
-                            this.ctx.moveTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
+                            this.ctx.moveTo(x, y);
                         } else {
-                            this.ctx.lineTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
+                            this.ctx.lineTo(x, y);
                         }
                     }
                     this.ctx.closePath();
-                    this.ctx.fill();
+                    this.ctx.stroke();
+                    
+                    // Inner hexagon pattern
+                    this.ctx.strokeStyle = enemyColor + '60';
+                    this.ctx.lineWidth = 1;
+                    this.ctx.beginPath();
+                    for (let i = 0; i < 6; i++) {
+                        const angle = (Math.PI * 2 * i) / 6;
+                        const radius = enemy.radius * 0.5;
+                        const x = Math.cos(angle) * radius;
+                        const y = Math.sin(angle) * radius;
+                        if (i === 0) {
+                            this.ctx.moveTo(x, y);
+                        } else {
+                            this.ctx.lineTo(x, y);
+                        }
+                    }
+                    this.ctx.closePath();
                     this.ctx.stroke();
                     break;
+                    
+                case 'boss':
+                    // Large octagon wireframe for boss
+                    this.ctx.lineWidth = 3;
+                    this.ctx.beginPath();
+                    for (let i = 0; i < 8; i++) {
+                        const angle = (Math.PI * 2 * i) / 8;
+                        const radius = enemy.radius;
+                        const x = Math.cos(angle) * radius;
+                        const y = Math.sin(angle) * radius;
+                        if (i === 0) {
+                            this.ctx.moveTo(x, y);
+                        } else {
+                            this.ctx.lineTo(x, y);
+                        }
+                    }
+                    this.ctx.closePath();
+                    this.ctx.stroke();
+                    
+                    // Inner cross pattern
+                    this.ctx.strokeStyle = enemyColor + '80';
+                    this.ctx.lineWidth = 2;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(-enemy.radius, 0);
+                    this.ctx.lineTo(enemy.radius, 0);
+                    this.ctx.moveTo(0, -enemy.radius);
+                    this.ctx.lineTo(0, enemy.radius);
+                    this.ctx.moveTo(-enemy.radius * 0.7, -enemy.radius * 0.7);
+                    this.ctx.lineTo(enemy.radius * 0.7, enemy.radius * 0.7);
+                    this.ctx.moveTo(-enemy.radius * 0.7, enemy.radius * 0.7);
+                    this.ctx.lineTo(enemy.radius * 0.7, -enemy.radius * 0.7);
+                    this.ctx.stroke();
+                    break;
+                    
                 default:
+                    // Wireframe circle
                     this.ctx.beginPath();
                     this.ctx.arc(0, 0, enemy.radius, 0, Math.PI * 2);
-                    this.ctx.fill();
+                    this.ctx.stroke();
+                    
+                    // Inner circle grid
+                    this.ctx.strokeStyle = enemyColor + '80';
+                    this.ctx.lineWidth = 1;
+                    this.ctx.beginPath();
+                    this.ctx.arc(0, 0, enemy.radius * 0.6, 0, Math.PI * 2);
+                    this.ctx.stroke();
+                    
+                    // Cross lines
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(-enemy.radius, 0);
+                    this.ctx.lineTo(enemy.radius, 0);
+                    this.ctx.moveTo(0, -enemy.radius);
+                    this.ctx.lineTo(0, enemy.radius);
                     this.ctx.stroke();
                     break;
             }
             
-            // Health bar
+            // Health bar with neon styling
             if (enemy.health < enemy.maxHealth) {
                 const barWidth = enemy.radius * 2;
                 const barHeight = 3;
@@ -2780,14 +3001,18 @@ class VibeSurvivor {
                 this.ctx.fillStyle = '#333';
                 this.ctx.fillRect(-barWidth / 2, -enemy.radius - 8, barWidth, barHeight);
                 
-                this.ctx.fillStyle = healthPercent > 0.5 ? '#4CAF50' : healthPercent > 0.25 ? '#FF9800' : '#F44336';
+                this.ctx.fillStyle = healthPercent > 0.5 ? '#00ff00' : healthPercent > 0.25 ? '#ffff00' : '#ff0000';
+                this.ctx.shadowBlur = 10;
+                this.ctx.shadowColor = this.ctx.fillStyle;
                 this.ctx.fillRect(-barWidth / 2, -enemy.radius - 8, barWidth * healthPercent, barHeight);
             }
             
-            // Burning effect
+            // Burning effect with neon style
             if (enemy.burning) {
                 this.ctx.globalAlpha = 0.8;
-                this.ctx.fillStyle = '#FF6B35';
+                this.ctx.fillStyle = '#ff6600';
+                this.ctx.shadowBlur = 15;
+                this.ctx.shadowColor = '#ff6600';
                 for (let i = 0; i < 3; i++) {
                     const x = (Math.random() - 0.5) * enemy.radius;
                     const y = (Math.random() - 0.5) * enemy.radius;
@@ -2933,17 +3158,7 @@ class VibeSurvivor {
     }
     
     drawParticles() {
-        this.particles.forEach(particle => {
-            this.ctx.save();
-            this.ctx.globalAlpha = particle.alpha;
-            this.ctx.fillStyle = particle.color;
-            
-            this.ctx.beginPath();
-            this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-            this.ctx.fill();
-            
-            this.ctx.restore();
-        });
+        // Particles completely removed for performance
     }
     
     drawNotifications() {
@@ -3013,58 +3228,7 @@ class VibeSurvivor {
     
     gameOver() {
         this.gameRunning = false;
-        
-        console.log('Game over triggered');
-        
-        // CRITICAL FIX: Show modal header for game over screen
-        this.showModalHeader();
-        
-        
-        // IMMEDIATE OVERLAY REMOVAL - before doing anything else
-        console.log('=== EMERGENCY OVERLAY REMOVAL ===');
-        try {
-            // Find and remove any invisible high z-index overlays immediately
-            const allElements = document.querySelectorAll('*');
-            let removedOverlays = 0;
-            
-            allElements.forEach(el => {
-                const style = window.getComputedStyle(el);
-                const zIndex = parseInt(style.zIndex);
-                const opacity = parseFloat(style.opacity);
-                const display = style.display;
-                
-                // Remove elements that are likely invisible overlays (but preserve header)
-                if ((zIndex > 50000 || 
-                    (zIndex > 10000 && opacity < 0.1) ||
-                    (display !== 'none' && zIndex > 20000 && el.innerHTML.trim() === '')) &&
-                    !el.className.includes('vibe-survivor-header')) {
-                    console.log('Removing overlay element:', {
-                        tag: el.tagName,
-                        id: el.id,
-                        className: el.className,
-                        zIndex: zIndex,
-                        opacity: opacity,
-                        display: display
-                    });
-                    el.remove();
-                    removedOverlays++;
-                }
-            });
-            
-            console.log(`Emergency removal: ${removedOverlays} overlay elements removed`);
-        } catch (e) {
-            console.error('Error during emergency overlay removal:', e);
-        }
-        
-        // Switch to game over screen first
-        document.querySelectorAll('.vibe-survivor-screen').forEach(screen => screen.classList.remove('active'));
-        const gameOverScreen = document.getElementById('survivor-game-over-screen');
-        if (gameOverScreen) {
-            gameOverScreen.classList.add('active');
-            console.log('Game over screen activated');
-        } else {
-            console.error('Game over screen element not found');
-        }
+        console.log('Game over - creating overlay like Vibe Runner');
         
         // Calculate final stats
         const minutes = Math.floor(this.gameTime / 60);
@@ -3073,333 +3237,147 @@ class VibeSurvivor {
         
         const finalStats = {
             level: this.player.level,
-            time: Math.floor(this.gameTime),
             timeText: timeText,
-            enemiesKilled: Math.max(1, Math.floor(this.gameTime * 1.8)),
-            weaponsObtained: this.weapons.length,
-            passivesObtained: Object.keys(this.player.passives).length
+            enemiesKilled: Math.max(1, Math.floor(this.gameTime * 1.8))
         };
         
-        // Save high score if better
-        const currentScore = this.gameTime;
-        const highScore = parseFloat(localStorage.getItem('vibe-survivor-high-score') || '0');
-        const isNewRecord = currentScore > highScore;
-        
-        if (isNewRecord) {
-            localStorage.setItem('vibe-survivor-high-score', currentScore.toString());
-        }
-        
-        // Create comprehensive stats HTML
-        const statsHTML = `
-            <div style="text-align: left; color: white; font-size: 16px; line-height: 1.6; max-height: 400px; overflow-y: auto; padding: 10px;">
-                ${isNewRecord ? '<div style="color: #FFD700; font-weight: bold; text-align: center; margin-bottom: 15px; font-size: 18px;">🏆 NEW RECORD! 🏆</div>' : ''}
-                
-                <div style="margin-bottom: 12px;">
-                    <strong style="color: #9B59B6; font-size: 18px;">📊 Final Stats</strong>
-                </div>
-                
-                <div style="margin-left: 15px; margin-bottom: 20px;">
-                    <div style="margin: 8px 0;"><strong>Level Reached:</strong> <span style="color: #E74C3C; font-size: 18px; font-weight: bold;">${finalStats.level}</span></div>
-                    <div style="margin: 8px 0;"><strong>Survival Time:</strong> <span style="color: #3498DB; font-size: 18px; font-weight: bold;">${finalStats.timeText}</span></div>
-                    <div style="margin: 8px 0;"><strong>Enemies Defeated:</strong> <span style="color: #E67E22; font-size: 18px; font-weight: bold;">${finalStats.enemiesKilled}</span></div>
-                    <div style="margin: 8px 0;"><strong>Weapons Collected:</strong> <span style="color: #9B59B6; font-size: 18px; font-weight: bold;">${finalStats.weaponsObtained}</span></div>
-                    <div style="margin: 8px 0;"><strong>Passive Abilities:</strong> <span style="color: #27AE60; font-size: 18px; font-weight: bold;">${finalStats.passivesObtained}</span></div>
-                </div>
-                
-                <div style="margin-bottom: 10px;">
-                    <strong style="color: #9B59B6; font-size: 16px;">🔫 Weapons Mastered</strong>
-                </div>
-                
-                <div style="margin-left: 15px; display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;">
-                    ${this.weapons.map(weapon => `
-                        <div style="background: rgba(155, 89, 182, 0.3); padding: 6px 12px; border-radius: 6px; border: 2px solid #9B59B6; font-size: 13px; color: white;">
-                            <strong>${this.getWeaponName(weapon.type)}</strong> Lv.${weapon.level}
-                        </div>
-                    `).join('')}
-                </div>
-                
-                ${Object.keys(this.player.passives).length > 0 ? `
-                    <div style="margin-bottom: 10px;">
-                        <strong style="color: #9B59B6; font-size: 16px;">✨ Abilities Unlocked</strong>
-                    </div>
-                    
-                    <div style="margin-left: 15px; display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px;">
-                        ${Object.keys(this.player.passives).map(passive => {
-                            const passiveNames = {
-                                'health_boost': '❤️ Health Boost',
-                                'speed_boost': '💨 Speed Boost', 
-                                'regeneration': '🔄 Regeneration',
-                                'magnet': '🧲 Magnet',
-                                'armor': '🛡️ Armor',
-                                'critical': '💥 Critical Strike'
-                            };
-                            return `<div style="background: rgba(46, 204, 113, 0.3); padding: 5px 10px; border-radius: 5px; border: 2px solid #27AE60; font-size: 12px; color: white;">${passiveNames[passive] || passive}</div>`;
-                        }).join('')}
-                    </div>
-                ` : ''}
-                
-                <div style="margin-top: 20px; text-align: center; color: #BDC3C7; font-size: 14px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 5px;">
-                    ${isNewRecord ? '🎉 Amazing performance! You set a new record! 🎉' : `🏆 Personal Best: ${Math.floor(highScore / 60)}:${(Math.floor(highScore) % 60).toString().padStart(2, '0')}`}
-                </div>
-            </div>
+        // Create game over overlay (similar to Vibe Runner style)
+        const gameOverOverlay = document.createElement('div');
+        gameOverOverlay.id = 'survivor-game-over-overlay';
+        gameOverOverlay.style.cssText = `
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            background: rgba(0, 0, 0, 0.8) !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            z-index: 10000 !important;
+            backdrop-filter: blur(5px) !important;
         `;
         
-        // NUCLEAR OPTION: Recreate entire modal to eliminate overlays
-        console.log('=== NUCLEAR MODAL RECREATION ===');
-        
-        // FORCE STOP any background game loop
-        this.gameRunning = false;
-        console.log('Background game forcefully stopped');
-        
-        // Remove ALL existing modals and overlays
-        const existingModals = document.querySelectorAll('[id*="modal"], [class*="modal"], .vibe-survivor-modal, #vibe-survivor-modal');
-        console.log(`Removing ${existingModals.length} existing modal elements`);
-        existingModals.forEach(modal => modal.remove());
-        
-        // Create completely fresh modal
-        const newModalHTML = `
-            <div id="fresh-game-over-modal" style="
-                position: fixed !important;
-                top: 0 !important; left: 0 !important;
-                width: 100vw !important; height: 100vh !important;
-                background: rgba(0,0,0,0.95) !important;
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-                z-index: 999999 !important;
+        // Create game over content with neon theme
+        gameOverOverlay.innerHTML = `
+            <div style="
+                background: linear-gradient(135deg, #0a0a1a, #1a0a2a) !important;
+                border: 2px solid #00ffff !important;
+                border-radius: 15px !important;
+                padding: 30px !important;
+                text-align: center !important;
+                color: white !important;
+                max-width: 400px !important;
+                box-shadow: 0 0 30px rgba(0, 255, 255, 0.5) !important;
                 font-family: Arial, sans-serif !important;
             ">
                 <div style="
-                    background: linear-gradient(135deg, #1a1a2e, #16213e) !important;
-                    border: 3px solid #E74C3C !important;
-                    border-radius: 15px !important;
-                    padding: 40px !important;
-                    text-align: center !important;
-                    color: white !important;
-                    max-width: 600px !important;
-                    box-shadow: 0 0 50px rgba(231,76,60,0.5) !important;
-                ">
-                    <h1 style="color: #E74C3C !important; font-size: 48px !important; margin: 0 0 30px 0 !important;">GAME OVER</h1>
-                    
-                    <div style="background: rgba(0,0,0,0.8) !important; padding: 20px !important; border-radius: 10px !important; margin-bottom: 30px !important;">
-                        <div style="font-size: 24px !important; line-height: 1.6 !important;">
-                            <div>Level: <span style="color: #E74C3C !important; font-weight: bold !important;">${finalStats.level}</span></div>
-                            <div>Time: <span style="color: #3498DB !important; font-weight: bold !important;">${finalStats.timeText}</span></div>
-                            <div>Enemies: <span style="color: #E67E22 !important; font-weight: bold !important;">${finalStats.enemiesKilled}</span></div>
-                        </div>
+                    color: #ff0066 !important;
+                    font-size: 36px !important;
+                    font-weight: bold !important;
+                    margin-bottom: 20px !important;
+                    text-shadow: 0 0 15px rgba(255, 0, 102, 0.8) !important;
+                ">GAME OVER</div>
+                
+                <div style="margin-bottom: 25px !important;">
+                    <div style="
+                        display: flex;
+                        justify-content: space-between;
+                        margin: 8px 0;
+                        font-size: 18px;
+                        color: #00ffff;
+                    ">
+                        <span>Level:</span>
+                        <span style="color: #ff00ff; font-weight: bold;">${finalStats.level}</span>
                     </div>
+                    <div style="
+                        display: flex;
+                        justify-content: space-between;
+                        margin: 8px 0;
+                        font-size: 18px;
+                        color: #00ffff;
+                    ">
+                        <span>Time:</span>
+                        <span style="color: #ff00ff; font-weight: bold;">${finalStats.timeText}</span>
+                    </div>
+                    <div style="
+                        display: flex;
+                        justify-content: space-between;
+                        margin: 8px 0;
+                        font-size: 18px;
+                        color: #00ffff;
+                    ">
+                        <span>Enemies:</span>
+                        <span style="color: #ff00ff; font-weight: bold;">${finalStats.enemiesKilled}</span>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 15px; justify-content: center;">
+                    <button id="overlay-retry-btn" style="
+                        background: transparent !important;
+                        border: 2px solid #00ffff !important;
+                        color: #00ffff !important;
+                        padding: 12px 25px !important;
+                        font-size: 16px !important;
+                        border-radius: 25px !important;
+                        font-weight: bold !important;
+                        transition: all 0.3s ease !important;
+                        cursor: pointer !important;
+                    ">RETRY</button>
                     
-                    <button id="fresh-restart-btn" style="
-                        background: #E74C3C !important; color: white !important; border: none !important;
-                        padding: 15px 30px !important; font-size: 20px !important; border-radius: 25px !important;
-                        margin: 0 10px !important; font-weight: bold !important;
-                    ">PLAY AGAIN</button>
-                    
-                    <button id="fresh-exit-btn" style="
-                        background: #9B59B6 !important; color: white !important; border: none !important;
-                        padding: 15px 30px !important; font-size: 20px !important; border-radius: 25px !important;
-                        margin: 0 10px !important; font-weight: bold !important;
+                    <button id="overlay-exit-btn" style="
+                        background: transparent !important;
+                        border: 2px solid #ff00ff !important;
+                        color: #ff00ff !important;
+                        padding: 12px 25px !important;
+                        font-size: 16px !important;
+                        border-radius: 25px !important;
+                        font-weight: bold !important;
+                        transition: all 0.3s ease !important;
+                        cursor: pointer !important;
                     ">EXIT</button>
                 </div>
             </div>
         `;
         
-        document.body.insertAdjacentHTML('beforeend', newModalHTML);
+        // Add hover effects
+        const style = document.createElement('style');
+        style.textContent = `
+            #overlay-retry-btn:hover {
+                background: rgba(0, 255, 255, 0.1) !important;
+                box-shadow: 0 0 15px rgba(0, 255, 255, 0.5) !important;
+            }
+            #overlay-exit-btn:hover {
+                background: rgba(255, 0, 255, 0.1) !important;
+                box-shadow: 0 0 15px rgba(255, 0, 255, 0.5) !important;
+            }
+        `;
+        document.head.appendChild(style);
         
-        
-        // Attach event listeners to new buttons
-        document.getElementById('fresh-restart-btn').addEventListener('click', () => {
-            console.log('Fresh restart button clicked - implementing clean restart');
-            
-            // COMPLETELY STOP the background game
-            this.gameRunning = false;
-            
-            // Clear any existing intervals or timeouts that might keep the game running
-            if (this.gameLoopId) {
-                cancelAnimationFrame(this.gameLoopId);
-                this.gameLoopId = null;
-            }
-            
-            // Remove the nuclear modal
-            const nuclearModal = document.getElementById('fresh-game-over-modal');
-            if (nuclearModal) {
-                nuclearModal.remove();
-            }
-            
-            // Clean restart - ensure we start fresh without modal conflicts
-            this.cleanRestart();
-        });
-        
-        document.getElementById('fresh-exit-btn').addEventListener('click', () => {
-            console.log('Fresh exit button clicked - implementing clean exit');
-            
-            // COMPLETELY STOP the background game
-            this.gameRunning = false;
-            
-            // Clear any existing intervals or timeouts that might keep the game running
-            if (this.gameLoopId) {
-                cancelAnimationFrame(this.gameLoopId);
-                this.gameLoopId = null;
-            }
-            
-            // Remove the nuclear modal
-            const nuclearModal = document.getElementById('fresh-game-over-modal');
-            if (nuclearModal) {
-                nuclearModal.remove();
-            }
-            
-            // Clean exit - completely reset state
-            this.cleanExit();
-        });
-        
-        console.log('Fresh modal created successfully - SHOULD BE VISIBLE NOW!');
-        return; // Exit early to use new modal
-        
-        // Direct HTML replacement approach to bypass any CSS issues
-        console.log('Replacing game over screen content entirely...');
-        if (gameOverScreen) {
-            // Completely replace the game over screen content with stats
-            // Ultra-simple test content to isolate the issue
-            gameOverScreen.innerHTML = `
-                <div style="width: 100%; height: 100%; background: blue; color: white; font-size: 30px; display: flex; align-items: center; justify-content: center;">
-                    <div style="text-align: center; padding: 50px; background: rgba(255,255,255,0.2);">
-                        <h1 style="color: yellow; font-size: 50px; margin: 20px 0;">GAME OVER TEST</h1>
-                        <p style="color: white; font-size: 25px;">Level: ${finalStats.level}</p>
-                        <p style="color: white; font-size: 25px;">Time: ${finalStats.timeText}</p>
-                        <button id="restart-survivor" style="background: red; color: white; padding: 20px; font-size: 20px; border: none; margin: 20px;">RESTART</button>
-                    </div>
-                </div>
-            `;
-            
-            // Re-attach button event listeners since we replaced the HTML
-            const restartBtn = document.getElementById('restart-survivor');
-            const exitBtn = document.getElementById('exit-survivor');
-            
-            if (restartBtn) {
-                restartBtn.addEventListener('click', () => {
-                    console.log('Restart button clicked');
-                    this.startGame();
-                });
-            }
-            
-            if (exitBtn) {
-                exitBtn.addEventListener('click', () => {
-                    console.log('Exit button clicked');
-                    this.closeGame();
-                });
-            }
-            
-            // Force visibility and override any CSS issues
-            gameOverScreen.style.cssText = `
-                display: flex !important;
-                visibility: visible !important;
-                opacity: 1 !important;
-                height: 100% !important;
-                width: 100% !important;
-                position: absolute !important;
-                top: 0 !important;
-                left: 0 !important;
-                z-index: 100000 !important;
-                background: rgba(26, 26, 46, 0.98) !important;
-                align-items: center !important;
-                justify-content: center !important;
-                flex-direction: column !important;
-                padding: 20px !important;
-                box-sizing: border-box !important;
-                overflow-y: auto !important;
-                pointer-events: auto !important;
-            `;
-            
-            // Add click debugging to game over screen
-            gameOverScreen.addEventListener('click', (e) => {
-                console.log('Game over screen clicked!', e.target);
-                e.stopPropagation();
-            });
-            
-            // REMOVE ANY POTENTIAL OVERLAYS
-            console.log('=== REMOVING POTENTIAL OVERLAYS ===');
-            // Remove any elements that might be covering our modal
-            const potentialOverlays = document.querySelectorAll('div[style*="position: fixed"], div[style*="position: absolute"]');
-            let removedCount = 0;
-            potentialOverlays.forEach(overlay => {
-                const zIndex = parseInt(window.getComputedStyle(overlay).zIndex);
-                const opacity = parseFloat(window.getComputedStyle(overlay).opacity);
-                // Remove invisible high z-index elements that might be blocking (but preserve header)
-                if (zIndex > 10000 && (opacity === 0 || overlay.innerHTML.trim() === '') &&
-                    !overlay.className.includes('vibe-survivor-header')) {
-                    console.log('Removing potential overlay:', overlay);
-                    overlay.remove();
-                    removedCount++;
-                }
-            });
-            console.log(`Removed ${removedCount} potential overlay elements`);
-            
-            // Force entire modal structure to be visible
-            const modal = document.getElementById('vibe-survivor-modal');
-            const container = document.getElementById('vibe-survivor-container');
-            
-            if (modal) {
-                modal.style.cssText = `
-                    position: fixed !important;
-                    top: 0 !important;
-                    left: 0 !important;
-                    width: 100% !important;
-                    height: 100% !important;
-                    background: rgba(0, 0, 0, 0.9) !important;
-                    display: flex !important;
-                    align-items: center !important;
-                    justify-content: center !important;
-                    z-index: 99999 !important;
-                    visibility: visible !important;
-                    opacity: 1 !important;
-                    pointer-events: auto !important;
-                `;
-                
-                // Add click debugging to modal
-                modal.addEventListener('click', (e) => {
-                    console.log('Modal clicked!', e.target);
-                });
-                
-                console.log('Modal forced visible with highest z-index');
-            }
-            
-            if (container) {
-                container.style.cssText = `
-                    background: linear-gradient(135deg, #1a1a2e, #16213e) !important;
-                    border: 2px solid #9B59B6 !important;
-                    border-radius: 15px !important;
-                    width: 95% !important;
-                    max-width: 900px !important;
-                    height: 90% !important;
-                    position: relative !important;
-                    display: block !important;
-                    visibility: visible !important;
-                    opacity: 1 !important;
-                `;
-                console.log('Container forced visible');
-            }
-            
-            console.log('Game over screen content replaced successfully with stats');
-            console.log('Game over screen HTML length:', gameOverScreen.innerHTML.length);
-            console.log('First 200 chars of content:', gameOverScreen.innerHTML.substring(0, 200));
-            console.log('Game over screen computed style display:', window.getComputedStyle(gameOverScreen).display);
-            console.log('Game over screen computed style visibility:', window.getComputedStyle(gameOverScreen).visibility);
-            console.log('Game over screen computed style opacity:', window.getComputedStyle(gameOverScreen).opacity);
-            console.log('Game over screen z-index:', window.getComputedStyle(gameOverScreen).zIndex);
-            
-            // Add a bright border to the game over screen for debugging
-            gameOverScreen.style.border = '5px solid red';
-            console.log('Game over screen computed style display:', window.getComputedStyle(gameOverScreen).display);
-            console.log('Game over screen computed style visibility:', window.getComputedStyle(gameOverScreen).visibility);
-            console.log('Game over screen computed style opacity:', window.getComputedStyle(gameOverScreen).opacity);
-            
-            // Add a bright border to the game over screen for debugging
-            gameOverScreen.style.border = '5px solid red';
-            
-            // Content should now be visible without test overlay
-        } else {
-            console.error('Game over screen element not found for replacement');
+        // Add overlay to the game container (not the modal)
+        const gameContainer = document.getElementById('vibe-survivor-container');
+        if (gameContainer) {
+            gameContainer.appendChild(gameOverOverlay);
         }
+        
+        // Add event listeners
+        document.getElementById('overlay-retry-btn').addEventListener('click', () => {
+            // Remove overlay
+            gameOverOverlay.remove();
+            style.remove();
+            // Restart game
+            this.startGame();
+        });
+        
+        document.getElementById('overlay-exit-btn').addEventListener('click', () => {
+            // Remove overlay
+            gameOverOverlay.remove();
+            style.remove();
+            // Close game
+            this.closeGame();
+        });
+        
+        console.log('Game over overlay created successfully');
     }
     
     restartGame() {
