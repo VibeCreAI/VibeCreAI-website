@@ -144,11 +144,11 @@ class GameManager {
     }
     
     showLoadingScreen(gameName) {
-        // Create a professional loading screen overlay
+        // Create a neon-themed loading screen overlay (similar to game over screen)
         const loadingDiv = document.createElement('div');
         loadingDiv.className = 'game-loading-screen';
         loadingDiv.innerHTML = `
-            <div class="loading-content">
+            <div class="loading-container">
                 <div class="loading-logo">🎮</div>
                 <h3>Loading ${gameName}...</h3>
                 <div class="loading-progress">
@@ -168,7 +168,8 @@ class GameManager {
                 left: 0;
                 width: 100%;
                 height: 100%;
-                background: linear-gradient(135deg, #0a0a2a, #1a0a3a);
+                background: transparent;
+                backdrop-filter: blur(5px);
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -176,11 +177,15 @@ class GameManager {
                 animation: loadingFadeIn 0.5s ease;
             }
             
-            .loading-content {
-                text-align: center;
-                color: #fff;
-                max-width: 400px;
+            .loading-container {
+                background: linear-gradient(135deg, #0a0a1a, #1a0a2a);
+                border: 2px solid #00ffff;
+                border-radius: 15px;
                 padding: 40px;
+                text-align: center;
+                color: white;
+                max-width: 400px;
+                box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
             }
             
             .loading-logo {
@@ -189,11 +194,11 @@ class GameManager {
                 animation: loadingPulse 1.5s ease-in-out infinite;
             }
             
-            .loading-content h3 {
-                color: #00d4ff;
+            .loading-container h3 {
+                color: #ff0066;
                 margin-bottom: 30px;
                 font-size: 24px;
-                text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+                text-shadow: 0 0 15px rgba(255, 0, 102, 0.8);
             }
             
             .loading-progress {
@@ -202,24 +207,24 @@ class GameManager {
             
             .loading-bar {
                 width: 100%;
-                height: 8px;
+                height: 6px;
                 background: rgba(255, 255, 255, 0.1);
-                border-radius: 4px;
+                border-radius: 3px;
                 overflow: hidden;
                 margin-bottom: 15px;
             }
             
             .loading-fill {
                 height: 100%;
-                background: linear-gradient(90deg, #00d4ff, #0099ff);
-                border-radius: 4px;
+                background: linear-gradient(90deg, #00ffff, #ff00ff);
+                border-radius: 3px;
                 width: 0%;
                 animation: loadingProgress 2s ease-in-out infinite;
-                box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+                box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
             }
             
             .loading-text {
-                color: rgba(255, 255, 255, 0.7);
+                color: #00ffff;
                 font-size: 14px;
                 margin: 0;
                 animation: loadingText 2s ease-in-out infinite;

@@ -2441,7 +2441,7 @@ class VibeSurvivor {
         
         const modalHTML = `
             <div id="levelup-modal" class="levelup-modal levelup-modal-responsive">
-                <div class="levelup-title">LEVEL UP! Choose an upgrade:</div>
+                <div class="levelup-title">LEVEL UP!</div>
                 <div class="upgrade-choices-container">
                     <div class="upgrade-choices">
                         ${choices.map((choice, index) => `
