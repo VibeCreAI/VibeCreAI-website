@@ -50,6 +50,9 @@ class VibeSurvivor {
         // Mobile touch controls
         this.isMobile = this.detectMobile();
         
+        // Initialize speed scaling (will be properly set when canvas is created)
+        this.speedScale = 1.0;
+        
         // Initialize object pools
         this.initializeProjectilePool();
         this.touchControls = {
@@ -106,6 +109,7 @@ class VibeSurvivor {
                 <div class="vibe-survivor-content">
                     <div id="vibe-survivor-container" class="vibe-survivor-container">
                         <div class="vibe-survivor-header">
+                            <button id="pause-btn" class="pause-btn">||</button>
                             <h2>VIBE SURVIVOR</h2>
                             <button id="close-survivor" class="close-btn">×</button>
                         </div>
@@ -132,7 +136,6 @@ class VibeSurvivor {
                                         <span id="level-text">Level 1</span>
                                     </div>
                                     <div class="time-display" id="time-display">0:00</div>
-
                                 </div>
                                 <div class="weapon-display" id="weapon-display"></div>
                             </div>
@@ -297,6 +300,7 @@ class VibeSurvivor {
                 align-items: center;
                 justify-content: center;
                 flex-shrink: 0;
+                cursor: pointer;
             }
 
             .close-btn:hover {
@@ -304,6 +308,20 @@ class VibeSurvivor {
                 color: #fff;
                 transform: rotate(90deg);
                 box-shadow: 0 0 20px rgba(255, 0, 255, 0.8);
+            }
+            
+            /* Position pause button on left */
+            #pause-btn {
+                position: absolute !important;
+                top: 15px !important;
+                left: 15px !important;
+                z-index: 999999 !important;
+                pointer-events: auto !important;
+            }
+            
+            /* Hide pause button initially */
+            #pause-btn {
+                display: none;
             }
 
             .vibe-survivor-container {
@@ -568,6 +586,31 @@ class VibeSurvivor {
                 font-weight: bold;
                 text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
                 font-family: 'Courier New', monospace;
+            }
+            
+            .pause-btn {
+                background: rgba(0, 255, 255, 0.1);
+                border: 2px solid #00ffff;
+                color: #00ffff;
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                font-size: 20px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                z-index: 999999 !important;
+                pointer-events: auto !important;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+            }
+            
+            .pause-btn:hover {
+                background: #00ffff;
+                color: #000;
+                box-shadow: 0 0 20px rgba(0, 255, 255, 0.8);
+                transform: scale(1.1);
             }
             
             /* Mobile-specific time display */
@@ -992,6 +1035,11 @@ class VibeSurvivor {
             this.closeGame();
         });
         
+        // Pause button event listener
+        document.getElementById('pause-btn').addEventListener('click', () => {
+            this.togglePause();
+        });
+        
         // Pause menu event listeners
         document.getElementById('resume-btn').addEventListener('click', () => {
             this.togglePause();
@@ -1113,6 +1161,14 @@ class VibeSurvivor {
             this.canvas.width = finalWidth;
             this.canvas.height = finalHeight;
             
+            // Calculate speed scaling factor to maintain consistent perceived speed
+            // Base reference: mobile canvas width (~400px)
+            const baseCanvasWidth = 400;
+            this.speedScale = Math.max(1.0, this.canvas.width / baseCanvasWidth);
+            
+            // Update player and enemy speeds based on canvas size
+            this.updateSpeedScaling();
+            
             // Apply CSS sizing to match
             this.canvas.style.width = `${finalWidth}px`;
             this.canvas.style.height = `${finalHeight}px`;
@@ -1126,6 +1182,44 @@ class VibeSurvivor {
                 this.updateTouchControlsPositioning();
             }
         }
+    }
+    
+    updateSpeedScaling() {
+        // Apply speed scaling to maintain consistent perceived speed across different canvas sizes
+        if (!this.speedScale) this.speedScale = 1.0;
+        
+        // Base speeds (designed for mobile ~400px width)
+        const basePlayerSpeed = 3;
+        const baseEnemySpeedMultiplier = 1.0;
+        const baseProjectileSpeedMultiplier = 1.0;
+        
+        // Update player speed
+        if (this.player) {
+            this.player.speed = basePlayerSpeed * this.speedScale;
+        }
+        
+        // Update existing enemy speeds
+        this.enemies.forEach(enemy => {
+            if (enemy.baseSpeed === undefined) {
+                // Store original speed if not already stored
+                enemy.baseSpeed = enemy.speed;
+            }
+            enemy.speed = enemy.baseSpeed * this.speedScale * baseEnemySpeedMultiplier;
+        });
+        
+        // Update existing projectile speeds
+        this.projectiles.forEach(projectile => {
+            if (projectile.baseSpeed === undefined && (projectile.vx || projectile.vy)) {
+                // Calculate and store base speed from velocity
+                projectile.baseSpeed = Math.sqrt(projectile.vx * projectile.vx + projectile.vy * projectile.vy);
+            }
+            if (projectile.baseSpeed && projectile.baseSpeed > 0) {
+                const angle = Math.atan2(projectile.vy, projectile.vx);
+                const newSpeed = projectile.baseSpeed * this.speedScale * baseProjectileSpeedMultiplier;
+                projectile.vx = Math.cos(angle) * newSpeed;
+                projectile.vy = Math.sin(angle) * newSpeed;
+            }
+        });
     }
     
     // Modal header management methods
@@ -1213,6 +1307,12 @@ class VibeSurvivor {
             // Start screen hidden
         }
         
+        // Show pause button during gameplay
+        const pauseBtn = document.getElementById('pause-btn');
+        if (pauseBtn) {
+            pauseBtn.style.display = 'flex';
+        }
+        
         // Force complete canvas reinitialization on every start
         this.canvas = null;
         this.ctx = null;
@@ -1294,13 +1394,14 @@ class VibeSurvivor {
         this.lastSpawn = 0;
         this.spawnRate = 120;
         this.waveMultiplier = 1;
+        this.bossSpawned = false;
         
         // Reset player - start at world center
         this.player = {
             x: 0,
             y: 0,
             radius: 15,
-            speed: 3,
+            speed: 3 * (this.speedScale || 1.0), // Apply speed scaling
             health: 100,
             maxHealth: 100,
             xp: 0,
@@ -1336,7 +1437,10 @@ class VibeSurvivor {
     gameLoop() {
         if (!this.gameRunning || !this.canvas || !this.ctx) return;
         
-        this.update();
+        // Only update game state if not paused, but always draw current state
+        if (!this.isPaused) {
+            this.update();
+        }
         this.draw();
         this.updateUI();
         
@@ -1359,6 +1463,8 @@ class VibeSurvivor {
         this.checkCollisions();
         this.checkLevelUp();
         this.updateCamera();
+        this.updateScreenShake();
+        this.updateExplosions();
     }
     
     updatePlayer() {
@@ -1472,13 +1578,26 @@ class VibeSurvivor {
     togglePause() {
         this.isPaused = !this.isPaused;
         const pauseMenu = document.getElementById('pause-menu');
+        const pauseBtn = document.getElementById('pause-btn');
         
         if (this.isPaused) {
+            // Update pause button to show play symbol
+            if (pauseBtn) pauseBtn.textContent = '▶';
             pauseMenu.style.display = 'flex';
-            this.gameRunning = false; // Stop game updates
+            // Pause background music
+            if (this.backgroundMusic && !this.backgroundMusic.paused) {
+                this.backgroundMusic.pause();
+            }
         } else {
+            // Update pause button to show pause symbol
+            if (pauseBtn) pauseBtn.textContent = '||';
             pauseMenu.style.display = 'none';
-            this.gameRunning = true; // Resume game updates
+            // Resume background music
+            if (this.backgroundMusic && this.backgroundMusic.paused) {
+                this.backgroundMusic.play().catch(e => {
+                    console.warn('Could not resume background music:', e);
+                });
+            }
         }
     }
     
@@ -1718,11 +1837,15 @@ class VibeSurvivor {
         const angle = Math.atan2(dy, dx);
         const projectile = this.getPooledProjectile();
         
+        // Calculate scaled projectile speed for consistent gameplay
+        const scaledSpeed = weapon.projectileSpeed * (this.speedScale || 1.0);
+        
         // Set projectile properties
         projectile.x = this.player.x;
         projectile.y = this.player.y;
-        projectile.vx = Math.cos(angle) * weapon.projectileSpeed;
-        projectile.vy = Math.sin(angle) * weapon.projectileSpeed;
+        projectile.vx = Math.cos(angle) * scaledSpeed;
+        projectile.vy = Math.sin(angle) * scaledSpeed;
+        projectile.baseSpeed = weapon.projectileSpeed; // Store base speed for scaling
         projectile.damage = weapon.damage;
         projectile.life = 120;
         projectile.type = 'basic';
@@ -1737,13 +1860,16 @@ class VibeSurvivor {
         const spreadCount = 3 + Math.floor(weapon.level / 3);
         const spreadAngle = Math.PI / 6; // 30 degrees
         
+        const scaledSpeed = weapon.projectileSpeed * (this.speedScale || 1.0);
+        
         for (let i = 0; i < spreadCount; i++) {
             const offsetAngle = angle + (i - Math.floor(spreadCount / 2)) * (spreadAngle / spreadCount);
             this.projectiles.push({
                 x: this.player.x,
                 y: this.player.y,
-                vx: Math.cos(offsetAngle) * weapon.projectileSpeed,
-                vy: Math.sin(offsetAngle) * weapon.projectileSpeed,
+                vx: Math.cos(offsetAngle) * scaledSpeed,
+                vy: Math.sin(offsetAngle) * scaledSpeed,
+                baseSpeed: weapon.projectileSpeed,
                 damage: weapon.damage * 0.8,
                 life: 100,
                 type: 'spread',
@@ -1781,7 +1907,7 @@ class VibeSurvivor {
             type: 'plasma',
             color: '#3498DB',
             size: 4,
-            explosionRadius: 30
+            explosionRadius: 50
         });
     }
     
@@ -1927,9 +2053,36 @@ class VibeSurvivor {
         projectile.size = 3;
         projectile.homing = true;
         projectile.explosionRadius = 60;
-        projectile.speed = weapon.projectileSpeed || 3;
+        projectile.speed = (weapon.projectileSpeed || 3) * (this.speedScale || 1.0);
+        projectile.baseSpeed = weapon.projectileSpeed || 3;
         
         this.projectiles.push(projectile);
+    }
+    
+    createBossMissile(boss) {
+        // Boss fires 3 missiles in a spread pattern
+        const angleToPlayer = Math.atan2(this.player.y - boss.y, this.player.x - boss.x);
+        const spreadAngles = [-0.3, 0, 0.3]; // 3 missiles with spread
+        
+        spreadAngles.forEach(angleOffset => {
+            const missile = {
+                x: boss.x,
+                y: boss.y,
+                vx: Math.cos(angleToPlayer + angleOffset) * 3,
+                vy: Math.sin(angleToPlayer + angleOffset) * 3,
+                damage: 25, // Boss missiles do significant damage
+                life: 300, // Long-lived missiles
+                type: 'boss-missile',
+                color: '#FF0066', // Distinctive boss missile color
+                size: 4,
+                homing: true,
+                homingStrength: 0.05, // Moderate homing for fair gameplay
+                explosionRadius: 40,
+                speed: 3,
+                owner: 'enemy' // Important: mark as enemy projectile
+            };
+            this.projectiles.push(missile);
+        });
     }
     
     spawnEnemies() {
@@ -1940,6 +2093,13 @@ class VibeSurvivor {
         
         if (this.enemies.length >= maxEnemies) {
             return; // Don't spawn more if at limit
+        }
+        
+        // Check for exact boss spawn at 5 minutes (300 seconds)
+        if (this.gameTime >= 300 && !this.bossSpawned && !this.enemies.some(enemy => enemy.behavior === 'boss')) {
+            this.spawnBoss();
+            this.bossSpawned = true;
+            return; // Don't spawn regular enemies this frame
         }
         
         // Increase difficulty over time
@@ -1987,11 +2147,16 @@ class VibeSurvivor {
         const type = this.selectEnemyType(enemyTypes);
         const config = this.getEnemyConfig(type);
         
+        // Calculate scaled speed for consistent gameplay across canvas sizes
+        const baseSpeed = config.speed * (1 + Math.floor(this.gameTime / 60) * 0.1);
+        const scaledSpeed = baseSpeed * (this.speedScale || 1.0);
+        
         this.enemies.push({
             x: x,
             y: y,
             radius: config.radius,
-            speed: config.speed * (1 + Math.floor(this.gameTime / 60) * 0.1),
+            speed: scaledSpeed,
+            baseSpeed: baseSpeed, // Store base speed for future scaling updates
             maxHealth: config.health * (1 + Math.floor(this.gameTime / 30) * 0.3),
             health: config.health * (1 + Math.floor(this.gameTime / 30) * 0.3),
             contactDamage: config.contactDamage,
@@ -2003,6 +2168,43 @@ class VibeSurvivor {
             burning: null,
             spawnedMinions: false
         });
+        
+        // Show boss notification when boss is spawned
+        if (config.behavior === 'boss') {
+            this.showBossNotification();
+        }
+    }
+    
+    spawnBoss() {
+        // Spawn boss at a specific distance from player
+        const spawnDistance = 400;
+        const angle = Math.random() * Math.PI * 2;
+        const x = this.player.x + Math.cos(angle) * spawnDistance;
+        const y = this.player.y + Math.sin(angle) * spawnDistance;
+        
+        const config = this.getEnemyConfig('boss');
+        const scaledSpeed = config.speed * (this.speedScale || 1.0);
+        
+        this.enemies.push({
+            x: x,
+            y: y,
+            radius: config.radius,
+            speed: scaledSpeed,
+            baseSpeed: config.speed,
+            maxHealth: config.health * (1 + Math.floor(this.gameTime / 30) * 0.3),
+            health: config.health * (1 + Math.floor(this.gameTime / 30) * 0.3),
+            contactDamage: config.contactDamage,
+            color: config.color,
+            behavior: config.behavior,
+            angle: 0,
+            rotSpeed: 0.05,
+            specialCooldown: 0,
+            burning: null,
+            spawnedMinions: false
+        });
+        
+        // Show boss notification
+        this.showBossNotification();
     }
     
     getAvailableEnemyTypes() {
@@ -2013,7 +2215,7 @@ class VibeSurvivor {
         if (time > 60) types.push('tank');
         if (time > 120) types.push('flyer');
         if (time > 180) types.push('phantom');
-        if (time > 300) types.push('boss'); // Boss spawns after 5 minutes
+        // Boss spawning is now handled separately in spawnEnemies() method
         
         return types;
     }
@@ -2176,6 +2378,90 @@ class VibeSurvivor {
                         enemy.y += (dy / distance) * enemy.speed * 0.5;
                     }
                     break;
+                
+                case 'boss':
+                    // Skip if boss is already dead/dying
+                    if (enemy.health <= 0) {
+                        break;
+                    }
+                    // Enhanced boss AI with phases based on health
+                    const bossHealthPercent = enemy.health / enemy.maxHealth;
+                    
+                    // Phase 1: Direct chase (above 70% health)
+                    if (bossHealthPercent > 0.7) {
+                        const dx = this.player.x - enemy.x;
+                        const dy = this.player.y - enemy.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (distance > 0) {
+                            enemy.x += (dx / distance) * enemy.speed * 1.2;
+                            enemy.y += (dy / distance) * enemy.speed * 1.2;
+                        }
+                        // Keep boss within bounds
+                        enemy.x = Math.max(enemy.radius, Math.min(this.canvas.width - enemy.radius, enemy.x));
+                        enemy.y = Math.max(enemy.radius, Math.min(this.canvas.height - enemy.radius, enemy.y));
+                    }
+                    // Phase 2: Circle strafe (30-70% health)
+                    else if (bossHealthPercent > 0.3) {
+                        const dx = this.player.x - enemy.x;
+                        const dy = this.player.y - enemy.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        // Maintain distance around 150-200 pixels
+                        const idealDistance = 175;
+                        if (distance > idealDistance + 50) {
+                            // Move closer
+                            enemy.x += (dx / distance) * enemy.speed * 1.5;
+                            enemy.y += (dy / distance) * enemy.speed * 1.5;
+                        } else if (distance < idealDistance - 50) {
+                            // Move away
+                            enemy.x -= (dx / distance) * enemy.speed;
+                            enemy.y -= (dy / distance) * enemy.speed;
+                        } else {
+                            // Circle strafe
+                            const perpX = -dy / distance;
+                            const perpY = dx / distance;
+                            enemy.x += perpX * enemy.speed * 2;
+                            enemy.y += perpY * enemy.speed * 2;
+                        }
+                        // Keep boss within bounds for phase 2
+                        enemy.x = Math.max(enemy.radius, Math.min(this.canvas.width - enemy.radius, enemy.x));
+                        enemy.y = Math.max(enemy.radius, Math.min(this.canvas.height - enemy.radius, enemy.y));
+                    }
+                    // Phase 3: Aggressive and teleport (below 30% health)
+                    else {
+                        const dx = this.player.x - enemy.x;
+                        const dy = this.player.y - enemy.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        // Random chance to teleport closer to player
+                        if (Math.random() < 0.02) { // 2% chance per frame
+                            const teleportDistance = 100 + Math.random() * 100;
+                            const angle = Math.atan2(dy, dx);
+                            enemy.x = this.player.x - Math.cos(angle) * teleportDistance;
+                            enemy.y = this.player.y - Math.sin(angle) * teleportDistance;
+                            
+                            // Keep boss within canvas bounds
+                            enemy.x = Math.max(enemy.size, Math.min(this.canvas.width - enemy.size, enemy.x));
+                            enemy.y = Math.max(enemy.size, Math.min(this.canvas.height - enemy.size, enemy.y));
+                        } else {
+                            // Aggressive chase
+                            if (distance > 0) {
+                                enemy.x += (dx / distance) * enemy.speed * 2;
+                                enemy.y += (dy / distance) * enemy.speed * 2;
+                            }
+                            // Keep boss within bounds for phase 3 aggressive chase
+                            enemy.x = Math.max(enemy.radius, Math.min(this.canvas.width - enemy.radius, enemy.x));
+                            enemy.y = Math.max(enemy.radius, Math.min(this.canvas.height - enemy.radius, enemy.y));
+                        }
+                    }
+                    
+                    // Boss missile attack every 4 seconds (240 frames at 60fps)
+                    if (!enemy.lastMissileFrame || this.frameCount - enemy.lastMissileFrame > 240) {
+                        enemy.lastMissileFrame = this.frameCount;
+                        this.createBossMissile(enemy);
+                    }
+                    break;
             }
             
             if (enemy.specialCooldown > 0) {
@@ -2188,6 +2474,8 @@ class VibeSurvivor {
             if (enemy.health <= 0) {
                 // Check if this was a boss enemy
                 if (enemy.behavior === 'boss') {
+                    // Remove boss from enemies array first
+                    this.enemies.splice(index, 1);
                     this.bossDefeated();
                     return; // Exit early, bossDefeated handles the rest
                 }
@@ -2257,6 +2545,30 @@ class VibeSurvivor {
                             const nearestEnemy = this.findNearestEnemy(projectile.x, projectile.y, 200);
                             if (nearestEnemy) {
                                 projectile.targetEnemy = nearestEnemy;
+                            }
+                        }
+                    }
+                    projectile.x += projectile.vx;
+                    projectile.y += projectile.vy;
+                    break;
+                    
+                case 'boss-missile':
+                    // Boss missiles home in on the player
+                    if (projectile.homing) {
+                        const dx = this.player.x - projectile.x;
+                        const dy = this.player.y - projectile.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (distance > 0) {
+                            const homingStrength = projectile.homingStrength || 0.05;
+                            projectile.vx += (dx / distance) * homingStrength;
+                            projectile.vy += (dy / distance) * homingStrength;
+                            
+                            // Limit max speed
+                            const currentSpeed = Math.sqrt(projectile.vx * projectile.vx + projectile.vy * projectile.vy);
+                            if (currentSpeed > projectile.speed) {
+                                projectile.vx = (projectile.vx / currentSpeed) * projectile.speed;
+                                projectile.vy = (projectile.vy / currentSpeed) * projectile.speed;
                             }
                         }
                     }
@@ -2772,10 +3084,52 @@ class VibeSurvivor {
                 }
             }
         });
+        
+        // Check enemy projectiles hitting player
+        this.projectiles.forEach((projectile, pIndex) => {
+            if (projectile.owner === 'enemy') {
+                const dx = projectile.x - this.player.x;
+                const dy = projectile.y - this.player.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < this.player.radius + (projectile.size || 3)) {
+                    // Player hit by enemy projectile
+                    this.player.health -= projectile.damage;
+                    
+                    // Create explosion if projectile has explosion radius
+                    if (projectile.explosionRadius) {
+                        this.createExplosion(projectile.x, projectile.y, projectile.explosionRadius, projectile.damage * 0.5);
+                        // Create screen shake effect
+                        this.createScreenShake(8);
+                    }
+                    
+                    // Remove the projectile
+                    this.projectiles.splice(pIndex, 1);
+                    
+                    // Check for game over
+                    if (this.player.health <= 0) {
+                        this.gameOver();
+                    }
+                }
+            }
+        });
     }
     
     createExplosion(x, y, radius, damage) {
-        // Damage enemies in radius (particles removed for performance)
+        // Create visual explosion effect
+        if (!this.explosions) this.explosions = [];
+        
+        this.explosions.push({
+            x: x,
+            y: y,
+            radius: 0,
+            maxRadius: radius,
+            life: 30,
+            maxLife: 30,
+            color: '#FF6600'
+        });
+        
+        // Damage enemies in radius
         this.enemies.forEach(enemy => {
             const dx = enemy.x - x;
             const dy = enemy.y - y;
@@ -2783,7 +3137,6 @@ class VibeSurvivor {
             
             if (distance <= radius) {
                 enemy.health -= damage * (1 - distance / radius);
-                // No particles for hit effects
             }
         });
     }
@@ -2804,6 +3157,49 @@ class VibeSurvivor {
         // Particles removed for performance
     }
     
+    createScreenShake(intensity) {
+        // Create screen shake effect
+        this.screenShake = {
+            x: 0,
+            y: 0,
+            intensity: intensity,
+            duration: 20,
+            decay: 0.95
+        };
+    }
+    
+    updateScreenShake() {
+        if (this.screenShake && this.screenShake.duration > 0) {
+            // Random shake in all directions
+            this.screenShake.x = (Math.random() - 0.5) * this.screenShake.intensity;
+            this.screenShake.y = (Math.random() - 0.5) * this.screenShake.intensity;
+            
+            // Decay the shake over time
+            this.screenShake.intensity *= this.screenShake.decay;
+            this.screenShake.duration--;
+            
+            if (this.screenShake.duration <= 0) {
+                this.screenShake = null;
+            }
+        }
+    }
+    
+    updateExplosions() {
+        if (!this.explosions) return;
+        
+        this.explosions.forEach((explosion, index) => {
+            // Expand the explosion radius over time
+            const progress = 1 - (explosion.life / explosion.maxLife);
+            explosion.radius = explosion.maxRadius * progress;
+            
+            explosion.life--;
+            
+            if (explosion.life <= 0) {
+                this.explosions.splice(index, 1);
+            }
+        });
+    }
+    
     createDeathParticles(x, y, color) {
         // Particles removed for performance
     }
@@ -2815,6 +3211,17 @@ class VibeSurvivor {
             y: this.player.y - 30, // Slightly above the player
             life: 120,
             maxLife: 120,
+            alpha: 1
+        });
+    }
+    
+    showBossNotification() {
+        this.notifications.push({
+            message: "⚠️ BOSS APPEARED! ⚠️",
+            x: this.player.x,
+            y: this.player.y - 50, // Higher above the player for boss warning
+            life: 180, // Show longer than regular notifications
+            maxLife: 180,
             alpha: 1
         });
     }
@@ -2923,15 +3330,21 @@ class VibeSurvivor {
         this.ctx.fillStyle = '#0a0a0a';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         
-        // Apply camera transformation
+        // Apply camera transformation with screen shake
         this.ctx.save();
-        this.ctx.translate(-this.camera.x, -this.camera.y);
+        let shakeX = 0, shakeY = 0;
+        if (this.screenShake) {
+            shakeX = this.screenShake.x;
+            shakeY = this.screenShake.y;
+        }
+        this.ctx.translate(-this.camera.x + shakeX, -this.camera.y + shakeY);
         
         this.drawGrid();
         this.drawPlayer();
         this.drawEnemies();
         this.drawProjectiles();
         this.drawXPOrbs();
+        this.drawExplosions();
         this.drawParticles();
         this.drawNotifications();
         
@@ -3437,6 +3850,42 @@ class VibeSurvivor {
                         this.ctx.fillRect(-6 - i * 3, -1, 3, 2);
                     }
                     break;
+                    
+                case 'boss-missile':
+                    this.ctx.translate(projectile.x, projectile.y);
+                    this.ctx.rotate(Math.atan2(projectile.vy, projectile.vx));
+                    
+                    // Boss missile body - larger and more menacing
+                    this.ctx.fillStyle = projectile.color;
+                    this.ctx.fillRect(-8, -3, 16, 6);
+                    
+                    // Boss missile tip - more aggressive
+                    this.ctx.fillStyle = '#FF0000';
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(8, 0);
+                    this.ctx.lineTo(4, -3);
+                    this.ctx.lineTo(4, 3);
+                    this.ctx.closePath();
+                    this.ctx.fill();
+                    
+                    // Pulsing glow effect for boss missiles
+                    const pulseIntensity = 0.7 + Math.sin(Date.now() * 0.01) * 0.3;
+                    this.ctx.shadowColor = '#FF0066';
+                    this.ctx.shadowBlur = 10 * pulseIntensity;
+                    this.ctx.fillStyle = '#FF0066';
+                    this.ctx.fillRect(-6, -2, 12, 4);
+                    
+                    // Exhaust trail - more intense
+                    this.ctx.shadowBlur = 0;
+                    this.ctx.fillStyle = '#FF0066';
+                    this.ctx.globalAlpha = 0.8;
+                    for (let i = 0; i < 4; i++) {
+                        const alpha = 0.8 - (i * 0.2);
+                        this.ctx.globalAlpha = alpha;
+                        this.ctx.fillRect(-8 - i * 4, -2, 4, 4);
+                    }
+                    this.ctx.globalAlpha = 1;
+                    break;
             }
             
             this.ctx.restore();
@@ -3474,6 +3923,51 @@ class VibeSurvivor {
         });
     }
     
+    drawExplosions() {
+        if (!this.explosions) return;
+        
+        this.explosions.forEach(explosion => {
+            // Only render explosions visible on screen
+            if (!this.isInViewport(explosion.x, explosion.y, explosion.maxRadius)) {
+                return;
+            }
+            
+            this.ctx.save();
+            
+            // Calculate explosion progress and alpha
+            const progress = 1 - (explosion.life / explosion.maxLife);
+            const alpha = 1 - progress; // Fade out as explosion progresses
+            
+            // Create radial gradient for explosion effect
+            const gradient = this.ctx.createRadialGradient(
+                explosion.x, explosion.y, 0,
+                explosion.x, explosion.y, explosion.radius
+            );
+            
+            // Color transitions from bright orange to red to transparent
+            if (progress < 0.3) {
+                gradient.addColorStop(0, `rgba(255, 255, 100, ${alpha})`); // Bright yellow center
+                gradient.addColorStop(0.5, `rgba(255, 140, 0, ${alpha * 0.8})`); // Orange
+                gradient.addColorStop(1, `rgba(255, 69, 0, ${alpha * 0.4})`); // Red-orange edge
+            } else if (progress < 0.7) {
+                gradient.addColorStop(0, `rgba(255, 140, 0, ${alpha})`); // Orange center
+                gradient.addColorStop(0.5, `rgba(255, 69, 0, ${alpha * 0.8})`); // Red-orange
+                gradient.addColorStop(1, `rgba(128, 0, 0, ${alpha * 0.3})`); // Dark red edge
+            } else {
+                gradient.addColorStop(0, `rgba(255, 69, 0, ${alpha})`); // Red-orange center
+                gradient.addColorStop(0.7, `rgba(128, 0, 0, ${alpha * 0.5})`); // Dark red
+                gradient.addColorStop(1, `rgba(64, 0, 0, ${alpha * 0.2})`); // Very dark red edge
+            }
+            
+            this.ctx.fillStyle = gradient;
+            this.ctx.beginPath();
+            this.ctx.arc(explosion.x, explosion.y, explosion.radius, 0, Math.PI * 2);
+            this.ctx.fill();
+            
+            this.ctx.restore();
+        });
+    }
+    
     drawParticles() {
         // Particles completely removed for performance
     }
@@ -3481,6 +3975,10 @@ class VibeSurvivor {
     drawNotifications() {
         this.notifications.forEach(notification => {
             this.ctx.save();
+            
+            // Reset transform to draw in screen coordinates
+            this.ctx.resetTransform();
+            
             this.ctx.globalAlpha = notification.alpha;
             this.ctx.fillStyle = '#FFD700';
             this.ctx.strokeStyle = '#000000';
@@ -3488,8 +3986,12 @@ class VibeSurvivor {
             this.ctx.font = 'bold 24px Arial';
             this.ctx.textAlign = 'center';
             
-            this.ctx.strokeText(notification.message, notification.x, notification.y);
-            this.ctx.fillText(notification.message, notification.x, notification.y);
+            // Draw notification in the center of the screen
+            const screenX = this.canvas.width / 2;
+            const screenY = this.canvas.height / 2 - 100; // Above center
+            
+            this.ctx.strokeText(notification.message, screenX, screenY);
+            this.ctx.fillText(notification.message, screenX, screenY);
             
             this.ctx.restore();
         });
@@ -3545,6 +4047,13 @@ class VibeSurvivor {
     
     gameOver() {
         this.gameRunning = false;
+        
+        // Hide pause button during game over
+        const pauseBtn = document.getElementById('pause-btn');
+        if (pauseBtn) {
+            pauseBtn.style.display = 'none';
+        }
+        
         // Creating game over overlay
         
         // Calculate final stats
@@ -3866,6 +4375,12 @@ class VibeSurvivor {
 
     closeGame() {
         this.gameRunning = false;
+        
+        // Hide pause button when closing game
+        const pauseBtn = document.getElementById('pause-btn');
+        if (pauseBtn) {
+            pauseBtn.style.display = 'none';
+        }
         
         // Stop background music
         try {
