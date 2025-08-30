@@ -440,8 +440,9 @@ class VibeSurvivor {
                 border-radius: 10px;
                 box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
                 width: calc(100% - 40px);
-                height: calc(100vh - var(--header-height) - var(--bottom-ui-height-desktop) - var(--canvas-margin));
-                max-width: calc(100% - 40px);
+                max-width: 760px; /* Performance-optimized max width */
+                height: calc(60vh - var(--header-height) - var(--bottom-ui-height-desktop) - var(--canvas-margin)); /* Reduced from 100vh to 60vh */
+                max-width: calc(130%);
                 object-fit: contain;
                 display: block;
                 margin: 10px auto 0;
@@ -811,8 +812,8 @@ class VibeSurvivor {
 
             .mobile-dash-btn {
                 position: absolute;
-                bottom: 100px;
-                right: 80px;
+                bottom: 120px;
+                right: 100px;
                 width: 60px;
                 height: 60px;
                 background: rgba(0, 255, 255, 0.3);
@@ -1107,7 +1108,7 @@ class VibeSurvivor {
             const isMobile = viewportWidth <= 480;
             
             // Define space reserves
-            const headerHeight = 220;
+            const headerHeight = 240;
             const bottomUIHeight = isMobile ? 120 : 80;
             const margin = 80;
             
@@ -1115,13 +1116,17 @@ class VibeSurvivor {
             const availableWidth = Math.max(viewportWidth - margin, 320);
             const availableHeight = Math.max(viewportHeight - headerHeight - bottomUIHeight - 40, 240);
             
+            // Apply 780px max width limit for performance
+            const finalWidth = Math.min(availableWidth, 760);
+            const finalHeight = availableHeight;
+            
             // Set canvas size
-            this.canvas.width = availableWidth;
-            this.canvas.height = availableHeight;
+            this.canvas.width = finalWidth;
+            this.canvas.height = finalHeight;
             
             // Apply CSS sizing to match
-            this.canvas.style.width = `${availableWidth}px`;
-            this.canvas.style.height = `${availableHeight}px`;
+            this.canvas.style.width = `${finalWidth}px`;
+            this.canvas.style.height = `${finalHeight}px`;
             this.canvas.style.display = 'block';
             this.canvas.style.margin = '10px auto';
             
@@ -1911,20 +1916,20 @@ class VibeSurvivor {
         // Spawn enemies around the player's position instead of canvas bounds
         switch (side) {
             case 0: // Top
-                x = this.player.x + (Math.random() - 0.5) * this.canvas.width;
+                x = this.player.x + (Math.random() - 0.5) * 500;
                 y = this.player.y - spawnDistance;
                 break;
             case 1: // Right
                 x = this.player.x + spawnDistance;
-                y = this.player.y + (Math.random() - 0.5) * this.canvas.height;
+                y = this.player.y + (Math.random() - 0.5) * 500;
                 break;
             case 2: // Bottom
-                x = this.player.x + (Math.random() - 0.5) * this.canvas.width;
+                x = this.player.x + (Math.random() - 0.5) * 500;
                 y = this.player.y + spawnDistance;
                 break;
             case 3: // Left
                 x = this.player.x - spawnDistance;
-                y = this.player.y + (Math.random() - 0.5) * this.canvas.height;
+                y = this.player.y + (Math.random() - 0.5) * 500;
                 break;
         }
         
@@ -3334,7 +3339,7 @@ class VibeSurvivor {
             left: 0 !important;
             width: 100% !important;
             height: 100% !important;
-            background: rgba(0, 0, 0, 0.8) !important;
+            background: transparent !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
