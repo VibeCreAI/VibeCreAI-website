@@ -150,7 +150,7 @@ class VibeSurvivor {
                                     <h2>GAME PAUSED</h2>
                                     <div class="pause-buttons">
                                         <button id="resume-btn" class="survivor-btn primary">RESUME</button>
-                                        <button id="exit-to-menu-btn" class="survivor-btn">EXIT TO MENU</button>
+                                        <button id="exit-to-menu-btn" class="survivor-btn">EXIT</button>
                                     </div>
                                     <p class="pause-hint">Press ESC to resume</p>
                                 </div>
@@ -1094,7 +1094,7 @@ class VibeSurvivor {
         });
         
         document.getElementById('exit-to-menu-btn').addEventListener('click', () => {
-            this.exitToMenu();
+            this.closeGame();
         });
         
         // Keyboard controls
@@ -1344,6 +1344,13 @@ class VibeSurvivor {
     startGame() {
         // Starting game with complete reinitialization
         
+        // Reset pause state and hide pause menu
+        this.isPaused = false;
+        const pauseMenu = document.getElementById('pause-menu');
+        if (pauseMenu) {
+            pauseMenu.style.display = 'none';
+        }
+        
         // CRITICAL FIX: Hide modal header during gameplay
         this.hideModalHeader();
         
@@ -1355,10 +1362,11 @@ class VibeSurvivor {
             // Start screen hidden
         }
         
-        // Show pause button during gameplay
+        // Show pause button during gameplay and reset its text
         const pauseBtn = document.getElementById('pause-btn');
         if (pauseBtn) {
             pauseBtn.style.display = 'flex';
+            pauseBtn.textContent = '||'; // Reset to pause symbol
         }
         
         // Force complete canvas reinitialization on every start
@@ -1443,6 +1451,7 @@ class VibeSurvivor {
         this.spawnRate = 120;
         this.waveMultiplier = 1;
         this.bossSpawned = false;
+        this.isPaused = false; // Ensure pause state is reset
         
         // Reset player - start at world center
         this.player = {
@@ -1684,7 +1693,10 @@ class VibeSurvivor {
                                 target.closest('.mobile-controls') ||
                                 target.closest('.close-btn') ||
                                 target.closest('.pause-btn') ||
-                                target.closest('.survivor-btn');
+                                target.closest('.survivor-btn') ||
+                                target.closest('.upgrade-choice') ||
+                                target.closest('.levelup-modal') ||
+                                target.closest('.pause-menu');
                                 
             if (!isGameControl) {
                 e.preventDefault();
@@ -1804,18 +1816,18 @@ class VibeSurvivor {
         const handle = document.getElementById('joystick-handle');
         const maxDistance = 40; // Increased for better floating experience
         
-        // Set up floating joystick with canvas-wide touch events
+        // Set up floating joystick with modal-wide touch events
         const canvas = document.getElementById('survivor-canvas');
         const gameModal = document.getElementById('vibe-survivor-modal');
         
         if (!canvas || !gameModal) return;
         
-        // Helper function to get touch position relative to canvas
+        // Helper function to get touch position relative to modal
         const getTouchPos = (touch) => {
-            const canvasRect = canvas.getBoundingClientRect();
+            const modalRect = gameModal.getBoundingClientRect();
             return {
-                x: touch.clientX - canvasRect.left,
-                y: touch.clientY - canvasRect.top
+                x: touch.clientX - modalRect.left,
+                y: touch.clientY - modalRect.top
             };
         };
         
@@ -1824,14 +1836,26 @@ class VibeSurvivor {
             const dashBtn = document.getElementById('mobile-dash-btn');
             if (!dashBtn) return false;
             const rect = dashBtn.getBoundingClientRect();
-            const canvasRect = canvas.getBoundingClientRect();
-            const btnX = rect.left - canvasRect.left + rect.width / 2;
-            const btnY = rect.top - canvasRect.top + rect.height / 2;
+            const modalRect = gameModal.getBoundingClientRect();
+            const btnX = rect.left - modalRect.left + rect.width / 2;
+            const btnY = rect.top - modalRect.top + rect.height / 2;
             const distance = Math.sqrt((touchX - btnX) ** 2 + (touchY - btnY) ** 2);
             return distance < 80; // 80px safe zone around dash button
         };
         
-        canvas.addEventListener('touchstart', (e) => {
+        gameModal.addEventListener('touchstart', (e) => {
+            // Only handle touches that aren't on interactive elements
+            const target = e.target;
+            const isInteractiveElement = target.closest('.close-btn') ||
+                                       target.closest('.pause-btn') ||
+                                       target.closest('.survivor-btn') ||
+                                       target.closest('.upgrade-choice') ||
+                                       target.closest('.levelup-modal') ||
+                                       target.closest('.pause-menu') ||
+                                       target.closest('#mobile-dash-btn');
+            
+            if (isInteractiveElement) return;
+            
             e.preventDefault();
             const touch = e.touches[0];
             const pos = getTouchPos(touch);
@@ -1847,18 +1871,18 @@ class VibeSurvivor {
             this.touchControls.joystick.startY = pos.y;
             this.touchControls.joystick.visible = true;
             
-            // Position joystick at touch location
-            const canvasRect = canvas.getBoundingClientRect();
+            // Position joystick at touch location relative to modal
+            const modalRect = gameModal.getBoundingClientRect();
             joystick.style.display = 'block';
-            joystick.style.left = `${touch.clientX - canvasRect.left - 40}px`; // Center joystick on touch
-            joystick.style.top = `${touch.clientY - canvasRect.top - 40}px`;
+            joystick.style.left = `${touch.clientX - modalRect.left - 40}px`; // Center joystick on touch
+            joystick.style.top = `${touch.clientY - modalRect.top - 40}px`;
             
             // Add active class for enhanced visuals
             joystick.classList.add('active');
             
         }, { passive: false });
         
-        canvas.addEventListener('touchmove', (e) => {
+        gameModal.addEventListener('touchmove', (e) => {
             if (!this.touchControls.joystick.active) return;
             e.preventDefault();
             
@@ -1908,8 +1932,8 @@ class VibeSurvivor {
             }, 300); // Match the CSS transition duration
         };
         
-        canvas.addEventListener('touchend', endTouch);
-        canvas.addEventListener('touchcancel', endTouch);
+        gameModal.addEventListener('touchend', endTouch);
+        gameModal.addEventListener('touchcancel', endTouch);
     }
     
     setupDashButton(dashBtn) {
@@ -4548,6 +4572,19 @@ class VibeSurvivor {
 
     closeGame() {
         this.gameRunning = false;
+        this.isPaused = false; // Reset pause state
+        
+        // Cancel any running game loop
+        if (this.gameLoopId) {
+            cancelAnimationFrame(this.gameLoopId);
+            this.gameLoopId = null;
+        }
+        
+        // Hide pause menu if it's open
+        const pauseMenu = document.getElementById('pause-menu');
+        if (pauseMenu) {
+            pauseMenu.style.display = 'none';
+        }
         
         // Restore body scrolling behavior
         this.restoreBackgroundScrolling();
