@@ -61,7 +61,7 @@ class GameManager {
     }
     
     launchVibeSurvivor() {
-        console.log('Launching Vibe Survivor...');
+        // Launching Vibe Survivor
         
         // Close any existing game first
         this.closeCurrentGame();
@@ -97,7 +97,7 @@ class GameManager {
         script.defer = true;
         
         script.onload = () => {
-            console.log('Vibe Survivor loaded successfully');
+            // Vibe Survivor loaded
             // Give it a moment to initialize
             setTimeout(() => {
                 if (window.vibeSurvivor) {

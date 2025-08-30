@@ -49,6 +49,9 @@ class VibeSurvivor {
         
         // Mobile touch controls
         this.isMobile = this.detectMobile();
+        
+        // Initialize object pools
+        this.initializeProjectilePool();
         this.touchControls = {
             joystick: {
                 active: false,
@@ -83,23 +86,12 @@ class VibeSurvivor {
     }
     
     createGameModal() {
-        // Debug: Check for ALL vibe-survivor modals and overlays
-        console.log('=== MODAL DEBUGGING ===');
+        // Clean up any existing modals
         const allModals = document.querySelectorAll('[id*="vibe-survivor"], [class*="vibe-survivor"], [class*="modal"]');
-        console.log('Found elements with vibe-survivor or modal:', allModals.length);
-        allModals.forEach((el, index) => {
-            console.log(`Element ${index}:`, {
-                id: el.id,
-                className: el.className,
-                display: window.getComputedStyle(el).display,
-                zIndex: window.getComputedStyle(el).zIndex,
-                position: window.getComputedStyle(el).position
-            });
-        });
         
         // Remove existing vibe-survivor MODAL elements only (preserve buttons)
         const existingModals = document.querySelectorAll('#vibe-survivor-modal, .vibe-survivor-modal');
-        console.log(`Removing ${existingModals.length} existing vibe-survivor modal elements`);
+        // Remove existing modal elements
         existingModals.forEach(modal => modal.remove());
         
         // Also check for any high z-index elements that might be covering content
@@ -107,16 +99,7 @@ class VibeSurvivor {
             const zIndex = parseInt(window.getComputedStyle(el).zIndex);
             return zIndex > 9000;
         });
-        console.log('High z-index elements (>9000):', highZElements.length);
-        highZElements.forEach((el, index) => {
-            console.log(`High z-index ${index}:`, {
-                tag: el.tagName,
-                id: el.id,
-                className: el.className,
-                zIndex: window.getComputedStyle(el).zIndex,
-                display: window.getComputedStyle(el).display
-            });
-        });
+        // Check for high z-index elements
 
         const modalHTML = `
             <div id="vibe-survivor-modal" class="vibe-survivor-modal">
@@ -197,10 +180,7 @@ class VibeSurvivor {
 
         document.body.insertAdjacentHTML('beforeend', modalHTML);
         
-        console.log('Modal HTML created, checking elements...');
-        console.log('vibe-survivor-modal exists:', !!document.getElementById('vibe-survivor-modal'));
-        console.log('survivor-start-screen exists:', !!document.getElementById('survivor-start-screen'));
-        console.log('survivor-game-over-screen exists:', !!document.getElementById('survivor-game-over-screen'));
+        // Modal created successfully
     }
     
     addStyles() {
@@ -995,7 +975,7 @@ class VibeSurvivor {
     }
     
     setupEventHandlers() {
-        console.log('setupEventHandlers called - setting up event listeners');
+        // Setting up event listeners
         document.getElementById('close-survivor').addEventListener('click', () => {
             this.closeGame();
         });
@@ -1062,12 +1042,12 @@ class VibeSurvivor {
     }
 
     launchGame() {
-        console.log('launchGame called - ensuring fresh modal state...');
+        // Launching game with fresh modal state
         
         // Always remove existing modal and create fresh one to avoid overlay issues
         const existingModal = document.getElementById('vibe-survivor-modal');
         if (existingModal) {
-            console.log('Removing existing modal to prevent overlay issues');
+            // Remove existing modal to prevent overlay issues
             existingModal.remove();
         }
         
@@ -1081,7 +1061,7 @@ class VibeSurvivor {
         const modal = document.getElementById('vibe-survivor-modal');
         if (modal) {
             modal.style.display = 'flex';
-            console.log('Fresh modal displayed');
+            // Modal ready for display
         } else {
             console.error('Failed to create modal!');
             return;
@@ -1139,8 +1119,7 @@ class VibeSurvivor {
             this.canvas.style.display = 'block';
             this.canvas.style.margin = '10px auto';
             
-            console.log(`Canvas sized to: ${this.canvas.width}x${this.canvas.height}`);
-            console.log(`Available space: ${availableWidth}x${availableHeight}, Viewport: ${viewportWidth}x${viewportHeight}`);
+            // Canvas resized successfully
             
             // Update touch controls positioning after canvas resize
             if (this.isMobile) {
@@ -1165,9 +1144,9 @@ class VibeSurvivor {
             header.style.justifyContent = 'space-between';
             header.style.alignItems = 'center';
             
-            console.log('Modal header title hidden during gameplay, X button remains visible');
+            // Header hidden during gameplay
         } else {
-            console.log('Modal header not found for hiding');
+            // Header not found
         }
     }
     
@@ -1180,9 +1159,9 @@ class VibeSurvivor {
             if (title) {
                 title.style.display = 'block';
             }
-            console.log('Modal header shown for menu screens');
+            // Header shown for menu screens
         } else {
-            console.log('Modal header not found for showing');
+            // Header not found
         }
     }
     
@@ -1221,7 +1200,7 @@ class VibeSurvivor {
     }
     
     startGame() {
-        console.log('startGame called - force complete reinitialization...');
+        // Starting game with complete reinitialization
         
         // CRITICAL FIX: Hide modal header during gameplay
         this.hideModalHeader();
@@ -1231,7 +1210,7 @@ class VibeSurvivor {
         if (startScreen) {
             startScreen.style.cssText = 'display: none !important;';
             startScreen.classList.remove('active');
-            console.log('Start screen explicitly hidden with cleared inline styles');
+            // Start screen hidden
         }
         
         // Force complete canvas reinitialization on every start
@@ -1266,7 +1245,7 @@ class VibeSurvivor {
             if (!this.ctx) {
                 throw new Error('Could not get canvas context');
             }
-            console.log('Canvas context successfully obtained');
+            // Canvas ready
             this.resizeCanvas();
         } catch (e) {
             console.error('Canvas initialization failed:', e);
@@ -1282,7 +1261,7 @@ class VibeSurvivor {
         const gameScreen = document.getElementById('game-screen');
         if (gameScreen) {
             gameScreen.classList.add('active');
-            console.log('Game screen activated');
+            // Game screen ready
         } else {
             console.error('Game screen not found! Modal structure may be missing.');
             return;
@@ -1300,12 +1279,12 @@ class VibeSurvivor {
         try {
             this.backgroundMusic.currentTime = 0;
             this.backgroundMusic.play();
-            console.log('Background music started');
+            // Background music started
         } catch (e) {
             console.warn('Could not start background music:', e);
         }
         
-        console.log('Starting game loop...');
+        // Game loop started
         this.gameLoop();
     }
     
@@ -1599,7 +1578,7 @@ class VibeSurvivor {
             }
         }
         
-        console.log(`Touch controls positioned: viewport ${viewportWidth}x${viewportHeight}, modal bottom: ${modalBottom}`);
+        // Touch controls positioned
     }
     
     setupVirtualJoystick(joystick) {
@@ -1613,7 +1592,7 @@ class VibeSurvivor {
             this.touchControls.joystick.active = true;
             this.touchControls.joystick.startX = touch.clientX;
             this.touchControls.joystick.startY = touch.clientY;
-        });
+        }, { passive: false });
         
         joystick.addEventListener('touchmove', (e) => {
             if (!this.touchControls.joystick.active) return;
@@ -1637,7 +1616,7 @@ class VibeSurvivor {
             // Convert to movement values (-1 to 1)
             this.touchControls.joystick.moveX = limitedX / maxDistance;
             this.touchControls.joystick.moveY = limitedY / maxDistance;
-        });
+        }, { passive: false });
         
         const endTouch = () => {
             this.touchControls.joystick.active = false;
@@ -1654,7 +1633,7 @@ class VibeSurvivor {
         dashBtn.addEventListener('touchstart', (e) => {
             e.preventDefault();
             this.touchControls.dashButton.pressed = true;
-        });
+        }, { passive: false });
         
         const endDash = () => {
             this.touchControls.dashButton.pressed = false;
@@ -1737,17 +1716,20 @@ class VibeSurvivor {
     
     createBasicProjectile(weapon, dx, dy, distance) {
         const angle = Math.atan2(dy, dx);
-        this.projectiles.push({
-            x: this.player.x,
-            y: this.player.y,
-            vx: Math.cos(angle) * weapon.projectileSpeed,
-            vy: Math.sin(angle) * weapon.projectileSpeed,
-            damage: weapon.damage,
-            life: 120,
-            type: 'basic',
-            color: '#9B59B6',
-            size: 3
-        });
+        const projectile = this.getPooledProjectile();
+        
+        // Set projectile properties
+        projectile.x = this.player.x;
+        projectile.y = this.player.y;
+        projectile.vx = Math.cos(angle) * weapon.projectileSpeed;
+        projectile.vy = Math.sin(angle) * weapon.projectileSpeed;
+        projectile.damage = weapon.damage;
+        projectile.life = 120;
+        projectile.type = 'basic';
+        projectile.color = '#9B59B6';
+        projectile.size = 3;
+        
+        this.projectiles.push(projectile);
     }
     
     createSpreadProjectiles(weapon, dx, dy, distance) {
@@ -1908,30 +1890,53 @@ class VibeSurvivor {
         });
     }
     
-    createHomingMissile(weapon, targetEnemy) {
-        this.projectiles.push({
-            x: this.player.x,
-            y: this.player.y,
-            vx: 0,
-            vy: 0,
-            targetX: targetEnemy.x,
-            targetY: targetEnemy.y,
-            damage: weapon.damage,
-            life: 180,
-            type: 'missile',
-            color: '#E67E22',
-            size: 3,
-            homing: true,
-            explosionRadius: 60,
-            speed: weapon.projectileSpeed || 3
+    // Helper function to find nearest enemy to a given position
+    findNearestEnemy(x, y, maxRange = Infinity) {
+        let nearestEnemy = null;
+        let nearestDistance = maxRange;
+        
+        this.enemies.forEach(enemy => {
+            const dx = enemy.x - x;
+            const dy = enemy.y - y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance < nearestDistance) {
+                nearestDistance = distance;
+                nearestEnemy = enemy;
+            }
         });
+        
+        return nearestEnemy;
+    }
+    
+    createHomingMissile(weapon, targetEnemy) {
+        const projectile = this.getPooledProjectile();
+        
+        // Set projectile properties
+        projectile.x = this.player.x;
+        projectile.y = this.player.y;
+        projectile.vx = 0;
+        projectile.vy = 0;
+        projectile.targetEnemy = targetEnemy; // Store reference to enemy, not just position
+        projectile.targetX = targetEnemy.x;
+        projectile.targetY = targetEnemy.y;
+        projectile.damage = weapon.damage;
+        projectile.life = 180;
+        projectile.type = 'missile';
+        projectile.color = '#E67E22';
+        projectile.size = 3;
+        projectile.homing = true;
+        projectile.explosionRadius = 60;
+        projectile.speed = weapon.projectileSpeed || 3;
+        
+        this.projectiles.push(projectile);
     }
     
     spawnEnemies() {
         this.frameCount++;
         
         // Performance limit: maximum number of enemies on screen
-        const maxEnemies = 40; // Adjust this number based on performance needs
+        const maxEnemies = 30; // Reduced for better desktop performance
         
         if (this.enemies.length >= maxEnemies) {
             return; // Don't spawn more if at limit
@@ -2181,6 +2186,12 @@ class VibeSurvivor {
             
             // Remove dead enemies
             if (enemy.health <= 0) {
+                // Check if this was a boss enemy
+                if (enemy.behavior === 'boss') {
+                    this.bossDefeated();
+                    return; // Exit early, bossDefeated handles the rest
+                }
+                
                 this.createXPOrb(enemy.x, enemy.y);
                 this.createDeathParticles(enemy.x, enemy.y, enemy.color);
                 this.enemies.splice(index, 1);
@@ -2224,14 +2235,29 @@ class VibeSurvivor {
             // Update position based on type
             switch (projectile.type) {
                 case 'missile':
-                    if (projectile.homing && projectile.targetX !== undefined) {
-                        const dx = projectile.targetX - projectile.x;
-                        const dy = projectile.targetY - projectile.y;
-                        const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (projectile.homing && projectile.targetEnemy) {
+                        // Check if target enemy is still alive
+                        const targetStillExists = this.enemies.includes(projectile.targetEnemy);
                         
-                        if (distance > 0) {
-                            projectile.vx = (dx / distance) * projectile.speed;
-                            projectile.vy = (dy / distance) * projectile.speed;
+                        if (targetStillExists) {
+                            // Update target position to enemy's current location
+                            projectile.targetX = projectile.targetEnemy.x;
+                            projectile.targetY = projectile.targetEnemy.y;
+                            
+                            const dx = projectile.targetX - projectile.x;
+                            const dy = projectile.targetY - projectile.y;
+                            const distance = Math.sqrt(dx * dx + dy * dy);
+                            
+                            if (distance > 0) {
+                                projectile.vx = (dx / distance) * projectile.speed;
+                                projectile.vy = (dy / distance) * projectile.speed;
+                            }
+                        } else {
+                            // Target is dead, find a new target or continue straight
+                            const nearestEnemy = this.findNearestEnemy(projectile.x, projectile.y, 200);
+                            if (nearestEnemy) {
+                                projectile.targetEnemy = nearestEnemy;
+                            }
                         }
                     }
                     projectile.x += projectile.vx;
@@ -2261,6 +2287,8 @@ class VibeSurvivor {
                     this.createExplosion(projectile.x, projectile.y, projectile.explosionRadius, projectile.damage * 0.7);
                 }
                 
+                // Return projectile to pool instead of just removing it
+                this.returnProjectileToPool(projectile);
                 this.projectiles.splice(index, 1);
             }
         });
@@ -2659,13 +2687,21 @@ class VibeSurvivor {
     }
     
     checkCollisions() {
-        // Projectile vs Enemy collisions
+        // Optimized collision detection with distance pre-screening
         this.projectiles.forEach((projectile, pIndex) => {
             let projectileHit = false;
             let hitCount = 0;
             const maxHits = projectile.piercing || 1;
             
-            this.enemies.forEach((enemy, eIndex) => {
+            // Pre-screen enemies by distance for performance
+            const nearbyEnemies = this.enemies.filter(enemy => {
+                const dx = projectile.x - enemy.x;
+                const dy = projectile.y - enemy.y;
+                const roughDistance = Math.abs(dx) + Math.abs(dy); // Manhattan distance (faster)
+                return roughDistance < 100; // Only check enemies within rough distance
+            });
+            
+            nearbyEnemies.forEach((enemy, eIndex) => {
                 const dx = projectile.x - enemy.x;
                 const dy = projectile.y - enemy.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
@@ -2700,12 +2736,21 @@ class VibeSurvivor {
             });
             
             if (projectileHit) {
+                // Return projectile to pool before removing from array
+                this.returnProjectileToPool(projectile);
                 this.projectiles.splice(pIndex, 1);
             }
         });
         
-        // Enemy vs Player collisions
-        this.enemies.forEach((enemy, index) => {
+        // Enemy vs Player collisions - only check nearby enemies
+        const nearbyEnemies = this.enemies.filter(enemy => {
+            const dx = this.player.x - enemy.x;
+            const dy = this.player.y - enemy.y;
+            const roughDistance = Math.abs(dx) + Math.abs(dy);
+            return roughDistance < 100; // Pre-screen for performance
+        });
+        
+        nearbyEnemies.forEach((enemy, index) => {
             const dx = this.player.x - enemy.x;
             const dy = this.player.y - enemy.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
@@ -2783,6 +2828,92 @@ class VibeSurvivor {
         const lerpFactor = 0.05;
         this.camera.x += (targetX - this.camera.x) * lerpFactor;
         this.camera.y += (targetY - this.camera.y) * lerpFactor;
+    }
+
+    
+    // Performance optimization: Check if object is visible on screen
+    isInViewport(x, y, radius = 0) {
+        if (!this.canvas) return true; // Fallback to render everything if no canvas
+        
+        const buffer = 50; // Small buffer to prevent pop-in effects
+        const left = this.camera.x - buffer;
+        const right = this.camera.x + this.canvas.width + buffer;
+        const top = this.camera.y - buffer;
+        const bottom = this.camera.y + this.canvas.height + buffer;
+        
+        return (x + radius > left && 
+                x - radius < right && 
+                y + radius > top && 
+                y - radius < bottom);
+    }
+
+
+    
+    // Object pooling for projectiles
+    initializeProjectilePool() {
+        this.projectilePool = [];
+        this.poolSize = 100; // Pre-allocate 100 projectiles
+        
+        // Pre-create projectiles
+        for (let i = 0; i < this.poolSize; i++) {
+            this.projectilePool.push({
+                x: 0, y: 0, vx: 0, vy: 0,
+                damage: 0, speed: 0, life: 0,
+                size: 3, color: '#ffffff',
+                type: 'basic', active: false
+            });
+        }
+    }
+    
+    // Get projectile from pool
+    getPooledProjectile() {
+        for (let i = 0; i < this.projectilePool.length; i++) {
+            if (!this.projectilePool[i].active) {
+                this.projectilePool[i].active = true;
+                return this.projectilePool[i];
+            }
+        }
+        
+        // If no available projectile in pool, create a new one
+        const newProjectile = {
+            x: 0, y: 0, vx: 0, vy: 0,
+            damage: 0, speed: 0, life: 0,
+            size: 3, color: '#ffffff',
+            type: 'basic', active: true
+        };
+        this.projectilePool.push(newProjectile);
+        return newProjectile;
+    }
+    
+    // Return projectile to pool
+    returnProjectileToPool(projectile) {
+        projectile.active = false;
+        // Reset properties
+        projectile.x = 0;
+        projectile.y = 0;
+        projectile.vx = 0;
+        projectile.vy = 0;
+        projectile.life = 0;
+    }
+
+    
+    // Performance optimization: Batch canvas state changes
+    setCanvasStyle(strokeStyle, lineWidth, shadowBlur = 0, shadowColor = null, fillStyle = null) {
+        if (this.ctx.strokeStyle !== strokeStyle) {
+            this.ctx.strokeStyle = strokeStyle;
+        }
+        if (this.ctx.lineWidth !== lineWidth) {
+            this.ctx.lineWidth = lineWidth;
+        }
+        if (this.ctx.shadowBlur !== shadowBlur) {
+            this.ctx.shadowBlur = shadowBlur;
+        }
+        if (shadowColor && this.ctx.shadowColor !== shadowColor) {
+            this.ctx.shadowColor = shadowColor;
+        }
+        if (fillStyle && this.ctx.fillStyle !== fillStyle) {
+            this.ctx.fillStyle = fillStyle;
+        }
     }
     
     draw() {
@@ -2975,8 +3106,11 @@ class VibeSurvivor {
     
     drawEnemies() {
         this.enemies.forEach(enemy => {
-            // Render all enemies to prevent invisible hit issues
-            // Performance culling removed to fix visibility problems
+            // Frustum culling: Only render enemies visible on screen
+            if (!this.isInViewport(enemy.x, enemy.y, enemy.radius)) {
+                return; // Skip rendering this enemy
+            }
+            // Cache context transformations for performance
             this.ctx.save();
             this.ctx.translate(enemy.x, enemy.y);
             this.ctx.rotate(enemy.angle);
@@ -3201,6 +3335,10 @@ class VibeSurvivor {
     
     drawProjectiles() {
         this.projectiles.forEach(projectile => {
+            // Frustum culling: Only render projectiles visible on screen
+            if (!this.isInViewport(projectile.x, projectile.y, projectile.size || 3)) {
+                return; // Skip rendering this projectile
+            }
             this.ctx.save();
             
             switch (projectile.type) {
@@ -3307,6 +3445,10 @@ class VibeSurvivor {
     
     drawXPOrbs() {
         this.xpOrbs.forEach(orb => {
+            // Frustum culling: Only render XP orbs visible on screen
+            if (!this.isInViewport(orb.x, orb.y, 15)) {
+                return; // Skip rendering this orb
+            }
             this.ctx.save();
             
             // Glow effect
@@ -3403,7 +3545,7 @@ class VibeSurvivor {
     
     gameOver() {
         this.gameRunning = false;
-        console.log('Game over - creating overlay like Vibe Runner');
+        // Creating game over overlay
         
         // Calculate final stats
         const minutes = Math.floor(this.gameTime / 60);
@@ -3552,7 +3694,169 @@ class VibeSurvivor {
             this.closeGame();
         });
         
-        console.log('Game over overlay created successfully');
+        // Game over overlay ready
+    }
+    
+    bossDefeated() {
+        this.gameRunning = false;
+        // Creating victory overlay
+        
+        // Calculate final stats
+        const minutes = Math.floor(this.gameTime / 60);
+        const seconds = Math.floor(this.gameTime % 60);
+        const timeText = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        
+        const finalStats = {
+            level: this.player.level,
+            timeText: timeText,
+            enemiesKilled: Math.max(1, Math.floor(this.gameTime * 1.8))
+        };
+        
+        // Create victory overlay (similar to game over but with victory theme)
+        const victoryOverlay = document.createElement('div');
+        victoryOverlay.id = 'survivor-victory-overlay';
+        victoryOverlay.style.cssText = `
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            background: transparent !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            z-index: 10000 !important;
+            backdrop-filter: blur(5px) !important;
+        `;
+        
+        // Create victory content with neon theme
+        victoryOverlay.innerHTML = `
+            <div style="
+                background: linear-gradient(135deg, #0a1a0a, #1a2a0a) !important;
+                border: 2px solid #00ff00 !important;
+                border-radius: 15px !important;
+                padding: 30px !important;
+                text-align: center !important;
+                color: white !important;
+                max-width: 400px !important;
+                box-shadow: 0 0 30px rgba(0, 255, 0, 0.5) !important;
+                font-family: Arial, sans-serif !important;
+            ">
+                <div style="
+                    color: #00ff00 !important;
+                    font-size: 36px !important;
+                    font-weight: bold !important;
+                    margin-bottom: 20px !important;
+                    text-shadow: 0 0 15px rgba(0, 255, 0, 0.8) !important;
+                ">VICTORY!</div>
+                
+                <div style="
+                    color: #ffff00 !important;
+                    font-size: 18px !important;
+                    font-weight: bold !important;
+                    margin-bottom: 25px !important;
+                    text-shadow: 0 0 10px rgba(255, 255, 0, 0.6) !important;
+                ">BOSS DEFEATED</div>
+                
+                <div style="margin-bottom: 25px !important;">
+                    <div style="
+                        display: flex;
+                        justify-content: space-between;
+                        margin: 8px 0;
+                        font-size: 18px;
+                        color: #00ffff;
+                    ">
+                        <span>Level:</span>
+                        <span style="color: #00ff00; font-weight: bold;">${finalStats.level}</span>
+                    </div>
+                    <div style="
+                        display: flex;
+                        justify-content: space-between;
+                        margin: 8px 0;
+                        font-size: 18px;
+                        color: #00ffff;
+                    ">
+                        <span>Survival Time:</span>
+                        <span style="color: #00ff00; font-weight: bold;">${finalStats.timeText}</span>
+                    </div>
+                    <div style="
+                        display: flex;
+                        justify-content: space-between;
+                        margin: 8px 0;
+                        font-size: 18px;
+                        color: #00ffff;
+                    ">
+                        <span>Enemies Defeated:</span>
+                        <span style="color: #00ff00; font-weight: bold;">${finalStats.enemiesKilled}</span>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 15px; justify-content: center;">
+                    <button id="victory-retry-btn" style="
+                        background: transparent !important;
+                        border: 2px solid #00ff00 !important;
+                        color: #00ff00 !important;
+                        padding: 12px 25px !important;
+                        font-size: 16px !important;
+                        border-radius: 25px !important;
+                        font-weight: bold !important;
+                        transition: all 0.3s ease !important;
+                        cursor: pointer !important;
+                    ">PLAY AGAIN</button>
+                    
+                    <button id="victory-exit-btn" style="
+                        background: transparent !important;
+                        border: 2px solid #ffff00 !important;
+                        color: #ffff00 !important;
+                        padding: 12px 25px !important;
+                        font-size: 16px !important;
+                        border-radius: 25px !important;
+                        font-weight: bold !important;
+                        transition: all 0.3s ease !important;
+                        cursor: pointer !important;
+                    ">EXIT</button>
+                </div>
+            </div>
+        `;
+        
+        // Add hover effects
+        const style = document.createElement('style');
+        style.textContent = `
+            #victory-retry-btn:hover {
+                background: rgba(0, 255, 0, 0.1) !important;
+                box-shadow: 0 0 15px rgba(0, 255, 0, 0.5) !important;
+            }
+            #victory-exit-btn:hover {
+                background: rgba(255, 255, 0, 0.1) !important;
+                box-shadow: 0 0 15px rgba(255, 255, 0, 0.5) !important;
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Add overlay to the game container
+        const gameContainer = document.getElementById('vibe-survivor-container');
+        if (gameContainer) {
+            gameContainer.appendChild(victoryOverlay);
+        }
+        
+        // Add event listeners
+        document.getElementById('victory-retry-btn').addEventListener('click', () => {
+            // Remove overlay
+            victoryOverlay.remove();
+            style.remove();
+            // Restart game
+            this.startGame();
+        });
+        
+        document.getElementById('victory-exit-btn').addEventListener('click', () => {
+            // Remove overlay
+            victoryOverlay.remove();
+            style.remove();
+            // Close game
+            this.closeGame();
+        });
+        
+        // Victory overlay ready
     }
     
     restartGame() {
@@ -3730,34 +4034,34 @@ class VibeSurvivor {
         // Notify Game Manager that we've exited
         if (window.gameManager && window.gameManager.currentGame === 'vibe-survivor') {
             window.gameManager.currentGame = null;
-            console.log('Notified Game Manager of clean exit');
+            // Notified Game Manager
         }
         
-        console.log('Clean exit completed - game state fully reset');
+        // Game state fully reset
     }
 }
 
 // Initialize when ready - prevent multiple instances
-console.log('VibeSurvivor class defined, initializing...');
+// VibeSurvivor class defined
 
 // Prevent multiple instances
 if (window.vibeSurvivor) {
-    console.log('VibeSurvivor already exists, not creating duplicate');
+    // VibeSurvivor already exists
 } else {
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
-            console.log('DOMContentLoaded - creating VibeSurvivor instance');
+            // Creating VibeSurvivor instance
             if (!window.vibeSurvivor) {
                 window.vibeSurvivor = new VibeSurvivor();
-                console.log('window.vibeSurvivor created:', !!window.vibeSurvivor);
+                // VibeSurvivor instance created
             }
         });
     } else {
-        console.log('Document ready - creating VibeSurvivor instance with delay');
+        // Creating VibeSurvivor instance
         setTimeout(() => {
             if (!window.vibeSurvivor) {
                 window.vibeSurvivor = new VibeSurvivor();
-                console.log('window.vibeSurvivor created:', !!window.vibeSurvivor);
+                // VibeSurvivor instance created
             }
         }, 200);
     }
