@@ -42,6 +42,11 @@ class VibeSurvivor {
         // Pause functionality
         this.isPaused = false;
         
+        // Background music
+        this.backgroundMusic = new Audio('sound/Vibe_Survivor.mp3');
+        this.backgroundMusic.loop = true;
+        this.backgroundMusic.volume = 0.3; // Adjust volume as needed
+        
         // Mobile touch controls
         this.isMobile = this.detectMobile();
         this.touchControls = {
@@ -600,7 +605,7 @@ class VibeSurvivor {
                 display: inline-flex;
                 align-items: center;
                 margin: 2px 4px;
-                color: white;
+                color: #000000;
                 font-size: 11px;
                 background: rgba(0, 20, 40, 0.8);
                 padding: 4px 8px;
@@ -623,6 +628,10 @@ class VibeSurvivor {
                 justify-content: center;
                 font-size: 8px;
                 box-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+            }
+
+            .weapon-name {
+                color: #00ffff !important;
             }
 
             .pause-menu {
@@ -1286,6 +1295,16 @@ class VibeSurvivor {
         }
         
         this.gameRunning = true;
+        
+        // Start background music when game actually begins
+        try {
+            this.backgroundMusic.currentTime = 0;
+            this.backgroundMusic.play();
+            console.log('Background music started');
+        } catch (e) {
+            console.warn('Could not start background music:', e);
+        }
+        
         console.log('Starting game loop...');
         this.gameLoop();
     }
@@ -1666,36 +1685,52 @@ class VibeSurvivor {
             const dy = nearestEnemy.y - this.player.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
             
-            switch (weapon.type) {
-                case 'basic':
-                case 'rapid':
-                    this.createBasicProjectile(weapon, dx, dy, distance);
-                    break;
-                case 'spread':
-                case 'spread_shot':
-                    this.createSpreadProjectiles(weapon, dx, dy, distance);
-                    break;
-                case 'laser':
-                    this.createLaserBeam(weapon, dx, dy, distance);
-                    break;
-                case 'plasma':
-                    this.createPlasmaProjectile(weapon, dx, dy, distance);
-                    break;
-                case 'shotgun':
-                    this.createShotgunBlast(weapon, dx, dy, distance);
-                    break;
-                case 'lightning':
-                    this.createLightningBolt(weapon, nearestEnemy);
-                    break;
-                case 'flamethrower':
-                    this.createFlameStream(weapon, dx, dy, distance);
-                    break;
-                case 'railgun':
-                    this.createRailgunBeam(weapon, dx, dy, distance);
-                    break;
-                case 'missiles':
-                    this.createHomingMissile(weapon, nearestEnemy);
-                    break;
+            // Fire multiple projectiles if weapon has been upgraded
+            const projectileCount = weapon.projectileCount || 1;
+            
+            for (let i = 0; i < projectileCount; i++) {
+                // Add slight angle variation for multiple projectiles
+                let adjustedDx = dx;
+                let adjustedDy = dy;
+                
+                if (projectileCount > 1) {
+                    const angleOffset = (i - (projectileCount - 1) / 2) * 0.2; // Small spread
+                    const angle = Math.atan2(dy, dx) + angleOffset;
+                    adjustedDx = Math.cos(angle) * distance;
+                    adjustedDy = Math.sin(angle) * distance;
+                }
+            
+                switch (weapon.type) {
+                    case 'basic':
+                    case 'rapid':
+                        this.createBasicProjectile(weapon, adjustedDx, adjustedDy, distance);
+                        break;
+                    case 'spread':
+                    case 'spread_shot':
+                        this.createSpreadProjectiles(weapon, adjustedDx, adjustedDy, distance);
+                        break;
+                    case 'laser':
+                        this.createLaserBeam(weapon, adjustedDx, adjustedDy, distance);
+                        break;
+                    case 'plasma':
+                        this.createPlasmaProjectile(weapon, adjustedDx, adjustedDy, distance);
+                        break;
+                    case 'shotgun':
+                        this.createShotgunBlast(weapon, adjustedDx, adjustedDy, distance);
+                        break;
+                    case 'lightning':
+                        this.createLightningBolt(weapon, nearestEnemy);
+                        break;
+                    case 'flamethrower':
+                        this.createFlameStream(weapon, adjustedDx, adjustedDy, distance);
+                        break;
+                    case 'railgun':
+                        this.createRailgunBeam(weapon, adjustedDx, adjustedDy, distance);
+                        break;
+                    case 'missiles':
+                        this.createHomingMissile(weapon, nearestEnemy);
+                        break;
+                }
             }
         }
     }
@@ -1895,13 +1930,23 @@ class VibeSurvivor {
     spawnEnemies() {
         this.frameCount++;
         
+        // Performance limit: maximum number of enemies on screen
+        const maxEnemies = 40; // Adjust this number based on performance needs
+        
+        if (this.enemies.length >= maxEnemies) {
+            return; // Don't spawn more if at limit
+        }
+        
         // Increase difficulty over time
         const difficultyMultiplier = 1 + Math.floor(this.gameTime / 30) * 0.2;
         this.spawnRate = Math.max(30, 120 - Math.floor(this.gameTime / 10) * 5);
         
         if (this.frameCount - this.lastSpawn >= this.spawnRate) {
             const spawnCount = 1 + Math.floor(this.gameTime / 60);
-            for (let i = 0; i < spawnCount; i++) {
+            // Limit spawn count to not exceed max enemies
+            const actualSpawnCount = Math.min(spawnCount, maxEnemies - this.enemies.length);
+            
+            for (let i = 0; i < actualSpawnCount; i++) {
                 this.spawnEnemy();
             }
             this.lastSpawn = this.frameCount;
@@ -1963,17 +2008,19 @@ class VibeSurvivor {
         if (time > 60) types.push('tank');
         if (time > 120) types.push('flyer');
         if (time > 180) types.push('phantom');
+        if (time > 300) types.push('boss'); // Boss spawns after 5 minutes
         
         return types;
     }
     
     selectEnemyType(types) {
         const weights = {
-            'basic': 0.4,
+            'basic': 0.35,
             'fast': 0.25,
             'tank': 0.15,
             'flyer': 0.15,
-            'phantom': 0.05
+            'phantom': 0.05,
+            'boss': 0.05  // Rare but powerful
         };
         
         // Weighted random selection
@@ -2031,6 +2078,14 @@ class VibeSurvivor {
                 contactDamage: 2,
                 color: '#9b59b6',
                 behavior: 'teleport'
+            },
+            boss: {
+                radius: 30,
+                health: 500,
+                speed: 0.8,
+                contactDamage: 50,
+                color: '#ff0066',
+                behavior: 'boss'
             }
         };
         
@@ -2283,11 +2338,20 @@ class VibeSurvivor {
         // Weapon upgrades for existing weapons
         this.weapons.forEach((weapon, index) => {
             if (weapon.level < 10) {
+                let description = `+${Math.floor(weapon.damage * 0.3)} damage, faster fire rate`;
+                
+                // Add projectile count info for level 2+ upgrades
+                if (weapon.level === 1) {
+                    description += ', +1 projectile';
+                } else if (weapon.level >= 2 && weapon.level < 5) {
+                    description += ', +1 projectile';
+                }
+                
                 choices.push({
                     type: 'weapon_upgrade',
                     weaponIndex: index,
                     name: `${this.getWeaponName(weapon.type)} LV.${weapon.level + 1}`,
-                    description: `+${Math.floor(weapon.damage * 0.3)} damage, faster fire rate`,
+                    description: description,
                     icon: '⚡'
                 });
             }
@@ -2532,6 +2596,13 @@ class VibeSurvivor {
         weapon.damage = Math.floor(weapon.damage * 1.3);
         weapon.fireRate = Math.max(10, weapon.fireRate - 3);
         
+        // Double projectile count at level 2
+        if (weapon.level === 2 && !weapon.projectileCount) {
+            weapon.projectileCount = 2;
+        } else if (weapon.level >= 2 && weapon.projectileCount) {
+            weapon.projectileCount = Math.min(weapon.projectileCount + 1, 5); // Cap at 5 projectiles
+        }
+        
         // Special upgrades at certain levels
         if (weapon.level === 5 && weapon.type === 'basic') {
             weapon.type = 'rapid';
@@ -2695,8 +2766,8 @@ class VibeSurvivor {
     showUpgradeNotification(title) {
         this.notifications.push({
             message: `${title} ACQUIRED!`,
-            x: this.canvas.width / 2,
-            y: this.canvas.height / 2 - 50,
+            x: this.player.x,
+            y: this.player.y - 30, // Slightly above the player
             life: 120,
             maxLife: 120,
             alpha: 1
@@ -2777,28 +2848,43 @@ class VibeSurvivor {
         
         // Calculate movement direction for arrow orientation
         // Support both WASD and arrow keys
-        let movementAngle = 0;
         const up = this.keys.w || this.keys.ArrowUp;
         const down = this.keys.s || this.keys.ArrowDown;
         const left = this.keys.a || this.keys.ArrowLeft;
         const right = this.keys.d || this.keys.ArrowRight;
         
+        let movementAngle = this.player.lastMovementAngle || 0; // Use last direction as default
+        let isMoving = false;
+        
         if (up && right) {
             movementAngle = -45; // Up-right
+            isMoving = true;
         } else if (up && left) {
             movementAngle = -135; // Up-left
+            isMoving = true;
         } else if (down && right) {
             movementAngle = 45; // Down-right
+            isMoving = true;
         } else if (down && left) {
             movementAngle = 135; // Down-left
+            isMoving = true;
         } else if (up) {
             movementAngle = -90; // Up
+            isMoving = true;
         } else if (down) {
             movementAngle = 90; // Down
+            isMoving = true;
         } else if (right) {
             movementAngle = 0; // Right
+            isMoving = true;
         } else if (left) {
             movementAngle = 180; // Left
+            isMoving = true;
+        }
+        
+        // Remember the last movement direction
+        if (isMoving) {
+            this.player.lastMovementAngle = movementAngle;
         }
         
         // Smooth angle transition
@@ -3226,14 +3312,14 @@ class VibeSurvivor {
             // Glow effect
             const glowIntensity = 0.5 + Math.sin(orb.glow) * 0.3;
             const gradient = this.ctx.createRadialGradient(orb.x, orb.y, 0, orb.x, orb.y, 15);
-            gradient.addColorStop(0, `rgba(155, 89, 182, ${glowIntensity})`);
-            gradient.addColorStop(1, 'rgba(155, 89, 182, 0)');
+            gradient.addColorStop(0, `rgba(0, 255, 255, ${glowIntensity})`);
+            gradient.addColorStop(1, 'rgba(0, 255, 255, 0)');
             
             this.ctx.fillStyle = gradient;
             this.ctx.fillRect(orb.x - 15, orb.y - 15, 30, 30);
             
             // Orb body
-            this.ctx.fillStyle = '#9B59B6';
+            this.ctx.fillStyle = '#00FFFF';
             this.ctx.strokeStyle = '#FFFFFF';
             this.ctx.lineWidth = 1;
             
@@ -3309,7 +3395,7 @@ class VibeSurvivor {
             weaponDisplay.innerHTML = this.weapons.map(weapon => `
                 <div class="weapon-item">
                     <div class="weapon-icon">${weapon.level}</div>
-                    <span>${this.getWeaponName(weapon.type)}</span>
+                    <span class="weapon-name">${this.getWeaponName(weapon.type)}</span>
                 </div>
             `).join('');
         }
@@ -3477,6 +3563,14 @@ class VibeSurvivor {
     closeGame() {
         this.gameRunning = false;
         
+        // Stop background music
+        try {
+            this.backgroundMusic.pause();
+            this.backgroundMusic.currentTime = 0;
+            console.log('Background music stopped');
+        } catch (e) {
+            console.warn('Could not stop background music:', e);
+        }
         
         // Remove any fresh modals that might exist
         const freshModal = document.getElementById('fresh-game-over-modal');
