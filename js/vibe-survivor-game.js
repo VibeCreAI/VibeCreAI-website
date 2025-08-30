@@ -63,7 +63,11 @@ class VibeSurvivor {
                 currentX: 0,
                 currentY: 0,
                 moveX: 0,
-                moveY: 0
+                moveY: 0,
+                floating: true, // Enable floating joystick mode
+                visible: false, // Track joystick visibility
+                centerX: 0, // Dynamic center position
+                centerY: 0
             },
             dashButton: {
                 pressed: false
@@ -183,6 +187,9 @@ class VibeSurvivor {
 
         document.body.insertAdjacentHTML('beforeend', modalHTML);
         
+        // Add touch event listeners to prevent background page scrolling
+        this.preventBackgroundScrolling();
+        
         // Modal created successfully
     }
     
@@ -227,6 +234,21 @@ class VibeSurvivor {
                 }
             }
             
+            @keyframes joystickPulse {
+                0%, 100% {
+                    opacity: 0.6;
+                    transform: scale(0.8);
+                    box-shadow: 0 0 20px rgba(0, 255, 255, 0.3),
+                               0 0 40px rgba(0, 255, 255, 0.1);
+                }
+                50% {
+                    opacity: 0.8;
+                    transform: scale(0.85);
+                    box-shadow: 0 0 25px rgba(0, 255, 255, 0.4),
+                               0 0 50px rgba(0, 255, 255, 0.15);
+                }
+            }
+            
             .vibe-survivor-modal {
                 position: fixed;
                 top: var(--header-height);
@@ -240,6 +262,8 @@ class VibeSurvivor {
                 justify-content: center;
                 z-index: 10000;
                 animation: fadeIn 0.3s ease;
+                touch-action: none;
+                overscroll-behavior: none;
             }
 
             .vibe-survivor-content {
@@ -256,6 +280,8 @@ class VibeSurvivor {
                 box-shadow: 0 0 40px rgba(0, 255, 255, 0.3),
                            inset 0 0 20px rgba(0, 255, 255, 0.1);
                 overflow: hidden;
+                touch-action: none;
+                overscroll-behavior: none;
             }
 
             .vibe-survivor-header {
@@ -817,29 +843,55 @@ class VibeSurvivor {
 
             .virtual-joystick {
                 position: absolute;
-                bottom: 100px;
-                left: 80px;
                 width: 80px;
                 height: 80px;
                 background: rgba(0, 255, 255, 0.2);
-                border: 1px solid rgba(0, 255, 255, 0.4);
+                border: 2px solid rgba(0, 255, 255, 0.6);
                 border-radius: 50%;
-                pointer-events: auto;
+                pointer-events: none; /* Let touches pass through to canvas */
                 touch-action: none;
-                backdrop-filter: blur(2px);
+                backdrop-filter: blur(3px);
+                display: none; /* Hidden by default for floating mode */
+                opacity: 0;
+                transform: scale(0.8);
+                transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+                z-index: 16000; /* Above other controls */
+                box-shadow: 0 0 20px rgba(0, 255, 255, 0.3), 
+                           0 0 40px rgba(0, 255, 255, 0.1);
+                animation: joystickPulse 2s ease-in-out infinite;
+            }
+            
+            .virtual-joystick.active {
+                opacity: 0.9;
+                transform: scale(1);
+                background: rgba(0, 255, 255, 0.4);
+                border-color: rgba(0, 255, 255, 0.8);
+                box-shadow: 0 0 25px rgba(0, 255, 255, 0.6),
+                           0 0 50px rgba(0, 255, 255, 0.2);
+                animation: none;
             }
 
             .joystick-handle {
                 position: absolute;
                 width: 40px;
                 height: 40px;
-                background: #00ffff;
+                background: linear-gradient(135deg, #00ffff 0%, #00cccc 100%);
+                border: 2px solid rgba(255, 255, 255, 0.3);
                 border-radius: 50%;
                 top: 50%;
                 left: 50%;
                 transform: translate(-50%, -50%);
-                box-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
-                transition: all 0.1s ease;
+                box-shadow: 0 0 15px rgba(0, 255, 255, 0.8),
+                           inset 0 0 10px rgba(255, 255, 255, 0.2);
+                transition: all 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+                cursor: pointer;
+            }
+            
+            .joystick-handle.moving {
+                background: linear-gradient(135deg, #ff00ff 0%, #cc00cc 100%);
+                box-shadow: 0 0 20px rgba(255, 0, 255, 0.8),
+                           inset 0 0 15px rgba(255, 255, 255, 0.3);
+                transform: translate(-50%, -50%) scale(1.1);
             }
 
             .mobile-dash-btn {
@@ -1618,6 +1670,58 @@ class VibeSurvivor {
                (navigator.maxTouchPoints > 0);
     }
     
+    preventBackgroundScrolling() {
+        const modal = document.getElementById('vibe-survivor-modal');
+        const content = document.querySelector('.vibe-survivor-content');
+        
+        if (!modal || !content) return;
+        
+        // Prevent touch scrolling on modal and content
+        const preventTouchDefault = (e) => {
+            // Only prevent default if the touch isn't on game controls
+            const target = e.target;
+            const isGameControl = target.closest('#survivor-canvas') || 
+                                target.closest('.mobile-controls') ||
+                                target.closest('.close-btn') ||
+                                target.closest('.pause-btn') ||
+                                target.closest('.survivor-btn');
+                                
+            if (!isGameControl) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        };
+        
+        // Add event listeners to prevent background scrolling
+        modal.addEventListener('touchstart', preventTouchDefault, { passive: false });
+        modal.addEventListener('touchmove', preventTouchDefault, { passive: false });
+        modal.addEventListener('touchend', preventTouchDefault, { passive: false });
+        
+        content.addEventListener('touchstart', preventTouchDefault, { passive: false });
+        content.addEventListener('touchmove', preventTouchDefault, { passive: false });
+        content.addEventListener('touchend', preventTouchDefault, { passive: false });
+        
+        // Also prevent wheel events for desktop
+        modal.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+        }, { passive: false });
+        
+        // Prevent body scrolling while modal is open
+        document.body.style.overflow = 'hidden';
+        document.body.style.position = 'fixed';
+        document.body.style.width = '100%';
+        document.body.style.height = '100%';
+    }
+    
+    restoreBackgroundScrolling() {
+        // Restore normal body scroll behavior
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.width = '';
+        document.body.style.height = '';
+    }
+    
     setupMobileControls() {
         const mobileControls = document.getElementById('mobile-controls');
         const joystick = document.getElementById('virtual-joystick');
@@ -1698,24 +1802,71 @@ class VibeSurvivor {
     
     setupVirtualJoystick(joystick) {
         const handle = document.getElementById('joystick-handle');
-        const joystickRect = joystick.getBoundingClientRect();
-        const maxDistance = 30; // Maximum distance handle can move from center
+        const maxDistance = 40; // Increased for better floating experience
         
-        joystick.addEventListener('touchstart', (e) => {
+        // Set up floating joystick with canvas-wide touch events
+        const canvas = document.getElementById('survivor-canvas');
+        const gameModal = document.getElementById('vibe-survivor-modal');
+        
+        if (!canvas || !gameModal) return;
+        
+        // Helper function to get touch position relative to canvas
+        const getTouchPos = (touch) => {
+            const canvasRect = canvas.getBoundingClientRect();
+            return {
+                x: touch.clientX - canvasRect.left,
+                y: touch.clientY - canvasRect.top
+            };
+        };
+        
+        // Helper function to check if touch is near dash button area (avoid conflicts)
+        const isTouchNearDashButton = (touchX, touchY) => {
+            const dashBtn = document.getElementById('mobile-dash-btn');
+            if (!dashBtn) return false;
+            const rect = dashBtn.getBoundingClientRect();
+            const canvasRect = canvas.getBoundingClientRect();
+            const btnX = rect.left - canvasRect.left + rect.width / 2;
+            const btnY = rect.top - canvasRect.top + rect.height / 2;
+            const distance = Math.sqrt((touchX - btnX) ** 2 + (touchY - btnY) ** 2);
+            return distance < 80; // 80px safe zone around dash button
+        };
+        
+        canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
             const touch = e.touches[0];
+            const pos = getTouchPos(touch);
+            
+            // Avoid conflicts with dash button
+            if (isTouchNearDashButton(pos.x, pos.y)) return;
+            
+            // Start floating joystick
             this.touchControls.joystick.active = true;
-            this.touchControls.joystick.startX = touch.clientX;
-            this.touchControls.joystick.startY = touch.clientY;
+            this.touchControls.joystick.centerX = pos.x;
+            this.touchControls.joystick.centerY = pos.y;
+            this.touchControls.joystick.startX = pos.x;
+            this.touchControls.joystick.startY = pos.y;
+            this.touchControls.joystick.visible = true;
+            
+            // Position joystick at touch location
+            const canvasRect = canvas.getBoundingClientRect();
+            joystick.style.display = 'block';
+            joystick.style.left = `${touch.clientX - canvasRect.left - 40}px`; // Center joystick on touch
+            joystick.style.top = `${touch.clientY - canvasRect.top - 40}px`;
+            
+            // Add active class for enhanced visuals
+            joystick.classList.add('active');
+            
         }, { passive: false });
         
-        joystick.addEventListener('touchmove', (e) => {
+        canvas.addEventListener('touchmove', (e) => {
             if (!this.touchControls.joystick.active) return;
             e.preventDefault();
             
             const touch = e.touches[0];
-            const deltaX = touch.clientX - this.touchControls.joystick.startX;
-            const deltaY = touch.clientY - this.touchControls.joystick.startY;
+            const pos = getTouchPos(touch);
+            
+            const deltaX = pos.x - this.touchControls.joystick.centerX;
+            const deltaY = pos.y - this.touchControls.joystick.centerY;
             
             // Limit movement to circle
             const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
@@ -1725,8 +1876,15 @@ class VibeSurvivor {
             const limitedX = Math.cos(angle) * limitedDistance;
             const limitedY = Math.sin(angle) * limitedDistance;
             
-            // Update handle position
+            // Update handle position relative to joystick center
             handle.style.transform = `translate(calc(-50% + ${limitedX}px), calc(-50% + ${limitedY}px))`;
+            
+            // Add moving class when joystick is being used
+            if (limitedDistance > 5) {
+                handle.classList.add('moving');
+            } else {
+                handle.classList.remove('moving');
+            }
             
             // Convert to movement values (-1 to 1)
             this.touchControls.joystick.moveX = limitedX / maxDistance;
@@ -1737,11 +1895,21 @@ class VibeSurvivor {
             this.touchControls.joystick.active = false;
             this.touchControls.joystick.moveX = 0;
             this.touchControls.joystick.moveY = 0;
-            handle.style.transform = 'translate(-50%, -50%)';
+            this.touchControls.joystick.visible = false;
+            
+            // Remove active classes for smooth fade out
+            joystick.classList.remove('active');
+            handle.classList.remove('moving');
+            
+            // Hide and reset joystick with smooth transition
+            setTimeout(() => {
+                joystick.style.display = 'none';
+                handle.style.transform = 'translate(-50%, -50%)';
+            }, 300); // Match the CSS transition duration
         };
         
-        joystick.addEventListener('touchend', endTouch);
-        joystick.addEventListener('touchcancel', endTouch);
+        canvas.addEventListener('touchend', endTouch);
+        canvas.addEventListener('touchcancel', endTouch);
     }
     
     setupDashButton(dashBtn) {
@@ -3387,7 +3555,7 @@ class VibeSurvivor {
         this.ctx.save();
         
         // Calculate movement direction for arrow orientation
-        // Support both WASD and arrow keys
+        // Support both WASD/arrow keys and virtual joystick
         const up = this.keys.w || this.keys.ArrowUp;
         const down = this.keys.s || this.keys.ArrowDown;
         const left = this.keys.a || this.keys.ArrowLeft;
@@ -3396,7 +3564,16 @@ class VibeSurvivor {
         let movementAngle = this.player.lastMovementAngle || 0; // Use last direction as default
         let isMoving = false;
         
-        if (up && right) {
+        // Check for joystick movement first (takes priority for mobile)
+        if (this.isMobile && this.touchControls.joystick.active && 
+            (Math.abs(this.touchControls.joystick.moveX) > 0.1 || Math.abs(this.touchControls.joystick.moveY) > 0.1)) {
+            // Calculate angle from joystick movement (-1 to 1 range)
+            const joystickAngle = Math.atan2(this.touchControls.joystick.moveY, this.touchControls.joystick.moveX);
+            movementAngle = (joystickAngle * 180 / Math.PI); // Convert to degrees
+            isMoving = true;
+        }
+        // Fall back to keyboard controls if no joystick movement
+        else if (up && right) {
             movementAngle = -45; // Up-right
             isMoving = true;
         } else if (up && left) {
@@ -4372,6 +4549,9 @@ class VibeSurvivor {
     closeGame() {
         this.gameRunning = false;
         
+        // Restore body scrolling behavior
+        this.restoreBackgroundScrolling();
+        
         // Hide pause button when closing game
         const pauseBtn = document.getElementById('pause-btn');
         if (pauseBtn) {
@@ -4529,6 +4709,9 @@ class VibeSurvivor {
     
     cleanExit() {
         console.log('Executing clean exit...');
+        
+        // Restore body scrolling behavior
+        this.restoreBackgroundScrolling();
         
         // Reset all game state completely
         this.resetGame();
