@@ -251,10 +251,10 @@ class VibeSurvivor {
             
             .vibe-survivor-modal {
                 position: fixed;
-                top: var(--header-height);
+                top: 0;
                 left: 0;
                 width: 100%;
-                height: calc(100vh - var(--header-height));
+                height: 100vh;
                 background: rgba(0, 0, 0, 0.95);
                 backdrop-filter: blur(10px);
                 display: flex;
@@ -262,7 +262,6 @@ class VibeSurvivor {
                 justify-content: center;
                 z-index: 10000;
                 animation: fadeIn 0.3s ease;
-                touch-action: none;
                 overscroll-behavior: none;
             }
 
@@ -1939,15 +1938,18 @@ class VibeSurvivor {
     setupDashButton(dashBtn) {
         dashBtn.addEventListener('touchstart', (e) => {
             e.preventDefault();
+            e.stopPropagation(); // Prevent event from bubbling to modal
             this.touchControls.dashButton.pressed = true;
         }, { passive: false });
         
-        const endDash = () => {
+        const endDash = (e) => {
+            e.preventDefault();
+            e.stopPropagation(); // Prevent event from bubbling to modal
             this.touchControls.dashButton.pressed = false;
         };
         
-        dashBtn.addEventListener('touchend', endDash);
-        dashBtn.addEventListener('touchcancel', endDash);
+        dashBtn.addEventListener('touchend', endDash, { passive: false });
+        dashBtn.addEventListener('touchcancel', endDash, { passive: false });
     }
     
     fireWeapon(weapon) {
