@@ -919,23 +919,19 @@ class VibeSurvivor {
                 }
                 
                 .survivor-ui {
-                    /* Mobile safe zone layout - avoid touch control areas */
+                    /* Keep normal UI layout on mobile - no shrinking */
                     position: fixed !important;
-                    bottom: 15px !important;
-                    left: 200px !important;  /* Safe zone: avoid joystick (left 40-140px) */
-                    right: 200px !important; /* Safe zone: avoid dash button (right 40-140px) */
+                    bottom: 20px !important;
+                    left: 20px !important;
+                    right: 20px !important;
                     top: auto !important;
                     margin: 0 !important;
                     display: grid !important;
-                    grid-template-columns: 1fr !important;
-                    grid-template-areas: 
-                        "stats"
-                        "time"
-                        "weapon" !important;
-                    gap: 4px !important;
-                    padding: 6px 8px !important;
-                    max-height: 100px !important;
-                    overflow: hidden !important;
+                    grid-template-columns: 1fr auto 1fr !important;
+                    grid-template-areas: "stats time weapon" !important;
+                    align-items: center !important;
+                    padding: 12px 15px !important;
+                    /* Remove max-height restriction */
                     text-align: center !important;
                 }
                 
