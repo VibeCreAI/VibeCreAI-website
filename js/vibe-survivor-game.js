@@ -2479,8 +2479,7 @@ class VibeSurvivor {
             contactDamage: config.contactDamage,
             color: config.color,
             behavior: config.behavior,
-            angle: 0,
-            rotSpeed: 0.05,
+            // angle: 0, rotSpeed: 0.05, // Removed for performance
             specialCooldown: 0,
             burning: null,
             spawnedMinions: false
@@ -2513,8 +2512,7 @@ class VibeSurvivor {
             contactDamage: config.contactDamage,
             color: config.color,
             behavior: config.behavior,
-            angle: 0,
-            rotSpeed: 0.05,
+            // angle: 0, rotSpeed: 0.05, // Removed for performance
             specialCooldown: 0,
             burning: null,
             spawnedMinions: false,
@@ -2779,7 +2777,7 @@ class VibeSurvivor {
                 enemy.specialCooldown--;
             }
             
-            enemy.angle += enemy.rotSpeed;
+            // enemy.angle += enemy.rotSpeed; // Removed for performance
             
             // Remove dead enemies
             if (enemy.health <= 0) {
@@ -2820,8 +2818,7 @@ class VibeSurvivor {
                 contactDamage: 5,
                 color: '#7F8C8D',
                 behavior: 'chase',
-                angle: 0,
-                rotSpeed: 0.1,
+                // angle: 0, rotSpeed: 0.1, // Removed for performance
                 specialCooldown: 0,
                 burning: null,
                 spawnedMinions: false
@@ -3531,7 +3528,7 @@ class VibeSurvivor {
         this.notifications.push({
             message: "⚠️ BOSS APPEARED! ⚠️",
             x: this.player.x,
-            y: this.player.y - 70, // Higher above the player for boss warning
+            y: this.player.y - 80, // Higher above the player for boss warning
             life: 180, // Show longer than regular notifications
             maxLife: 180,
             alpha: 1
@@ -3867,7 +3864,7 @@ class VibeSurvivor {
             // Cache context transformations for performance
             this.ctx.save();
             this.ctx.translate(enemy.x, enemy.y);
-            this.ctx.rotate(enemy.angle);
+            // this.ctx.rotate(enemy.angle); // Removed for performance
             
             // Use enemy's config color directly with neon effect
             const enemyColor = enemy.color;
