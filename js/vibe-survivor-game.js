@@ -2058,8 +2058,25 @@ class VibeSurvivor {
             // }, 300);  // Commented out
         };
         
-        gameModal.addEventListener('touchend', endTouch);
-        gameModal.addEventListener('touchcancel', endTouch);
+        gameModal.addEventListener('touchend', (e) => {
+            // Only end joystick if the specific touch that started it ends
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                if (e.changedTouches[i].identifier === this.touchControls.joystick.touchId) {
+                    endTouch();
+                    break;
+                }
+            }
+        });
+        
+        gameModal.addEventListener('touchcancel', (e) => {
+            // Only end joystick if the specific touch that started it is cancelled
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                if (e.changedTouches[i].identifier === this.touchControls.joystick.touchId) {
+                    endTouch();
+                    break;
+                }
+            }
+        });
     }
     
     setupDashButton(dashBtn) {
@@ -2381,6 +2398,8 @@ class VibeSurvivor {
         const angleToPlayer = Math.atan2(this.player.y - boss.y, this.player.x - boss.x);
         const spreadAngles = [-0.3, 0, 0.3]; // 3 missiles with spread
         
+        console.log('Creating boss missiles. Boss position:', boss.x, boss.y, 'Player:', this.player.x, this.player.y);
+        
         spreadAngles.forEach(angleOffset => {
             const missile = {
                 x: boss.x,
@@ -2399,7 +2418,10 @@ class VibeSurvivor {
                 owner: 'enemy' // Important: mark as enemy projectile
             };
             this.projectiles.push(missile);
+            console.log('Boss missile created:', missile);
         });
+        
+        console.log('Total projectiles after boss missile creation:', this.projectiles.length);
     }
     
     spawnEnemies() {
@@ -2479,7 +2501,8 @@ class VibeSurvivor {
             contactDamage: config.contactDamage,
             color: config.color,
             behavior: config.behavior,
-            // angle: 0, rotSpeed: 0.05, // Removed for performance
+            angle: 0,
+            rotSpeed: 0.05,
             specialCooldown: 0,
             burning: null,
             spawnedMinions: false
@@ -2512,7 +2535,8 @@ class VibeSurvivor {
             contactDamage: config.contactDamage,
             color: config.color,
             behavior: config.behavior,
-            // angle: 0, rotSpeed: 0.05, // Removed for performance
+            angle: 0,
+            rotSpeed: 0.05,
             specialCooldown: 0,
             burning: null,
             spawnedMinions: false,
@@ -2573,7 +2597,7 @@ class VibeSurvivor {
             fast: {
                 radius: 8,
                 health: 12,
-                speed: 1.9,
+                speed: 2.0,
                 contactDamage: 8,
                 color: '#ffff00', // Neon yellow
                 behavior: 'dodge'
@@ -2777,7 +2801,7 @@ class VibeSurvivor {
                 enemy.specialCooldown--;
             }
             
-            // enemy.angle += enemy.rotSpeed; // Removed for performance
+            enemy.angle += enemy.rotSpeed;
             
             // Remove dead enemies
             if (enemy.health <= 0) {
@@ -2818,7 +2842,8 @@ class VibeSurvivor {
                 contactDamage: 5,
                 color: '#7F8C8D',
                 behavior: 'chase',
-                // angle: 0, rotSpeed: 0.1, // Removed for performance
+                angle: 0,
+                rotSpeed: 0.1,
                 specialCooldown: 0,
                 burning: null,
                 spawnedMinions: false
@@ -2901,7 +2926,7 @@ class VibeSurvivor {
             const dy = projectile.y - this.player.y;
             const distanceFromPlayer = Math.sqrt(dx * dx + dy * dy);
             
-            if (projectile.life <= 0 || distanceFromPlayer > 800) {
+            if (projectile.life <= 0 || (distanceFromPlayer > 800 && projectile.type !== 'boss-missile')) {
                     
                 if (projectile.type === 'missile' && projectile.explosionRadius) {
                     this.createExplosion(projectile.x, projectile.y, projectile.explosionRadius, projectile.damage * 0.7);
@@ -3864,7 +3889,7 @@ class VibeSurvivor {
             // Cache context transformations for performance
             this.ctx.save();
             this.ctx.translate(enemy.x, enemy.y);
-            // this.ctx.rotate(enemy.angle); // Removed for performance
+            this.ctx.rotate(enemy.angle);
             
             // Use enemy's config color directly with neon effect
             const enemyColor = enemy.color;
