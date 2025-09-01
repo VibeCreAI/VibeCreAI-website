@@ -1990,22 +1990,11 @@ class VibeSurvivor {
             const modalRect = gameModal.getBoundingClientRect();
             
             // Make joystick visible first, then get its dimensions
-            joystick.style.display = 'block';
+            // Keep joystick invisible - no visual feedback needed
+            // joystick.style.display = 'block';  // Commented out - keep invisible
             
-            // Force layout recalculation to get accurate dimensions
-            joystick.offsetHeight; // This triggers a layout recalculation
-            
-            const joystickRect = joystick.getBoundingClientRect();
-            
-            // Calculate precise center positioning - use CSS dimensions if getBoundingClientRect fails
-            const joystickHalfWidth = joystickRect.width > 0 ? joystickRect.width / 2 : 40; // 40px = half of 80px from CSS
-            const joystickHalfHeight = joystickRect.height > 0 ? joystickRect.height / 2 : 40;
-            
-            joystick.style.left = `${touch.clientX - modalRect.left - joystickHalfWidth}px`;
-            joystick.style.top = `${touch.clientY - modalRect.top - joystickHalfHeight}px`;
-            
-            // Add active class for enhanced visuals
-            joystick.classList.add('active');
+            // Skip visual feedback - keep joystick invisible
+            // joystick.classList.add('active');  // Commented out - no visuals needed
             
         }, { passive: false });
         
@@ -2027,15 +2016,10 @@ class VibeSurvivor {
             const limitedX = Math.cos(angle) * limitedDistance;
             const limitedY = Math.sin(angle) * limitedDistance;
             
-            // Update handle position relative to joystick center
-            handle.style.transform = `translate(calc(-50% + ${limitedX}px), calc(-50% + ${limitedY}px))`;
-            
-            // Add moving class when joystick is being used
-            if (limitedDistance > 5) {
-                handle.classList.add('moving');
-            } else {
-                handle.classList.remove('moving');
-            }
+            // Skip visual handle updates - no graphics needed
+            // handle.style.transform = `translate(calc(-50% + ${limitedX}px), calc(-50% + ${limitedY}px))`;  // Commented out
+            // Moving class visual feedback not needed
+            // if (limitedDistance > 5) { handle.classList.add('moving'); } else { handle.classList.remove('moving'); }
             
             // Convert to movement values (-1 to 1)
             this.touchControls.joystick.moveX = limitedX / maxDistance;
@@ -2048,15 +2032,14 @@ class VibeSurvivor {
             this.touchControls.joystick.moveY = 0;
             this.touchControls.joystick.visible = false;
             
-            // Remove active classes for smooth fade out
-            joystick.classList.remove('active');
-            handle.classList.remove('moving');
-            
-            // Hide and reset joystick with smooth transition
-            setTimeout(() => {
-                joystick.style.display = 'none';
-                handle.style.transform = 'translate(-50%, -50%)';
-            }, 300); // Match the CSS transition duration
+            // Skip visual cleanup - joystick stays invisible
+            // joystick.classList.remove('active');  // Commented out
+            // handle.classList.remove('moving');    // Commented out
+            // No need to hide since it's already invisible
+            // setTimeout(() => {
+            //     joystick.style.display = 'none';
+            //     handle.style.transform = 'translate(-50%, -50%)';
+            // }, 300);  // Commented out
         };
         
         gameModal.addEventListener('touchend', endTouch);
