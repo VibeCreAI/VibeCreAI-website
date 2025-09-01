@@ -137,21 +137,23 @@ class VibeSurvivor {
                             
                             <!-- Game Stats in Header -->
                             <div class="header-stats" id="header-stats" style="display: none;">
-                                <div class="header-health">
-                                    <div class="header-health-bar">
-                                        <div class="header-health-fill" id="header-health-fill"></div>
+                                <div class="header-primary-stats">
+                                    <div class="header-health">
+                                        <div class="header-health-bar">
+                                            <div class="header-health-fill" id="header-health-fill"></div>
+                                        </div>
+                                        <span class="header-health-text" id="header-health-text">100</span>
                                     </div>
-                                    <span class="header-health-text" id="header-health-text">100</span>
-                                </div>
-                                
-                                <div class="header-xp">
-                                    <div class="header-xp-bar">
-                                        <div class="header-xp-fill" id="header-xp-fill"></div>
+                                    
+                                    <div class="header-xp">
+                                        <div class="header-xp-bar">
+                                            <div class="header-xp-fill" id="header-xp-fill"></div>
+                                        </div>
+                                        <span class="header-level-text" id="header-level-text">Lv1</span>
                                     </div>
-                                    <span class="header-level-text" id="header-level-text">Lv1</span>
+                                    
+                                    <div class="header-time" id="header-time-display">0:00</div>
                                 </div>
-                                
-                                <div class="header-time" id="header-time-display">0:00</div>
                                 
                                 <div class="header-weapons" id="header-weapon-display"></div>
                             </div>
@@ -325,9 +327,18 @@ class VibeSurvivor {
                 gap: 20px;
                 flex: 1;
                 justify-content: center;
-                max-width: 600px;
+                margin: 0 60px; /* Reserve 60px each side for buttons */
+                overflow: hidden; /* Prevent content overflow */
+                flex-wrap: wrap; /* Allow wrapping to multiple rows */
             }
             
+            .header-primary-stats {
+                display: flex;
+                align-items: center;
+                gap: 20px;
+                flex-shrink: 0; /* Prevent primary stats from shrinking */
+            }
+
             .header-health, .header-xp {
                 display: flex;
                 align-items: center;
@@ -391,7 +402,7 @@ class VibeSurvivor {
             @media screen and (max-width: 320px) {
                 .vibe-survivor-header {
                     padding: 8px 10px;
-                    min-height: 50px;
+                    min-height: 70px; /* Increased for two-row layout */
                     flex-direction: row;
                     align-items: center;
                 }
@@ -403,11 +414,19 @@ class VibeSurvivor {
                 }
                 
                 .header-stats {
-                    gap: 8px;
-                    max-width: none;
+                    gap: 5px;
                     flex: 1;
-                    justify-content: space-between;
+                    justify-content: center;
                     align-items: center;
+                    margin: 0 45px; /* 32px buttons + 13px clearance each side */
+                    overflow: visible; /* Allow overflow for wrapped content */
+                    flex-direction: column; /* Stack rows vertically */
+                }
+                
+                .header-primary-stats {
+                    gap: 8px;
+                    justify-content: space-between;
+                    width: 100%;
                 }
                 
                 .header-health, .header-xp {
@@ -431,7 +450,10 @@ class VibeSurvivor {
                 }
                 
                 .header-weapons {
-                    display: none; /* Hide weapons on ultra-narrow screens */
+                    display: flex; /* Show weapons below on ultra-narrow screens */
+                    width: 100%;
+                    justify-content: center;
+                    margin-top: 3px;
                 }
             }
             
@@ -439,7 +461,7 @@ class VibeSurvivor {
             @media screen and (min-width: 321px) and (max-width: 400px) {
                 .vibe-survivor-header {
                     padding: 8px 12px;
-                    min-height: 55px;
+                    min-height: 75px; /* Increased for two-row layout */
                 }
                 
                 .pause-btn, .close-btn {
@@ -449,8 +471,23 @@ class VibeSurvivor {
                 }
                 
                 .header-stats {
-                    gap: 10px;
-                    max-width: none;
+                    gap: 8px;
+                    margin: 0 50px; /* 35px buttons + 15px clearance each side */
+                    overflow: visible; /* Allow overflow for wrapped content */
+                    flex-direction: column; /* Stack rows vertically */
+                }
+                
+                .header-primary-stats {
+                    gap: 15px;
+                    justify-content: center;
+                    width: 100%;
+                }
+                
+                .header-weapons {
+                    display: flex; /* Show weapons below on narrow screens */
+                    width: 100%;
+                    justify-content: center;
+                    margin-top: 5px;
                 }
                 
                 .header-health-bar, .header-xp-bar {
@@ -474,13 +511,20 @@ class VibeSurvivor {
             }
             
             /* Standard mobile screens */
-            @media screen and (min-width: 401px) and (max-width: 480px) {
+            @media screen and (min-width: 401px) and (max-width: 530px) {
                 .vibe-survivor-header {
                     padding: 10px 15px;
                     min-height: 60px;
                 }
                 
                 .header-stats {
+                    gap: 15px;
+                    margin: 0 55px; /* 40px buttons + 15px clearance each side */
+                    overflow: hidden;
+                    flex-direction: row; /* Keep single row for standard mobile */
+                }
+                
+                .header-primary-stats {
                     gap: 15px;
                 }
                 
@@ -548,6 +592,9 @@ class VibeSurvivor {
                 left: 15px !important;
                 z-index: 999999 !important;
                 pointer-events: auto !important;
+                min-width: 40px; /* Ensure button maintains size */
+                min-height: 40px;
+                flex-shrink: 0; /* Prevent button from shrinking */
             }
             
             /* Hide pause button initially */
@@ -1055,20 +1102,20 @@ class VibeSurvivor {
             }
             
             /* Tablet responsive adjustments */
-            @media screen and (min-width: 481px) and (max-width: 1024px) {
+            @media screen and (min-width: 531px) and (max-width: 1024px) {
                 .survivor-ui {
                     bottom: 25px;
-                    left: 25px;
-                    right: 25px;
+                    left: 20px;
+                    right: 20px;
                     padding: 10px 12px;
                 }
                 
                 .health-bar, .xp-bar {
-                    width: 120px;
+                    width: 100px;
                 }
                 
                 .time-display {
-                    font-size: 16px;
+                    font-size: 15px;
                 }
             }
 
