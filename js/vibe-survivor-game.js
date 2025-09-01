@@ -555,17 +555,6 @@ class VibeSurvivor {
                 display: none;
             }
 
-            .vibe-survivor-container {
-                height: calc(100% - 70px) !important;
-                position: relative !important;
-                width: 100% !important;
-                display: block !important;
-                visibility: visible !important;
-                overflow: hidden !important;
-                background: transparent;
-                margin-top: 70px;
-            }
-
             .vibe-survivor-screen {
                 position: absolute;
                 top: 0;
@@ -675,42 +664,13 @@ class VibeSurvivor {
                 box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
                 width: calc(100% - 40px);
                 max-width: 760px; /* Performance-optimized max width */
-                height: calc(100% - 20px); /* Full container height minus small margin */
+                height: calc(100% - 100px); /* Full container height minus small margin */
                 max-width: calc(130%);
                 object-fit: contain;
                 display: block;
                 margin: 10px auto 10px;
             }
-            
-            /* Ultra-narrow canvas sizing */
-            @media screen and (max-width: 320px) {
-                #survivor-canvas {
-                    width: calc(100% - 16px);
-                    height: calc(100% - 16px);
-                    max-width: calc(100% - 16px);
-                    margin: 8px auto 8px;
-                }
-            }
-            
-            /* Narrow mobile canvas sizing */
-            @media screen and (min-width: 321px) and (max-width: 400px) {
-                #survivor-canvas {
-                    width: calc(100% - 18px);
-                    height: calc(100% - 18px);
-                    max-width: calc(100% - 18px);
-                    margin: 9px auto 9px;
-                }
-            }
-            
-            /* Standard mobile canvas sizing */
-            @media screen and (min-width: 401px) and (max-width: 480px) {
-                #survivor-canvas {
-                    width: calc(100% - 20px);
-                    height: calc(100% - 20px);
-                    max-width: calc(100% - 20px);
-                    margin: 10px auto 10px;
-                }
-            }
+
 
 
             
@@ -953,8 +913,8 @@ class VibeSurvivor {
 
             .mobile-dash-btn {
                 position: absolute;
-                bottom: 40px;
-                right: 20px;
+                bottom: 80px;
+                right: 50px;
                 width: 60px;
                 height: 60px;
                 background: rgba(0, 255, 255, 0.3);
