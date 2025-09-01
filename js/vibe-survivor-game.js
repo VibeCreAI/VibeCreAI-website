@@ -236,32 +236,6 @@ class VibeSurvivor {
                 --touch-control-size: 100px;
             }
             
-            /* Responsive header height variables */
-            @media screen and (max-width: 320px) {
-                :root {
-                    --header-height: 50px;
-                }
-            }
-            
-            @media screen and (min-width: 321px) and (max-width: 400px) {
-                :root {
-                    --header-height: 55px;
-                }
-            }
-            
-            @media screen and (min-width: 401px) and (max-width: 480px) {
-                :root {
-                    --header-height: 60px;
-                }
-            }
-            
-            /* Tablet breakpoint */
-            @media screen and (min-width: 481px) and (max-width: 1024px) {
-                #survivor-canvas {
-                    height: calc(100vh - var(--header-height) - 40px); /* Full height on tablet */
-                }
-            }
-            
             @keyframes neonPulse {
                 0%, 100% { opacity: 1; }
                 50% { opacity: 0.8; }
@@ -301,7 +275,7 @@ class VibeSurvivor {
                 left: 0;
                 width: 100%;
                 height: 100vh;
-                background: rgba(0, 0, 0, 0.95);
+                background: transparent;
                 backdrop-filter: blur(10px);
                 display: flex;
                 align-items: center;
@@ -317,8 +291,8 @@ class VibeSurvivor {
                 padding: 0;
                 width: 90%;
                 max-width: 1500px;
-                height: calc(90vh - var(--header-height));
-                max-height: calc(90vh - var(--header-height));
+                height: calc(95vh - 20px);
+                max-height: calc(95vh - 20px);
                 display: flex;
                 flex-direction: column;
                 border: 2px solid #00ffff;
@@ -582,14 +556,14 @@ class VibeSurvivor {
             }
 
             .vibe-survivor-container {
-                height: calc(100% - var(--header-height)) !important;
+                height: calc(100% - 70px) !important;
                 position: relative !important;
                 width: 100% !important;
                 display: block !important;
                 visibility: visible !important;
                 overflow: hidden !important;
                 background: transparent;
-                top: 10px;
+                margin-top: 70px;
             }
 
             .vibe-survivor-screen {
@@ -701,7 +675,7 @@ class VibeSurvivor {
                 box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
                 width: calc(100% - 40px);
                 max-width: 760px; /* Performance-optimized max width */
-                height: calc(100vh - var(--header-height) - 40px); /* Full height minus header and margin */
+                height: calc(100% - 20px); /* Full container height minus small margin */
                 max-width: calc(130%);
                 object-fit: contain;
                 display: block;
@@ -712,7 +686,7 @@ class VibeSurvivor {
             @media screen and (max-width: 320px) {
                 #survivor-canvas {
                     width: calc(100% - 16px);
-                    height: calc(100vh - var(--header-height) - 24px);
+                    height: calc(100% - 16px);
                     max-width: calc(100% - 16px);
                     margin: 8px auto 8px;
                 }
@@ -722,7 +696,7 @@ class VibeSurvivor {
             @media screen and (min-width: 321px) and (max-width: 400px) {
                 #survivor-canvas {
                     width: calc(100% - 18px);
-                    height: calc(100vh - var(--header-height) - 26px);
+                    height: calc(100% - 18px);
                     max-width: calc(100% - 18px);
                     margin: 9px auto 9px;
                 }
@@ -732,7 +706,7 @@ class VibeSurvivor {
             @media screen and (min-width: 401px) and (max-width: 480px) {
                 #survivor-canvas {
                     width: calc(100% - 20px);
-                    height: calc(100vh - var(--header-height) - 30px);
+                    height: calc(100% - 20px);
                     max-width: calc(100% - 20px);
                     margin: 10px auto 10px;
                 }
