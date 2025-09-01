@@ -67,7 +67,8 @@ class VibeSurvivor {
                 floating: true, // Enable floating joystick mode
                 visible: false, // Track joystick visibility
                 centerX: 0, // Dynamic center position
-                centerY: 0
+                centerY: 0,
+                touchId: null // Track specific touch ID
             },
             dashButton: {
                 pressed: false
@@ -964,8 +965,8 @@ class VibeSurvivor {
                 position: absolute;
                 bottom: 80px;
                 right: 50px;
-                width: 60px;
-                height: 60px;
+                width: 80px;
+                height: 80px;
                 background: rgba(0, 255, 255, 0.3);
                 border: 2px solid rgba(0, 255, 255, 0.6);
                 border-radius: 50%;
@@ -1985,6 +1986,7 @@ class VibeSurvivor {
             this.touchControls.joystick.startX = pos.x;
             this.touchControls.joystick.startY = pos.y;
             this.touchControls.joystick.visible = true;
+            this.touchControls.joystick.touchId = touch.identifier; // Track specific touch ID
             
             // Position joystick at touch location relative to modal
             const modalRect = gameModal.getBoundingClientRect();
@@ -2002,7 +2004,16 @@ class VibeSurvivor {
             if (!this.touchControls.joystick.active) return;
             e.preventDefault();
             
-            const touch = e.touches[0];
+            // Find the specific touch that started the joystick
+            let touch = null;
+            for (let i = 0; i < e.touches.length; i++) {
+                if (e.touches[i].identifier === this.touchControls.joystick.touchId) {
+                    touch = e.touches[i];
+                    break;
+                }
+            }
+            
+            if (!touch) return; // Touch not found, ignore
             const pos = getTouchPos(touch);
             
             const deltaX = pos.x - this.touchControls.joystick.centerX;
@@ -2031,6 +2042,7 @@ class VibeSurvivor {
             this.touchControls.joystick.moveX = 0;
             this.touchControls.joystick.moveY = 0;
             this.touchControls.joystick.visible = false;
+            this.touchControls.joystick.touchId = null; // Clear touch ID
             
             // Skip visual cleanup - joystick stays invisible
             // joystick.classList.remove('active');  // Commented out
