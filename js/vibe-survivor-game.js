@@ -2433,7 +2433,7 @@ class VibeSurvivor {
     
     spawnEnemy() {
         const side = Math.floor(Math.random() * 4);
-        const spawnDistance = 600; // Distance from player to spawn enemies
+        const spawnDistance = 300; // Distance from player to spawn enemies
         let x, y;
         
         // Spawn enemies around the player's position instead of canvas bounds
@@ -2490,7 +2490,7 @@ class VibeSurvivor {
     
     spawnBoss() {
         // Spawn boss at a specific distance from player (reduced for mobile visibility)
-        const spawnDistance = 250;
+        const spawnDistance = 200;
         const angle = Math.random() * Math.PI * 2;
         const x = this.player.x + Math.cos(angle) * spawnDistance;
         const y = this.player.y + Math.sin(angle) * spawnDistance;
@@ -2565,15 +2565,15 @@ class VibeSurvivor {
                 health: 20,
                 speed: 1.0,
                 contactDamage: 10,
-                color: '#E74C3C',
+                color: '#ff00ff', // Neon pink
                 behavior: 'chase'
             },
             fast: {
                 radius: 8,
                 health: 12,
-                speed: 2.0,
+                speed: 1.9,
                 contactDamage: 8,
-                color: '#F39C12',
+                color: '#ffff00', // Neon yellow
                 behavior: 'dodge'
             },
             tank: {
@@ -2581,7 +2581,7 @@ class VibeSurvivor {
                 health: 80,
                 speed: 0.5,
                 contactDamage: 20,
-                color: '#34495E',
+                color: '#ff0040', // Neon red
                 behavior: 'tank'
             },
             flyer: {
@@ -2589,7 +2589,7 @@ class VibeSurvivor {
                 health: 25,
                 speed: 1.5,
                 contactDamage: 12,
-                color: '#3498DB',
+                color: '#0080ff', // Neon blue
                 behavior: 'fly'
             },
             phantom: {
@@ -2597,7 +2597,7 @@ class VibeSurvivor {
                 health: 15,
                 speed: 1.0,
                 contactDamage: 2,
-                color: '#9b59b6',
+                color: '#74EE15', // Neon green
                 behavior: 'teleport'
             },
             boss: {
@@ -2605,7 +2605,7 @@ class VibeSurvivor {
                 health: 500,
                 speed: 0.8,
                 contactDamage: 50,
-                color: '#ff0066',
+                color: '#F000FF', // Neon purple
                 behavior: 'boss'
             }
         };
@@ -3865,36 +3865,9 @@ class VibeSurvivor {
             this.ctx.translate(enemy.x, enemy.y);
             this.ctx.rotate(enemy.angle);
             
-            // Define neon colors based on enemy type
-            let enemyColor, glowColor;
-            switch (enemy.behavior) {
-                case 'tank':
-                    enemyColor = '#ff0040'; // Neon red
-                    glowColor = '#ff0040';
-                    break;
-                case 'flyer':
-                    enemyColor = '#0080ff'; // Neon blue
-                    glowColor = '#0080ff';
-                    break;
-                case 'phantom':
-                    enemyColor = '#ffff00'; // Neon yellow (dodging enemy)
-                    glowColor = '#ffff00';
-                    break;
-                case 'boss':
-                    enemyColor = '#00ff80'; // Neon green
-                    glowColor = '#00ff80';
-                    break;
-                default:
-                    // Differentiate by enemy size - smallest gets yellow (dodge ability), larger gets pink
-                    if (enemy.radius <= 8) {
-                        enemyColor = '#ffff00'; // Yellow neon (smallest, dodge ability)
-                        glowColor = '#ffff00';
-                    } else {
-                        enemyColor = '#ff00ff'; // Pink neon (larger default)
-                        glowColor = '#ff00ff';
-                    }
-                    break;
-            }
+            // Use enemy's config color directly with neon effect
+            const enemyColor = enemy.color;
+            const glowColor = enemy.color;
             
             // Enemy glow effect
             const gradient = this.ctx.createRadialGradient(0, 0, 0, 0, 0, enemy.radius * 2);
