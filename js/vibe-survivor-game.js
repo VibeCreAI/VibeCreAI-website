@@ -1973,6 +1973,10 @@ class VibeSurvivor {
             if (isInteractiveElement) return;
             
             e.preventDefault();
+            
+            // Don't start new joystick if one is already active
+            if (this.touchControls.joystick.active) return;
+            
             const touch = e.touches[0];
             const pos = getTouchPos(touch);
             
@@ -3527,7 +3531,7 @@ class VibeSurvivor {
         this.notifications.push({
             message: "⚠️ BOSS APPEARED! ⚠️",
             x: this.player.x,
-            y: this.player.y - 50, // Higher above the player for boss warning
+            y: this.player.y - 70, // Higher above the player for boss warning
             life: 180, // Show longer than regular notifications
             maxLife: 180,
             alpha: 1
