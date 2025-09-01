@@ -2017,9 +2017,16 @@ class VibeSurvivor {
             
             // Position joystick at touch location relative to modal
             const modalRect = gameModal.getBoundingClientRect();
+            const joystickRect = joystick.getBoundingClientRect();
+            
             joystick.style.display = 'block';
-            joystick.style.left = `${touch.clientX - modalRect.left}px`; // Center joystick on touch
-            joystick.style.top = `${touch.clientY - modalRect.top}px`;
+            
+            // Calculate precise center positioning
+            const joystickHalfWidth = joystickRect.width / 2 || 40; // fallback to 40px if not rendered yet
+            const joystickHalfHeight = joystickRect.height / 2 || 40;
+            
+            joystick.style.left = `${touch.clientX - modalRect.left - joystickHalfWidth}px`;
+            joystick.style.top = `${touch.clientY - modalRect.top - joystickHalfHeight}px`;
             
             // Add active class for enhanced visuals
             joystick.classList.add('active');
@@ -4564,6 +4571,13 @@ class VibeSurvivor {
     
     bossDefeated() {
         this.gameRunning = false;
+        
+        // Cancel any running game loop
+        if (this.gameLoopId) {
+            cancelAnimationFrame(this.gameLoopId);
+            this.gameLoopId = null;
+        }
+        
         // Creating victory overlay
         
         // Calculate final stats
