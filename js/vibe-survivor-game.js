@@ -2018,8 +2018,8 @@ class VibeSurvivor {
             // Position joystick at touch location relative to modal
             const modalRect = gameModal.getBoundingClientRect();
             joystick.style.display = 'block';
-            joystick.style.left = `${touch.clientX - modalRect.left - 40}px`; // Center joystick on touch
-            joystick.style.top = `${touch.clientY - modalRect.top - 40}px`;
+            joystick.style.left = `${touch.clientX - modalRect.left}px`; // Center joystick on touch
+            joystick.style.top = `${touch.clientY - modalRect.top}px`;
             
             // Add active class for enhanced visuals
             joystick.classList.add('active');
