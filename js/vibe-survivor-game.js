@@ -2477,8 +2477,8 @@ class VibeSurvivor {
     }
     
     spawnBoss() {
-        // Spawn boss at a specific distance from player
-        const spawnDistance = 400;
+        // Spawn boss at a specific distance from player (reduced for mobile visibility)
+        const spawnDistance = 250;
         const angle = Math.random() * Math.PI * 2;
         const x = this.player.x + Math.cos(angle) * spawnDistance;
         const y = this.player.y + Math.sin(angle) * spawnDistance;
@@ -3544,7 +3544,7 @@ class VibeSurvivor {
     isInViewport(x, y, radius = 0) {
         if (!this.canvas) return true; // Fallback to render everything if no canvas
         
-        const buffer = 50; // Small buffer to prevent pop-in effects
+        const buffer = 100; // Increased buffer for boss visibility on mobile
         const left = this.camera.x - buffer;
         const right = this.camera.x + this.canvas.width + buffer;
         const top = this.camera.y - buffer;
