@@ -4512,6 +4512,12 @@ class VibeSurvivor {
                         font-weight: bold !important;
                         transition: all 0.3s ease !important;
                         cursor: pointer !important;
+                        touch-action: manipulation !important;
+                        min-width: 44px !important;
+                        min-height: 44px !important;
+                        user-select: none !important;
+                        -webkit-user-select: none !important;
+                        -webkit-tap-highlight-color: transparent !important;
                     ">RETRY</button>
                     
                     <button id="overlay-exit-btn" style="
@@ -4524,6 +4530,12 @@ class VibeSurvivor {
                         font-weight: bold !important;
                         transition: all 0.3s ease !important;
                         cursor: pointer !important;
+                        touch-action: manipulation !important;
+                        min-width: 44px !important;
+                        min-height: 44px !important;
+                        user-select: none !important;
+                        -webkit-user-select: none !important;
+                        -webkit-tap-highlight-color: transparent !important;
                     ">EXIT</button>
                 </div>
             </div>
@@ -4549,22 +4561,35 @@ class VibeSurvivor {
             gameContainer.appendChild(gameOverOverlay);
         }
         
-        // Add event listeners
-        document.getElementById('overlay-retry-btn').addEventListener('click', () => {
+        // Add event listeners with both click and touch support
+        const retryBtn = document.getElementById('overlay-retry-btn');
+        const exitBtn = document.getElementById('overlay-exit-btn');
+        
+        const retryHandler = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             // Remove overlay
             gameOverOverlay.remove();
             style.remove();
             // Restart game
             this.startGame();
-        });
+        };
         
-        document.getElementById('overlay-exit-btn').addEventListener('click', () => {
+        const exitHandler = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             // Remove overlay
             gameOverOverlay.remove();
             style.remove();
             // Close game
             this.closeGame();
-        });
+        };
+        
+        // Add both click and touch events for better mobile support
+        retryBtn.addEventListener('click', retryHandler);
+        retryBtn.addEventListener('touchend', retryHandler);
+        exitBtn.addEventListener('click', exitHandler);
+        exitBtn.addEventListener('touchend', exitHandler);
         
         // Game over overlay ready
     }
@@ -4681,6 +4706,12 @@ class VibeSurvivor {
                         font-weight: bold !important;
                         transition: all 0.3s ease !important;
                         cursor: pointer !important;
+                        touch-action: manipulation !important;
+                        min-width: 44px !important;
+                        min-height: 44px !important;
+                        user-select: none !important;
+                        -webkit-user-select: none !important;
+                        -webkit-tap-highlight-color: transparent !important;
                     ">PLAY AGAIN</button>
                     
                     <button id="victory-exit-btn" style="
@@ -4693,6 +4724,12 @@ class VibeSurvivor {
                         font-weight: bold !important;
                         transition: all 0.3s ease !important;
                         cursor: pointer !important;
+                        touch-action: manipulation !important;
+                        min-width: 44px !important;
+                        min-height: 44px !important;
+                        user-select: none !important;
+                        -webkit-user-select: none !important;
+                        -webkit-tap-highlight-color: transparent !important;
                     ">EXIT</button>
                 </div>
             </div>
@@ -4718,22 +4755,35 @@ class VibeSurvivor {
             gameContainer.appendChild(victoryOverlay);
         }
         
-        // Add event listeners
-        document.getElementById('victory-retry-btn').addEventListener('click', () => {
+        // Add event listeners with both click and touch support
+        const victoryRetryBtn = document.getElementById('victory-retry-btn');
+        const victoryExitBtn = document.getElementById('victory-exit-btn');
+        
+        const victoryRetryHandler = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             // Remove overlay
             victoryOverlay.remove();
             style.remove();
             // Restart game
             this.startGame();
-        });
+        };
         
-        document.getElementById('victory-exit-btn').addEventListener('click', () => {
+        const victoryExitHandler = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             // Remove overlay
             victoryOverlay.remove();
             style.remove();
             // Close game
             this.closeGame();
-        });
+        };
+        
+        // Add both click and touch events for better mobile support
+        victoryRetryBtn.addEventListener('click', victoryRetryHandler);
+        victoryRetryBtn.addEventListener('touchend', victoryRetryHandler);
+        victoryExitBtn.addEventListener('click', victoryExitHandler);
+        victoryExitBtn.addEventListener('touchend', victoryExitHandler);
         
         // Victory overlay ready
     }
