@@ -104,6 +104,8 @@ class VibeSurvivor {
                         if (!this.gameRunning) {
                             this.renderStartScreenBackground();
                         }
+                        // Ensure stats are hidden on start screen
+                        this.showModalHeader();
                     }, 100);
                 }
             } catch (e) {
@@ -1413,7 +1415,7 @@ class VibeSurvivor {
                 title.style.display = 'block';
             }
             if (stats) {
-                stats.style.display = 'none';
+                stats.style.setProperty('display', 'none', 'important');
             }
             // Header shown for menu screens
         } else {
