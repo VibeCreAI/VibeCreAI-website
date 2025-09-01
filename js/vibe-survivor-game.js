@@ -1894,40 +1894,11 @@ class VibeSurvivor {
     }
     
     ensureDashButtonInBounds(dashBtn) {
-        if (!dashBtn || !this.canvas) return;
+        if (!dashBtn) return;
         
-        const canvas = this.canvas;
-        const gameScreen = document.getElementById('game-screen');
-        
-        if (!gameScreen) return;
-        
-        // Get current CSS computed values (from responsive breakpoints)
-        const buttonStyle = window.getComputedStyle(dashBtn);
-        const buttonSize = parseFloat(buttonStyle.width);
-        const currentRight = parseFloat(buttonStyle.right);
-        const currentBottom = parseFloat(buttonStyle.bottom);
-        
-        // Get canvas dimensions
-        const canvasRect = canvas.getBoundingClientRect();
-        const gameScreenRect = gameScreen.getBoundingClientRect();
-        
-        const buttonMargin = 10; // Small safety margin
-        
-        // Calculate if button would be outside canvas bounds
-        const maxAllowedRight = canvasRect.width - buttonSize - buttonMargin;
-        const maxAllowedBottom = canvasRect.height - buttonSize - buttonMargin;
-        
-        // Only adjust if actually outside bounds (safety check)
-        if (currentRight > maxAllowedRight || currentBottom > maxAllowedBottom) {
-            const safeRight = Math.min(currentRight, maxAllowedRight);
-            const safeBottom = Math.min(currentBottom, maxAllowedBottom);
-            
-            // Apply minimal adjustment only if needed
-            dashBtn.style.right = `${Math.max(safeRight, buttonMargin)}px`;
-            dashBtn.style.bottom = `${Math.max(safeBottom, buttonMargin)}px`;
-        }
-        
-        // Otherwise, let CSS responsive breakpoints handle positioning
+        // Always force consistent positioning - same as original CSS
+        dashBtn.style.right = '50px';
+        dashBtn.style.bottom = '80px';
     }
     
     updateTouchControlsPositioning() {
@@ -2017,13 +1988,18 @@ class VibeSurvivor {
             
             // Position joystick at touch location relative to modal
             const modalRect = gameModal.getBoundingClientRect();
-            const joystickRect = joystick.getBoundingClientRect();
             
+            // Make joystick visible first, then get its dimensions
             joystick.style.display = 'block';
             
-            // Calculate precise center positioning
-            const joystickHalfWidth = joystickRect.width / 2 || 40; // fallback to 40px if not rendered yet
-            const joystickHalfHeight = joystickRect.height / 2 || 40;
+            // Force layout recalculation to get accurate dimensions
+            joystick.offsetHeight; // This triggers a layout recalculation
+            
+            const joystickRect = joystick.getBoundingClientRect();
+            
+            // Calculate precise center positioning - use CSS dimensions if getBoundingClientRect fails
+            const joystickHalfWidth = joystickRect.width > 0 ? joystickRect.width / 2 : 40; // 40px = half of 80px from CSS
+            const joystickHalfHeight = joystickRect.height > 0 ? joystickRect.height / 2 : 40;
             
             joystick.style.left = `${touch.clientX - modalRect.left - joystickHalfWidth}px`;
             joystick.style.top = `${touch.clientY - modalRect.top - joystickHalfHeight}px`;
@@ -4816,6 +4792,14 @@ class VibeSurvivor {
         const pauseBtn = document.getElementById('pause-btn');
         if (pauseBtn) {
             pauseBtn.style.display = 'none';
+        }
+        
+        // Reset dash button to consistent position (same as CSS default)
+        const dashBtn = document.getElementById('mobile-dash-btn');
+        if (dashBtn) {
+            // Always set to the same position as the original CSS
+            dashBtn.style.right = '50px';
+            dashBtn.style.bottom = '80px';
         }
         
         // Stop background music
