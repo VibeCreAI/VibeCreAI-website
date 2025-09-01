@@ -2513,7 +2513,8 @@ class VibeSurvivor {
             rotSpeed: 0.05,
             specialCooldown: 0,
             burning: null,
-            spawnedMinions: false
+            spawnedMinions: false,
+            lastMissileFrame: 0 // Initialize missile timing for boss attacks
         });
         
         // Show boss notification
@@ -2710,9 +2711,7 @@ class VibeSurvivor {
                             enemy.x += (dx / distance) * enemy.speed * 1.2;
                             enemy.y += (dy / distance) * enemy.speed * 1.2;
                         }
-                        // Keep boss within bounds
-                        enemy.x = Math.max(enemy.radius, Math.min(this.canvas.width - enemy.radius, enemy.x));
-                        enemy.y = Math.max(enemy.radius, Math.min(this.canvas.height - enemy.radius, enemy.y));
+                        // Boss can move freely in infinite world (no canvas bounds constraint)
                     }
                     // Phase 2: Circle strafe (30-70% health)
                     else if (bossHealthPercent > 0.3) {
@@ -2737,9 +2736,7 @@ class VibeSurvivor {
                             enemy.x += perpX * enemy.speed * 2;
                             enemy.y += perpY * enemy.speed * 2;
                         }
-                        // Keep boss within bounds for phase 2
-                        enemy.x = Math.max(enemy.radius, Math.min(this.canvas.width - enemy.radius, enemy.x));
-                        enemy.y = Math.max(enemy.radius, Math.min(this.canvas.height - enemy.radius, enemy.y));
+                        // Boss can move freely in infinite world (no canvas bounds constraint)
                     }
                     // Phase 3: Aggressive and teleport (below 30% health)
                     else {
@@ -2754,23 +2751,20 @@ class VibeSurvivor {
                             enemy.x = this.player.x - Math.cos(angle) * teleportDistance;
                             enemy.y = this.player.y - Math.sin(angle) * teleportDistance;
                             
-                            // Keep boss within canvas bounds
-                            enemy.x = Math.max(enemy.size, Math.min(this.canvas.width - enemy.size, enemy.x));
-                            enemy.y = Math.max(enemy.size, Math.min(this.canvas.height - enemy.size, enemy.y));
+                            // Boss can move freely in infinite world (no canvas bounds constraint)
                         } else {
                             // Aggressive chase
                             if (distance > 0) {
                                 enemy.x += (dx / distance) * enemy.speed * 2;
                                 enemy.y += (dy / distance) * enemy.speed * 2;
                             }
-                            // Keep boss within bounds for phase 3 aggressive chase
-                            enemy.x = Math.max(enemy.radius, Math.min(this.canvas.width - enemy.radius, enemy.x));
-                            enemy.y = Math.max(enemy.radius, Math.min(this.canvas.height - enemy.radius, enemy.y));
+                            // Boss can move freely in infinite world (no canvas bounds constraint)
                         }
                     }
                     
                     // Boss missile attack every 4 seconds (240 frames at 60fps)
                     if (!enemy.lastMissileFrame || this.frameCount - enemy.lastMissileFrame > 240) {
+                        console.log('Boss firing missiles! Frame:', this.frameCount, 'Last:', enemy.lastMissileFrame);
                         enemy.lastMissileFrame = this.frameCount;
                         this.createBossMissile(enemy);
                     }
@@ -4414,7 +4408,7 @@ class VibeSurvivor {
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
-            z-index: 10000 !important;
+            z-index: 99999 !important;
             backdrop-filter: blur(5px) !important;
         `;
         
@@ -4566,12 +4560,14 @@ class VibeSurvivor {
     }
     
     bossDefeated() {
+        console.log('Boss defeated! Starting victory sequence...');
         this.gameRunning = false;
         
         // Cancel any running game loop
         if (this.gameLoopId) {
             cancelAnimationFrame(this.gameLoopId);
             this.gameLoopId = null;
+            console.log('Game loop cancelled');
         }
         
         // Creating victory overlay
@@ -4600,7 +4596,7 @@ class VibeSurvivor {
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
-            z-index: 10000 !important;
+            z-index: 99999 !important;
             backdrop-filter: blur(5px) !important;
         `;
         
@@ -4720,10 +4716,23 @@ class VibeSurvivor {
         `;
         document.head.appendChild(style);
         
-        // Add overlay to the game container
-        const gameContainer = document.getElementById('vibe-survivor-container');
+        // Add overlay to the game container - try multiple possible containers
+        let gameContainer = document.getElementById('vibe-survivor-container');
+        if (!gameContainer) {
+            gameContainer = document.getElementById('vibe-survivor-modal');
+        }
+        if (!gameContainer) {
+            gameContainer = document.getElementById('game-screen');
+        }
+        if (!gameContainer) {
+            gameContainer = document.body; // Fallback to body
+        }
+        
         if (gameContainer) {
             gameContainer.appendChild(victoryOverlay);
+            console.log('Victory overlay added to:', gameContainer.id || 'body');
+        } else {
+            console.error('Could not find container for victory overlay');
         }
         
         // Add event listeners with both click and touch support
