@@ -566,6 +566,9 @@ class VibeSurvivor {
                 color: #ff00ff;
                 width: 40px;
                 height: 40px;
+                min-width: 40px;
+                min-height: 40px;
+                flex-shrink: 0;
                 border-radius: 50%;
                 font-size: 24px;
                 font-weight: bold;
@@ -1656,6 +1659,7 @@ class VibeSurvivor {
         this.updateParticles();
         this.updateXPOrbs();
         this.updateNotifications();
+        
         this.checkCollisions();
         this.checkLevelUp();
         this.updateCamera();
@@ -1754,7 +1758,7 @@ class VibeSurvivor {
                     this.player.passives.regeneration.timer = 0;
                 }
                 if (this.player.passives.regeneration.timer++ >= 60) { // 1 second
-                    this.player.health = Math.min(this.player.maxHealth, this.player.health + 4);
+                    this.player.health = Math.min(this.player.maxHealth, this.player.health + 1);
                     this.player.passives.regeneration.timer = 0;
                 }
             }
@@ -2426,7 +2430,6 @@ class VibeSurvivor {
         const angleToPlayer = Math.atan2(this.player.y - boss.y, this.player.x - boss.x);
         const spreadAngles = [-0.3, 0, 0.3]; // 3 missiles with spread
         
-        console.log('Creating boss missiles. Boss position:', boss.x, boss.y, 'Player:', this.player.x, this.player.y);
         
         spreadAngles.forEach(angleOffset => {
             const missile = {
@@ -2446,7 +2449,7 @@ class VibeSurvivor {
                 owner: 'enemy' // Important: mark as enemy projectile
             };
             this.projectiles.push(missile);
-            console.log('Boss missile created:', missile);
+            console.log('Boss missile created:', missile.x, missile.y, 'Type:', missile.type);
         });
         
         console.log('Total projectiles after boss missile creation:', this.projectiles.length);
@@ -2463,7 +2466,7 @@ class VibeSurvivor {
         }
         
         // Check for exact boss spawn at 5 minutes (300 seconds)
-        if (this.gameTime >= 300 && !this.bossSpawned && !this.enemies.some(enemy => enemy.behavior === 'boss')) {
+        if (this.gameTime >= 1 && !this.bossSpawned && !this.enemies.some(enemy => enemy.behavior === 'boss')) {
             this.spawnBoss();
             this.bossSpawned = true;
             return; // Don't spawn regular enemies this frame
@@ -2550,7 +2553,7 @@ class VibeSurvivor {
     
     spawnBoss() {
         // Spawn boss at a specific distance from player (reduced for mobile visibility)
-        const spawnDistance = 200;
+        const spawnDistance = 250;
         const angle = Math.random() * Math.PI * 2;
         const x = this.player.x + Math.cos(angle) * spawnDistance;
         const y = this.player.y + Math.sin(angle) * spawnDistance;
@@ -2662,7 +2665,7 @@ class VibeSurvivor {
             },
             boss: {
                 radius: 30,
-                health: 500,
+                health: 1000,
                 speed: 0.8,
                 contactDamage: 50,
                 color: '#F000FF', // Neon purple
@@ -2824,7 +2827,6 @@ class VibeSurvivor {
                     
                     // Boss missile attack every 4 seconds (240 frames at 60fps)
                     if (!enemy.lastMissileFrame || this.frameCount - enemy.lastMissileFrame > 240) {
-                        console.log('Boss firing missiles! Frame:', this.frameCount, 'Last:', enemy.lastMissileFrame);
                         enemy.lastMissileFrame = this.frameCount;
                         this.createBossMissile(enemy);
                     }
@@ -2888,6 +2890,11 @@ class VibeSurvivor {
     }
     
     updateProjectiles() {
+        const initialBossMissileCount = this.projectiles.filter(p => p.type === 'boss-missile').length;
+        if (initialBossMissileCount > 0) {
+            console.log('Start updateProjectiles with', initialBossMissileCount, 'boss missiles');
+        }
+        
         this.projectiles.forEach((projectile, index) => {
             // Update position based on type
             switch (projectile.type) {
@@ -2922,6 +2929,7 @@ class VibeSurvivor {
                     break;
                     
                 case 'boss-missile':
+                    console.log('Boss missile updating:', projectile.x, projectile.y, 'Life:', projectile.life);
                     // Boss missiles home in on the player
                     if (projectile.homing) {
                         const dx = this.player.x - projectile.x;
@@ -2963,6 +2971,9 @@ class VibeSurvivor {
             const distanceFromPlayer = Math.sqrt(dx * dx + dy * dy);
             
             if (projectile.life <= 0 || (distanceFromPlayer > 800 && projectile.type !== 'boss-missile')) {
+                if (projectile.type === 'boss-missile') {
+                    console.log('Boss missile removed - Life:', projectile.life, 'Distance:', distanceFromPlayer);
+                }
                     
                 if (projectile.type === 'missile' && projectile.explosionRadius) {
                     this.createExplosion(projectile.x, projectile.y, projectile.explosionRadius, projectile.damage * 0.7);
@@ -2973,6 +2984,11 @@ class VibeSurvivor {
                 this.projectiles.splice(index, 1);
             }
         });
+        
+        const finalBossMissileCount = this.projectiles.filter(p => p.type === 'boss-missile').length;
+        if (initialBossMissileCount > 0) {
+            console.log('End updateProjectiles with', finalBossMissileCount, 'boss missiles (started with', initialBossMissileCount, ')');
+        }
     }
     
     updateParticles() {
@@ -3369,8 +3385,14 @@ class VibeSurvivor {
     }
     
     checkCollisions() {
-        // Optimized collision detection with distance pre-screening
+        
+        // Optimized collision detection with distance pre-screening - ONLY for player projectiles
         this.projectiles.forEach((projectile, pIndex) => {
+            // Skip enemy projectiles (like boss missiles) - they are handled in the enemy projectile section
+            if (projectile.owner === 'enemy') {
+                return;
+            }
+            
             let projectileHit = false;
             let hitCount = 0;
             const maxHits = projectile.piercing || 1;
@@ -3455,9 +3477,20 @@ class VibeSurvivor {
             }
         });
         
-        // Check enemy projectiles hitting player
-        this.projectiles.forEach((projectile, pIndex) => {
+        
+        // Check enemy projectiles hitting player - collect indices to remove first
+        const bossMissilesBeforeCollision = this.projectiles.filter(p => p.type === 'boss-missile').length;
+        if (bossMissilesBeforeCollision > 0) {
+            console.log('Starting collision detection with', bossMissilesBeforeCollision, 'boss missiles');
+        }
+        
+        const projectilesToRemove = [];
+        for (let pIndex = 0; pIndex < this.projectiles.length; pIndex++) {
+            const projectile = this.projectiles[pIndex];
             if (projectile.owner === 'enemy') {
+                if (projectile.type === 'boss-missile') {
+                    console.log('Boss missile collision check:', projectile.x, projectile.y);
+                }
                 const dx = projectile.x - this.player.x;
                 const dy = projectile.y - this.player.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
@@ -3473,9 +3506,10 @@ class VibeSurvivor {
                         this.createScreenShake(8);
                     }
                     
-                    // Return projectile to pool before removing
-                    this.returnProjectileToPool(projectile);
-                    this.projectiles.splice(pIndex, 1);
+                    if (projectile.type === 'boss-missile') {
+                        console.log('Boss missile hit player and will be removed');
+                    }
+                    projectilesToRemove.push(pIndex);
                     
                     // Check for game over
                     if (this.player.health <= 0) {
@@ -3483,7 +3517,15 @@ class VibeSurvivor {
                     }
                 }
             }
-        });
+        }
+        
+        // Remove projectiles in reverse order to avoid index shifting
+        for (let i = projectilesToRemove.length - 1; i >= 0; i--) {
+            const index = projectilesToRemove[i];
+            const projectile = this.projectiles[index];
+            this.returnProjectileToPool(projectile);
+            this.projectiles.splice(index, 1);
+        }
     }
     
     createExplosion(x, y, radius, damage) {
@@ -3935,6 +3977,20 @@ class VibeSurvivor {
             const enemyColor = enemy.color;
             const glowColor = enemy.color;
             
+            // Special pulsing glow for boss enemies
+            if (enemy.behavior === 'boss') {
+                const pulseIntensity = 0.7 + Math.sin(Date.now() * 0.005) * 0.3;
+                this.ctx.shadowBlur = 30 * pulseIntensity;
+                this.ctx.shadowColor = '#FF00FF';
+                
+                // Additional outer glow layer
+                const outerGradient = this.ctx.createRadialGradient(0, 0, 0, 0, 0, enemy.radius * 3);
+                outerGradient.addColorStop(0, `rgba(255, 0, 255, ${0.3 * pulseIntensity})`);
+                outerGradient.addColorStop(1, 'rgba(255, 0, 255, 0)');
+                this.ctx.fillStyle = outerGradient;
+                this.ctx.fillRect(-enemy.radius * 3, -enemy.radius * 3, enemy.radius * 6, enemy.radius * 6);
+            }
+            
             // Enemy glow effect
             const gradient = this.ctx.createRadialGradient(0, 0, 0, 0, 0, enemy.radius * 2);
             gradient.addColorStop(0, enemyColor + '40');
@@ -4125,7 +4181,10 @@ class VibeSurvivor {
     drawProjectiles() {
         this.projectiles.forEach(projectile => {
             // Frustum culling: Only render projectiles visible on screen
-            if (!this.isInViewport(projectile.x, projectile.y, projectile.size || 3)) {
+            const inViewport = this.isInViewport(projectile.x, projectile.y, projectile.size || 3);
+            if (projectile.type === 'boss-missile') {
+            }
+            if (!inViewport) {
                 return; // Skip rendering this projectile
             }
             this.ctx.save();
@@ -4228,6 +4287,7 @@ class VibeSurvivor {
                     break;
                     
                 case 'boss-missile':
+                    console.log('Rendering boss missile at:', projectile.x, projectile.y);
                     this.ctx.translate(projectile.x, projectile.y);
                     this.ctx.rotate(Math.atan2(projectile.vy, projectile.vx));
                     
@@ -4244,10 +4304,7 @@ class VibeSurvivor {
                     this.ctx.closePath();
                     this.ctx.fill();
                     
-                    // Pulsing glow effect for boss missiles
-                    const pulseIntensity = 0.7 + Math.sin(Date.now() * 0.01) * 0.3;
-                    this.ctx.shadowColor = '#FF0066';
-                    this.ctx.shadowBlur = 10 * pulseIntensity;
+                    // Simplified glow effect
                     this.ctx.fillStyle = '#FF0066';
                     this.ctx.fillRect(-6, -2, 12, 4);
                     
@@ -4385,6 +4442,11 @@ class VibeSurvivor {
         if (headerHealthFill && headerHealthText) {
             headerHealthFill.style.width = `${Math.max(0, healthPercent)}%`;
             headerHealthText.textContent = `${Math.max(0, Math.floor(this.player.health))}`;
+            
+            // Color-changing health bar (same logic as enemy health bars)
+            const healthRatio = this.player.health / this.player.maxHealth;
+            const healthColor = healthRatio > 0.5 ? '#00ff00' : healthRatio > 0.25 ? '#ffff00' : '#ff0000';
+            headerHealthFill.style.backgroundColor = healthColor;
         }
         
         // Header XP bar
