@@ -219,36 +219,56 @@ class VibeRunner {
     applyMobileAdjustments() {
         const modal = document.querySelector('.vibe-runner-modal');
         if (modal) {
-            // Force mobile-specific positioning
+            // Force mobile-specific positioning with dynamic viewport height
             modal.style.cssText += `
                 position: fixed !important;
                 top: 0 !important;
                 left: 0 !important;
                 transform: none !important;
                 width: 100vw !important;
-                height: 100vh !important;
+                height: 100dvh !important;
                 max-width: 100vw !important;
-                max-height: 100vh !important;
+                max-height: 100dvh !important;
                 border-radius: 0 !important;
-                padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0) !important;
+                padding: 0 !important;
             `;
             
-            // Adjust header for mobile
+            // Adjust header for mobile with increased padding
             const header = document.querySelector('.vibe-runner-header');
             if (header) {
                 header.style.cssText += `
-                    padding: max(env(safe-area-inset-top, 0), 10px) 20px 10px 20px !important;
+                    padding: max(env(safe-area-inset-top, 15px), 20px) 20px 15px 20px !important;
+                    min-height: 60px !important;
                 `;
             }
             
-            // Adjust close button for mobile safe areas
+            // Adjust close button for mobile safe areas with better positioning
             const closeBtn = document.querySelector('.vibe-runner-close-x');
             if (closeBtn) {
                 closeBtn.style.cssText += `
-                    top: max(env(safe-area-inset-top, 0), 10px) !important;
-                    right: max(env(safe-area-inset-right, 0), 10px) !important;
+                    top: max(env(safe-area-inset-top, 15px), 20px) !important;
+                    right: max(env(safe-area-inset-right, 15px), 20px) !important;
+                    z-index: 30 !important;
                 `;
             }
+            
+            // Fix start screen and game-over screen positioning for mobile
+            const startScreen = document.querySelector('.vibe-runner-start-screen');
+            const gameOverScreen = document.querySelector('.vibe-runner-game-over');
+            
+            [startScreen, gameOverScreen].forEach(screen => {
+                if (screen) {
+                    screen.style.cssText += `
+                        position: absolute !important;
+                        top: 50% !important;
+                        left: 50% !important;
+                        transform: translate(-50%, -50%) !important;
+                        max-width: 90vw !important;
+                        max-height: 70vh !important;
+                        overflow: auto !important;
+                    `;
+                }
+            });
         }
     }
     
@@ -324,20 +344,7 @@ class VibeRunner {
                 overflow: hidden;
             }
             
-            /* Mobile viewport adjustments */
-            @media (max-width: 480px), (max-height: 700px) {
-                .vibe-runner-modal {
-                    position: fixed !important;
-                    top: 0 !important;
-                    left: 0 !important;
-                    transform: none !important;
-                    width: 100vw !important;
-                    height: 100vh !important;
-                    max-width: 100vw !important;
-                    max-height: 100vh !important;
-                    border-radius: 0 !important;
-                }
-            }
+            /* Mobile adjustments handled by JavaScript applyMobileAdjustments() */
             
             .vibe-runner-close-x {
                 position: absolute;
@@ -545,12 +552,7 @@ class VibeRunner {
                 }
             }
 
-            @media (max-width: 480px) {
-                .vibe-runner-header { gap: 12px; padding: 10px 12px; }
-                .distance-label, .best-label { font-size: 12px; }
-                .distance-value, .best-value { font-size: 16px; min-width: initial; }
-                .vibe-runner-close-x { top: 6px; right: 6px; width: 32px; height: 32px; font-size: 18px; }
-            }
+            /* Mobile responsive adjustments handled by JavaScript */
         `;
         document.head.appendChild(style);
     }
