@@ -280,7 +280,8 @@ class VibeSurvivor {
                 top: 0;
                 left: 0;
                 width: 100%;
-                height: 100vh;
+                height: calc(100vh-40px);
+                margin-bottom: 40xp;
                 background: transparent;
                 backdrop-filter: blur(10px);
                 display: flex;
@@ -323,7 +324,7 @@ class VibeSurvivor {
             @media screen and (max-width: 480px) {
                 .vibe-survivor-content {
                     width: 98%;
-                    height: calc(100dvh - 15px);
+                    height: calc(100dvh - 20px);
                     max-height: calc(100dvh - 20px);
                     border-radius: 10px;
                 }
