@@ -309,6 +309,33 @@ class VibeSurvivor {
                 overscroll-behavior: none;
             }
 
+            /* Mobile Responsive Height Fixes */
+            @media screen and (max-width: 768px) {
+                .vibe-survivor-content {
+                    width: 95%;
+                    height: calc(100dvh - 10px); /* Use dynamic viewport height */
+                    max-height: calc(100dvh - 10px);
+                    border-radius: 15px;
+                }
+            }
+
+            @media screen and (max-width: 480px) {
+                .vibe-survivor-content {
+                    width: 98%;
+                    height: calc(100dvh - 5px);
+                    max-height: calc(100dvh - 5px);
+                    border-radius: 10px;
+                }
+            }
+
+            /* iOS Safari specific fixes */
+            @media screen and (max-width: 768px) and (-webkit-min-device-pixel-ratio: 2) {
+                .vibe-survivor-content {
+                    height: calc(100vh - env(safe-area-inset-bottom, 0px) - 10px);
+                    max-height: calc(100vh - env(safe-area-inset-bottom, 0px) - 10px);
+                }
+            }
+
             .vibe-survivor-header {
                 padding: 15px 20px;
                 border-bottom: 2px solid rgba(0, 255, 255, 0.3);
@@ -1014,8 +1041,7 @@ class VibeSurvivor {
             /* Mobile responsive positioning */
             @media screen and (max-width: 480px) {
                 .vibe-survivor-content {
-                    width: 95%;
-                    height: 95%;
+                    /* Height handled by earlier mobile media query - don't override */
                     border-radius: 10px;
                 }
                 
