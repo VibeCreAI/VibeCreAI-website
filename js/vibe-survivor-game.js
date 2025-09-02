@@ -299,8 +299,8 @@ class VibeSurvivor {
                 margin-bottom: 20px;
                 width: 90%;
                 max-width: 1500px;
-                height: calc(95vh - 30px);
-                max-height: calc(95vh - 30px);
+                height: calc(95dvh - 20px);
+                max-height: calc(95dvh - 20px);
                 display: flex;
                 flex-direction: column;
                 border: 2px solid #00ffff;
@@ -333,8 +333,8 @@ class VibeSurvivor {
             /* iOS Safari specific fixes */
             @media screen and (max-width: 768px) and (-webkit-min-device-pixel-ratio: 2) {
                 .vibe-survivor-content {
-                    height: calc(100vh - env(safe-area-inset-bottom, 0px) - 15px);
-                    max-height: calc(100vh - env(safe-area-inset-bottom, 0px) - 20px);
+                    height: calc(100dvh - env(safe-area-inset-bottom, 0px) - 15px);
+                    max-height: calc(100dvh - env(safe-area-inset-bottom, 0px) - 20px);
                 }
             }
 
