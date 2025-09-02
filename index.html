@@ -1894,23 +1894,22 @@
                 <div class="app-card fade-in">
                     <div class="status-badge">🎮 LIVE</div>
                     <div class="app-icon-wrapper" style="background: transparent;">
-                        <img src="images/game.png" alt="Mini Games" style="width: 4.5rem; height: 4.5rem; border-radius: 50%; background: transparent; backdrop-filter: contrast(1.2) brightness(1.1);">
+                        <img src="images/Vibe_Runner.png" alt="Vibe Runner" style="width: 4.5rem; height: 4.5rem; border-radius: 50%; background: transparent; backdrop-filter: contrast(1.2) brightness(1.1);">
                     </div>
-                    <h3 class="app-title">MINI GAMES</h3>
-                    <p class="app-description">Two neon cyber games with the same thrilling aesthetic! Challenge yourself in fast-paced endless running or survive waves of geometric enemies. Ready to unlock the secrets? 🎮</p>
+                    <h3 class="app-title">VIBE RUNNER</h3>
+                    <p class="app-description">Experience fast-paced endless running in a neon cyber world! Jump, slide, and navigate through geometric obstacles in this thrilling runner game. How far can you go? 🏃‍♂️</p>
                     <div class="app-buttons-container">
-                        <button class="app-button game-button" id="vibe-runner-btn">🎮 VIBE RUNNER</button>
-                        <button class="app-button game-button" id="vibe-survivor-btn">⚔️ VIBE SURVIVOR</button>
+                        <button class="app-button game-button" id="vibe-runner-btn">🎮 PLAY VIBE RUNNER</button>
                     </div>
                 </div>
                 <div class="app-card fade-in">
-                    <div class="status-badge">💡 IDEATING</div>
+                    <div class="status-badge">🎮 LIVE</div>
                     <div class="app-icon-wrapper" style="background: transparent;">
-                        <img src="images/idea.png" alt="Your Next Idea" style="width: 4.5rem; height: 4.5rem; border-radius: 50%; background: transparent; backdrop-filter: contrast(1.2) brightness(1.1);">
+                        <img src="images/Vibe_Survivor.png" alt="Vibe Survivor" style="width: 4.5rem; height: 4.5rem; border-radius: 50%; background: transparent; backdrop-filter: contrast(1.2) brightness(1.1);">
                     </div>
-                    <h3 class="app-title">YOUR IDEA HERE?</h3>
-                    <p class="app-description">Got a crazy app idea? I'm always looking for the next fun project! The best part about being a solo dev? I can build whatever sounds exciting! Let's collaborate!</p>
-                    <a href="#contact" class="app-button">SHARE YOUR IDEA</a>
+                    <h3 class="app-title">VIBE SURVIVOR</h3>
+                    <p class="app-description">Survive waves of geometric enemies in this intense defense game! Use strategy and quick reflexes to outlast the neon cyber assault. Can you survive the digital apocalypse? ⚔️</p>
+                    <button class="app-button game-button" id="vibe-survivor-btn">⚔️ PLAY VIBE SURVIVOR</button>
                 </div>
             </div>
         </div>
@@ -2627,6 +2626,7 @@
             if (menuOpen && !menuToggle.contains(e.target) && !navLinks.contains(e.target)) {
                 // Use the same closing animation as the toggle button
                 menuOpen = false;
+                const links = navLinks.querySelectorAll('li');
                 
                 // Closing animation for hamburger button
                 anime({
@@ -2678,6 +2678,7 @@
             if (menuOpen && !menuToggle.contains(e.target) && !navLinks.contains(e.target)) {
                 // Use the same closing animation as the toggle button
                 menuOpen = false;
+                const links = navLinks.querySelectorAll('li');
                 
                 // Closing animation for hamburger button
                 anime({
