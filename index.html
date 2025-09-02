@@ -266,7 +266,7 @@
             position: fixed;
             top: 0;
             width: 100%;
-            padding: 20px 50px;
+            padding: 20px 35px;
             z-index: 1000;
             backdrop-filter: blur(10px);
             background: rgba(0, 0, 0, 0.5);
@@ -1676,6 +1676,10 @@
 
         
         @media (max-width: 768px) {
+            header {
+                padding: 20px 20px;
+            }
+            
             .menu-toggle {
                 display: flex;
             }
@@ -1721,6 +1725,107 @@
             .nav-links a:hover {
                 background: rgba(0, 255, 255, 0.1);
                 transform: scale(1.05);
+            }
+        }
+        
+        /* Mobile App Cards Responsive Design */
+        @media (max-width: 768px) {
+            .about-grid {
+                gap: 30px;
+            }
+            
+            .app-showcase {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 30px;
+                margin-top: 40px;
+            }
+            
+            .app-card {
+                padding: 20px;
+            }
+            
+            .app-icon-wrapper {
+                width: 80px;
+                height: 80px;
+                margin: 0 auto 15px;
+            }
+            
+            .app-title {
+                font-size: 1.3rem;
+                margin-bottom: 12px;
+            }
+            
+            .app-description {
+                font-size: 0.9rem;
+                line-height: 1.5;
+                margin-bottom: 20px;
+            }
+        }
+        
+        /* Contact Form Mobile Responsive Design */
+        @media (max-width: 768px) {
+            .form-group {
+                gap: 10px;
+            }
+            
+            .form-group input {
+                min-width: 200px;
+            }
+            
+            .form-group button {
+                padding: 15px 25px;
+                font-size: 0.9rem;
+            }
+            
+            .contact-info {
+                flex-direction: column;
+                gap: 20px;
+                align-items: center;
+            }
+        }
+        
+        /* Very Narrow Screen Optimizations */
+        @media (max-width: 480px) {
+            .app-showcase {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 0 10px;
+            }
+            
+            .app-card {
+                padding: 15px;
+                margin: 0 5px;
+            }
+            
+            .form-group {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .form-group input {
+                max-width: 100%;
+                min-width: unset;
+            }
+            
+            .form-group button {
+                padding: 15px 20px;
+                font-size: 0.85rem;
+            }
+        }
+        
+        /* Ultra Narrow Screen Optimizations */
+        @media (max-width: 400px) {
+            .apps {
+                padding: 100px 20px;
+            }
+            
+            .app-showcase {
+                padding: 0;
+            }
+            
+            .form-group button {
+                font-size: 0.8rem;
+                letter-spacing: 0.05em;
             }
         }
         
@@ -2826,6 +2931,21 @@
             }, 1500);
         });
 
+        // Responsive Button Text Function
+        function updateButtonTextForMobile() {
+            const joinButton = document.querySelector('.form-group button[type="submit"]');
+            if (joinButton) {
+                if (window.innerWidth <= 480) {
+                    joinButton.textContent = 'JOIN';
+                } else {
+                    joinButton.textContent = 'JOIN THE VIBE';
+                }
+            }
+        }
+        
+        // Initialize button text on load
+        updateButtonTextForMobile();
+        
         // Window Resize Handler with debouncing and size range protection
         let resizeTimeout;
         let lastWidth = window.innerWidth;
@@ -2854,6 +2974,9 @@
                     if (window.matrixResize) {
                         window.matrixResize();
                     }
+                    
+                    // Update responsive button text
+                    updateButtonTextForMobile();
                     
                     // Update last known dimensions
                     lastWidth = currentWidth;
