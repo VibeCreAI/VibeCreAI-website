@@ -295,10 +295,11 @@ class VibeSurvivor {
                 background: linear-gradient(135deg, #0a0a1a 0%, #1a0a2a 100%);
                 border-radius: 20px;
                 padding: 0;
+                margin-bottom: 20px;
                 width: 90%;
                 max-width: 1500px;
-                height: calc(95vh - 20px);
-                max-height: calc(95vh - 20px);
+                height: calc(95vh - 30px);
+                max-height: calc(95vh - 30px);
                 display: flex;
                 flex-direction: column;
                 border: 2px solid #00ffff;
@@ -750,6 +751,7 @@ class VibeSurvivor {
                 object-fit: contain;
                 display: block;
                 margin: 10px auto 10px;
+                margin-bottom: 20px;
             }
 
 
