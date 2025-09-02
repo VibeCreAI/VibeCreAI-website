@@ -41,6 +41,9 @@ class VibeRunner {
         this.backgroundMusic.loop = true;
         this.backgroundMusic.volume = 0.5;
         
+        // Mobile device detection
+        this.isMobile = this.detectMobile();
+        
         // Level scripting / pattern options
         this.levelEndDistance = 10000; // meters
         this.useScripted = true; // default to scripted obstacle patterns
@@ -69,6 +72,16 @@ class VibeRunner {
         this.timeStep = 1000 / 60; // 60 FPS
         
         this.initGame();
+    }
+    
+    detectMobile() {
+        // Real mobile device detection - not just screen size
+        const userAgent = navigator.userAgent.toLowerCase();
+        const isMobileUA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
+        const isTouchOnly = 'ontouchstart' in window && !window.matchMedia('(hover: hover)').matches;
+        const isSmallScreen = window.innerWidth <= 768;
+        
+        return isMobileUA || (isTouchOnly && isSmallScreen);
     }
     
     initGame() {
@@ -192,7 +205,49 @@ class VibeRunner {
         `;
         
         document.body.appendChild(gameContainer);
+        
+        // Apply mobile-specific positioning adjustments
+        if (this.isMobile) {
+            this.applyMobileAdjustments();
+        }
+        
         this.addGameStyles();
+    }
+    
+    applyMobileAdjustments() {
+        const modal = document.querySelector('.vibe-runner-modal');
+        if (modal) {
+            // Force mobile-specific positioning
+            modal.style.cssText += `
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                transform: none !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                max-width: 100vw !important;
+                max-height: 100vh !important;
+                border-radius: 0 !important;
+                padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0) !important;
+            `;
+            
+            // Adjust header for mobile
+            const header = document.querySelector('.vibe-runner-header');
+            if (header) {
+                header.style.cssText += `
+                    padding: max(env(safe-area-inset-top, 0), 10px) 20px 10px 20px !important;
+                `;
+            }
+            
+            // Adjust close button for mobile safe areas
+            const closeBtn = document.querySelector('.vibe-runner-close-x');
+            if (closeBtn) {
+                closeBtn.style.cssText += `
+                    top: max(env(safe-area-inset-top, 0), 10px) !important;
+                    right: max(env(safe-area-inset-right, 0), 10px) !important;
+                `;
+            }
+        }
     }
     
     addGameStyles() {
@@ -437,13 +492,28 @@ class VibeRunner {
                 to { opacity: 1; }
             }
             
-            @media (max-width: 600px) {
+            /* Real mobile device detection */
+            @media (max-width: 600px) and (hover: none) and (pointer: coarse) {
+                .vibe-runner-modal {
+                    width: 98%;
+                    height: calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 20px));
+                    max-height: calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 20px));
+                    border-radius: 10px;
+                    top: env(safe-area-inset-top, 0px);
+                    transform: translateX(-50%);
+                    left: 50%;
+                }
+            }
+            
+            /* Desktop at mobile dimensions */
+            @media (max-width: 600px) and (hover: hover) {
                 .vibe-runner-modal {
                     width: 95%;
                     height: calc(95dvh - 10px);
                     max-height: calc(95dvh - 10px);
                     border-radius: 10px;
                 }
+            }
                 
                 .distance-meter, .best-score {
                     gap: 10px;
