@@ -75,13 +75,15 @@ class VibeRunner {
     }
     
     detectMobile() {
-        // Real mobile device detection - not just screen size
+        // Enhanced mobile detection for real devices and mobile viewports
         const userAgent = navigator.userAgent.toLowerCase();
         const isMobileUA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
         const isTouchOnly = 'ontouchstart' in window && !window.matchMedia('(hover: hover)').matches;
         const isSmallScreen = window.innerWidth <= 768;
+        const isMobileViewport = window.innerWidth <= 480; // Very small screens should always use mobile layout
         
-        return isMobileUA || (isTouchOnly && isSmallScreen);
+        // Mobile if: real mobile device OR touch-only small screen OR very small viewport
+        return isMobileUA || (isTouchOnly && isSmallScreen) || isMobileViewport;
     }
     
     initGame() {
@@ -303,7 +305,7 @@ class VibeRunner {
             }
             
             .vibe-runner-modal {
-                position: absolute;
+                position: fixed;
                 top: 50%;
                 left: 50%;
                 transform: translate(-50%, -50%);
@@ -320,6 +322,21 @@ class VibeRunner {
                 box-shadow: 0 0 40px rgba(0, 255, 255, 0.3),
                            inset 0 0 20px rgba(0, 255, 255, 0.1);
                 overflow: hidden;
+            }
+            
+            /* Mobile viewport adjustments */
+            @media (max-width: 480px), (max-height: 700px) {
+                .vibe-runner-modal {
+                    position: fixed !important;
+                    top: 0 !important;
+                    left: 0 !important;
+                    transform: none !important;
+                    width: 100vw !important;
+                    height: 100vh !important;
+                    max-width: 100vw !important;
+                    max-height: 100vh !important;
+                    border-radius: 0 !important;
+                }
             }
             
             .vibe-runner-close-x {
