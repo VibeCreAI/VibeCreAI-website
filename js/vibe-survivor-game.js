@@ -2425,32 +2425,54 @@ class VibeSurvivor {
         this.projectiles.push(projectile);
     }
     
-    createBossMissile(boss) {
-        // Boss fires 3 missiles in a spread pattern
+    createBossMissile(boss, healthPercent = 1.0) {
         const angleToPlayer = Math.atan2(this.player.y - boss.y, this.player.x - boss.x);
-        const spreadAngles = [-0.3, 0, 0.3]; // 3 missiles with spread
+        let spreadAngles, damage, speed, homingStrength, color;
         
+        // Phase 1: Basic 3-missile spread (above 70% health)
+        if (healthPercent > 0.7) {
+            spreadAngles = [-0.3, 0, 0.3]; // 3 missiles with spread
+            damage = 25;
+            speed = 3;
+            homingStrength = 0.05;
+            color = '#FF0066'; // Pink
+        }
+        // Phase 2: 5-missile spread with faster speed (30-70% health)
+        else if (healthPercent > 0.3) {
+            spreadAngles = [-0.6, -0.3, 0, 0.3, 0.6]; // 5 missiles with wider spread
+            damage = 30;
+            speed = 3.5;
+            homingStrength = 0.07;
+            color = '#FF3366'; // Brighter pink
+        }
+        // Phase 3: 7-missile burst with high speed and homing (below 30% health)
+        else {
+            spreadAngles = [-0.9, -0.6, -0.3, 0, 0.3, 0.6, 0.9]; // 7 missiles, wide spread
+            damage = 35;
+            speed = 4;
+            homingStrength = 0.10;
+            color = '#FF0033'; // Deep red
+        }
         
         spreadAngles.forEach(angleOffset => {
             const missile = {
                 x: boss.x,
                 y: boss.y,
-                vx: Math.cos(angleToPlayer + angleOffset) * 3,
-                vy: Math.sin(angleToPlayer + angleOffset) * 3,
-                damage: 25, // Boss missiles do significant damage
+                vx: Math.cos(angleToPlayer + angleOffset) * speed,
+                vy: Math.sin(angleToPlayer + angleOffset) * speed,
+                damage: damage,
                 life: 300, // Long-lived missiles
                 type: 'boss-missile',
-                color: '#FF0066', // Distinctive boss missile color
+                color: color,
                 size: 4,
                 homing: true,
-                homingStrength: 0.05, // Moderate homing for fair gameplay
+                homingStrength: homingStrength,
                 explosionRadius: 40,
-                speed: 3,
+                speed: speed,
                 owner: 'enemy' // Important: mark as enemy projectile
             };
             this.projectiles.push(missile);
         });
-        
     }
     
     spawnEnemies() {
@@ -2823,10 +2845,25 @@ class VibeSurvivor {
                         }
                     }
                     
-                    // Boss missile attack every 4 seconds (240 frames at 60fps)
-                    if (!enemy.lastMissileFrame || this.frameCount - enemy.lastMissileFrame > 240) {
+                    // Boss missile attack with different patterns based on health phase
+                    let missileInterval;
+                    
+                    // Phase 1: Slow missiles (above 70% health) - every 4 seconds
+                    if (bossHealthPercent > 0.7) {
+                        missileInterval = 240; // 4 seconds at 60fps
+                    }
+                    // Phase 2: Moderate missiles (30-70% health) - every 2.5 seconds  
+                    else if (bossHealthPercent > 0.3) {
+                        missileInterval = 150; // 2.5 seconds at 60fps
+                    }
+                    // Phase 3: Rapid missiles (below 30% health) - every 1.5 seconds
+                    else {
+                        missileInterval = 90; // 1.5 seconds at 60fps
+                    }
+                    
+                    if (!enemy.lastMissileFrame || this.frameCount - enemy.lastMissileFrame > missileInterval) {
                         enemy.lastMissileFrame = this.frameCount;
-                        this.createBossMissile(enemy);
+                        this.createBossMissile(enemy, bossHealthPercent);
                     }
                     break;
             }
@@ -3611,6 +3648,17 @@ class VibeSurvivor {
             y: this.player.y - 80, // Higher above the player for boss warning
             life: 180, // Show longer than regular notifications
             maxLife: 180,
+            alpha: 1
+        });
+    }
+    
+    showContinueNotification() {
+        this.notifications.push({
+            message: "🎉 BOSS DEFEATED! DIFFICULTY INCREASED! 🎉",
+            x: this.player.x,
+            y: this.player.y - 60,
+            life: 200, // Show longer for this important message
+            maxLife: 200,
             alpha: 1
         });
     }
@@ -4742,7 +4790,25 @@ class VibeSurvivor {
                     </div>
                 </div>
                 
-                <div style="display: flex; gap: 15px; justify-content: center;">
+                <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                    <button id="victory-continue-btn" style="
+                        background: transparent !important;
+                        border: 2px solid #ff00ff !important;
+                        color: #ff00ff !important;
+                        padding: 12px 25px !important;
+                        font-size: 16px !important;
+                        border-radius: 25px !important;
+                        font-weight: bold !important;
+                        transition: all 0.3s ease !important;
+                        cursor: pointer !important;
+                        touch-action: manipulation !important;
+                        min-width: 44px !important;
+                        min-height: 44px !important;
+                        user-select: none !important;
+                        -webkit-user-select: none !important;
+                        -webkit-tap-highlight-color: transparent !important;
+                    ">CONTINUE</button>
+                    
                     <button id="victory-retry-btn" style="
                         background: transparent !important;
                         border: 2px solid #00ff00 !important;
@@ -4785,6 +4851,10 @@ class VibeSurvivor {
         // Add hover effects
         const style = document.createElement('style');
         style.textContent = `
+            #victory-continue-btn:hover {
+                background: rgba(255, 0, 255, 0.1) !important;
+                box-shadow: 0 0 15px rgba(255, 0, 255, 0.5) !important;
+            }
             #victory-retry-btn:hover {
                 background: rgba(0, 255, 0, 0.1) !important;
                 box-shadow: 0 0 15px rgba(0, 255, 0, 0.5) !important;
@@ -4816,8 +4886,19 @@ class VibeSurvivor {
         }
         
         // Add event listeners with both click and touch support
+        const victoryContinueBtn = document.getElementById('victory-continue-btn');
         const victoryRetryBtn = document.getElementById('victory-retry-btn');
         const victoryExitBtn = document.getElementById('victory-exit-btn');
+        
+        const victoryContinueHandler = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            // Remove overlay
+            victoryOverlay.remove();
+            style.remove();
+            // Continue game with increased difficulty
+            this.continueAfterBoss();
+        };
         
         const victoryRetryHandler = (e) => {
             e.preventDefault();
@@ -4840,12 +4921,41 @@ class VibeSurvivor {
         };
         
         // Add both click and touch events for better mobile support
+        victoryContinueBtn.addEventListener('click', victoryContinueHandler);
+        victoryContinueBtn.addEventListener('touchend', victoryContinueHandler);
         victoryRetryBtn.addEventListener('click', victoryRetryHandler);
         victoryRetryBtn.addEventListener('touchend', victoryRetryHandler);
         victoryExitBtn.addEventListener('click', victoryExitHandler);
         victoryExitBtn.addEventListener('touchend', victoryExitHandler);
         
         // Victory overlay ready
+    }
+    
+    continueAfterBoss() {
+        // Resume the game with increased difficulty after beating the boss
+        this.gameRunning = true;
+        
+        // Clear any existing enemies and projectiles for fresh start
+        this.enemies = [];
+        this.projectiles = [];
+        
+        // Increase game difficulty
+        this.waveNumber = Math.max(1, this.waveNumber + 1);
+        this.spawnRate = Math.max(0.3, this.spawnRate * 0.9); // Spawn enemies faster
+        this.maxEnemies = Math.min(150, this.maxEnemies + 10); // More max enemies
+        
+        // Restore player to full health as a reward
+        this.player.health = this.player.maxHealth;
+        
+        // Add bonus XP for defeating boss
+        this.player.xp += 50;
+        this.checkLevelUp();
+        
+        // Create notification for continued play
+        this.showContinueNotification();
+        
+        // Resume game loop
+        this.gameLoop();
     }
     
     restartGame() {
