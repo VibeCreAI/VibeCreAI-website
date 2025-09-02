@@ -3524,6 +3524,9 @@ class VibeSurvivor {
                 this.player.invulnerable = 60;
                 this.createHitParticles(this.player.x, this.player.y, '#ff0000');
                 
+                // Create screen shake effect for enemy contact
+                this.createScreenShake(6);
+                
                 if (this.player.health <= 0) {
                     this.gameOver();
                 }
@@ -3545,11 +3548,12 @@ class VibeSurvivor {
                     // Player hit by enemy projectile
                     this.player.health -= projectile.damage;
                     
+                    // Create screen shake effect for all projectile hits
+                    this.createScreenShake(projectile.explosionRadius ? 8 : 4);
+                    
                     // Create explosion if projectile has explosion radius
                     if (projectile.explosionRadius) {
                         this.createExplosion(projectile.x, projectile.y, projectile.explosionRadius, projectile.damage * 0.5);
-                        // Create screen shake effect
-                        this.createScreenShake(8);
                     }
                     
                     projectilesToRemove.push(pIndex);
