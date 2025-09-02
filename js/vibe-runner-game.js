@@ -257,8 +257,8 @@ class VibeRunner {
                 padding: 0;
                 width: 90%;
                 max-width: 1000px;
-                height: 90%;
-                max-height: 650px;
+                height: calc(90vh - 20px);
+                max-height: calc(90vh - 20px);
                 display: flex;
                 flex-direction: column;
                 border: 2px solid #00ffff;
@@ -440,7 +440,8 @@ class VibeRunner {
             @media (max-width: 600px) {
                 .vibe-runner-modal {
                     width: 95%;
-                    height: 95%;
+                    height: calc(95dvh - 10px);
+                    max-height: calc(95dvh - 10px);
                     border-radius: 10px;
                 }
                 
