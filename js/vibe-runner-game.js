@@ -246,8 +246,8 @@ class VibeRunner {
             const closeBtn = document.querySelector('.vibe-runner-close-x');
             if (closeBtn) {
                 closeBtn.style.cssText += `
-                    top: max(env(safe-area-inset-top, 15px), 20px) !important;
-                    right: max(env(safe-area-inset-right, 15px), 20px) !important;
+                    top: max(env(safe-area-inset-top, 15px), 15px) !important;
+                    right: max(env(safe-area-inset-right, 15px), 15px) !important;
                     z-index: 30 !important;
                 `;
             }
