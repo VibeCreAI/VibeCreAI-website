@@ -594,6 +594,40 @@
             justify-content: center;
             position: relative;
             z-index: 10;
+            transition: height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* Increase hero height when terminal is active */
+        body.terminal-active .hero {
+            height: calc(100vh + 100px);
+        }
+        
+        /* Ensure navigation links remain clickable when terminal is active */
+        body.terminal-active .cta-container {
+            position: relative;
+            z-index: 1001;
+            pointer-events: auto;
+            margin-bottom: 20px;
+        }
+        
+        /* Mobile-specific fix for navigation links with terminal open */
+        @media (max-width: 480px) {
+            body.terminal-active .hero {
+                height: calc(100vh + 150px);
+            }
+            
+            body.terminal-active .cta-container {
+                z-index: 1002;
+                margin-bottom: 30px;
+                padding-top: 20px;
+            }
+            
+            body.terminal-active .cta-button {
+                position: relative;
+                z-index: 1003;
+                pointer-events: auto;
+                touch-action: manipulation;
+            }
         }
 
         .hero-content {
@@ -873,7 +907,7 @@
 
         /* About Section */
         .about {
-            padding: 150px 50px;
+            padding: 160px 40px;
             position: relative;
             z-index: 10;
             background: linear-gradient(180deg, transparent, rgba(0, 255, 255, 0.02), transparent);
@@ -1009,7 +1043,7 @@
 
         /* Apps Section */
         .apps {
-            padding: 150px 50px;
+            padding: 160px 30px;
             position: relative;
             z-index: 10;
         }
@@ -1813,6 +1847,40 @@
             }
         }
         
+        /* Hero Section Scaling for Very Narrow Screens */
+        @media (max-width: 420px) {
+            .hero-content {
+                transform: scale(0.95);
+                transform-origin: center;
+            }
+            
+            .hero-title {
+                font-size: 5.7rem; /* 95% of 6rem */
+            }
+            
+            .title-v, .title-c, .title-ai, .glitch {
+                font-size: 5.7rem; /* 95% of 6rem */
+            }
+            
+            .title-small {
+                font-size: 4.56rem; /* 95% of 4.8rem */
+            }
+            
+            .hero-subtitle {
+                font-size: 1.425rem; /* 95% of 1.5rem */
+            }
+            
+            .tagline {
+                font-size: 1.14rem; /* 95% of 1.2rem */
+                min-height: 2.375rem; /* 95% of 2.5rem */
+            }
+            
+            .cta-button {
+                padding: 14.25px 38px; /* 95% of 15px 40px */
+                font-size: 0.95rem;
+            }
+        }
+
         /* Ultra Narrow Screen Optimizations */
         @media (max-width: 400px) {
             .apps {
@@ -3436,6 +3504,7 @@ Email: contact@vibecreai.com`
                 // Open terminal
                 terminalOpen = true;
                 sourceTerminal.classList.add('active');
+                document.body.classList.add('terminal-active');
                 
                 // Clear and populate terminal content with random code snippet
                 terminalContent.innerHTML = '';
@@ -3550,6 +3619,7 @@ Email: contact@vibecreai.com`
             if (terminalOpen) {
                 terminalOpen = false;
                 sourceTerminal.classList.remove('active');
+                document.body.classList.remove('terminal-active');
             }
         }
         
