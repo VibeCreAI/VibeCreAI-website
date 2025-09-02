@@ -27,6 +27,7 @@ class VibeSurvivor {
         // Game properties
         this.enemies = [];
         this.projectiles = [];
+        this.projectilePool = []; // Object pool for reusing projectile objects
         this.particles = [];
         this.xpOrbs = [];
         this.weapons = [{
@@ -2167,6 +2168,33 @@ class VibeSurvivor {
         }
     }
     
+    // Object pooling methods for performance
+    getPooledProjectile() {
+        if (this.projectilePool.length > 0) {
+            return this.projectilePool.pop();
+        } else {
+            return {}; // Create new object if pool is empty
+        }
+    }
+    
+    returnProjectileToPool(projectile) {
+        // Reset all properties to default values
+        projectile.x = 0;
+        projectile.y = 0;
+        projectile.vx = 0;
+        projectile.vy = 0;
+        projectile.life = 0;
+        projectile.damage = 0;
+        projectile.type = null;
+        projectile.color = null;
+        projectile.size = 0;
+        projectile.homing = false;
+        projectile.owner = null;
+        
+        // Return to pool for reuse
+        this.projectilePool.push(projectile);
+    }
+
     createBasicProjectile(weapon, dx, dy, distance) {
         const angle = Math.atan2(dy, dx);
         const projectile = this.getPooledProjectile();
@@ -2428,7 +2456,7 @@ class VibeSurvivor {
         this.frameCount++;
         
         // Performance limit: maximum number of enemies on screen
-        const maxEnemies = 30; // Reduced for better desktop performance
+        const maxEnemies = 20; // Optimized for better mobile/desktop performance
         
         if (this.enemies.length >= maxEnemies) {
             return; // Don't spawn more if at limit
@@ -2490,7 +2518,7 @@ class VibeSurvivor {
         const baseSpeed = config.speed * (1 + Math.floor(this.gameTime / 60) * 0.1);
         const scaledSpeed = baseSpeed * (this.speedScale || 1.0);
         
-        this.enemies.push({
+        const enemy = {
             x: x,
             y: y,
             radius: config.radius,
@@ -2501,12 +2529,18 @@ class VibeSurvivor {
             contactDamage: config.contactDamage,
             color: config.color,
             behavior: config.behavior,
-            angle: 0,
-            rotSpeed: 0.05,
             specialCooldown: 0,
             burning: null,
             spawnedMinions: false
-        });
+        };
+        
+        // Only add rotation properties for tank enemies (boss handled separately)
+        if (config.behavior === 'tank') {
+            enemy.angle = 0;
+            enemy.rotSpeed = 0.05;
+        }
+        
+        this.enemies.push(enemy);
         
         // Show boss notification when boss is spawned
         if (config.behavior === 'boss') {
@@ -2801,7 +2835,10 @@ class VibeSurvivor {
                 enemy.specialCooldown--;
             }
             
-            enemy.angle += enemy.rotSpeed;
+            // Only rotate tank and boss enemies for performance
+            if (enemy.behavior === 'tank' || enemy.behavior === 'boss') {
+                enemy.angle += enemy.rotSpeed;
+            }
             
             // Remove dead enemies
             if (enemy.health <= 0) {
@@ -2842,11 +2879,10 @@ class VibeSurvivor {
                 contactDamage: 5,
                 color: '#7F8C8D',
                 behavior: 'chase',
-                angle: 0,
-                rotSpeed: 0.1,
                 specialCooldown: 0,
                 burning: null,
                 spawnedMinions: false
+                // No angle/rotSpeed - minions don't rotate for performance
             });
         }
     }
@@ -3437,7 +3473,8 @@ class VibeSurvivor {
                         this.createScreenShake(8);
                     }
                     
-                    // Remove the projectile
+                    // Return projectile to pool before removing
+                    this.returnProjectileToPool(projectile);
                     this.projectiles.splice(pIndex, 1);
                     
                     // Check for game over
@@ -3889,7 +3926,10 @@ class VibeSurvivor {
             // Cache context transformations for performance
             this.ctx.save();
             this.ctx.translate(enemy.x, enemy.y);
-            this.ctx.rotate(enemy.angle);
+            // Only apply rotation to tank and boss enemies for performance
+            if (enemy.behavior === 'tank' || enemy.behavior === 'boss') {
+                this.ctx.rotate(enemy.angle);
+            }
             
             // Use enemy's config color directly with neon effect
             const enemyColor = enemy.color;
@@ -4310,6 +4350,10 @@ class VibeSurvivor {
     
     drawNotifications() {
         this.notifications.forEach(notification => {
+            // Enhanced frustum culling for notifications
+            if (!this.isInViewport(notification.x, notification.y, 50)) {
+                return; // Skip rendering off-screen notifications
+            }
             this.ctx.save();
             
             // Reset transform to draw in screen coordinates
