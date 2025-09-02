@@ -85,6 +85,15 @@ class VibeSurvivor {
         this.spawnRate = 120; // frames between spawns
         this.waveMultiplier = 1;
         
+        // Screen effects
+        this.redFlash = {
+            active: false,
+            intensity: 0,
+            duration: 0,
+            maxIntensity: 0.6,
+            decay: 0.9
+        };
+        
         
         this.initGame();
     }
@@ -1696,6 +1705,7 @@ class VibeSurvivor {
         this.checkLevelUp();
         this.updateCamera();
         this.updateScreenShake();
+        this.updateRedFlash();
         this.updateExplosions();
     }
     
@@ -3544,6 +3554,9 @@ class VibeSurvivor {
                 // Create screen shake effect for enemy contact
                 this.createScreenShake(6);
                 
+                // Create red flash effect for enemy contact
+                this.createRedFlash(0.5);
+                
                 if (this.player.health <= 0) {
                     this.gameOver();
                 }
@@ -3567,6 +3580,9 @@ class VibeSurvivor {
                     
                     // Create screen shake effect for all projectile hits
                     this.createScreenShake(projectile.explosionRadius ? 8 : 4);
+                    
+                    // Create red flash effect for projectile hits
+                    this.createRedFlash(projectile.explosionRadius ? 0.7 : 0.4);
                     
                     // Create explosion if projectile has explosion radius
                     if (projectile.explosionRadius) {
@@ -3644,6 +3660,17 @@ class VibeSurvivor {
             decay: 0.95
         };
     }
+
+    createRedFlash(intensity = 0.6) {
+        // Create red neon flash effect
+        this.redFlash = {
+            active: true,
+            intensity: intensity,
+            duration: 15,
+            maxIntensity: intensity,
+            decay: 0.85
+        };
+    }
     
     updateScreenShake() {
         if (this.screenShake && this.screenShake.duration > 0) {
@@ -3657,6 +3684,20 @@ class VibeSurvivor {
             
             if (this.screenShake.duration <= 0) {
                 this.screenShake = null;
+            }
+        }
+    }
+
+    updateRedFlash() {
+        if (this.redFlash && this.redFlash.active) {
+            // Decay the flash intensity over time
+            this.redFlash.intensity *= this.redFlash.decay;
+            this.redFlash.duration--;
+            
+            // Deactivate when duration expires or intensity is very low
+            if (this.redFlash.duration <= 0 || this.redFlash.intensity < 0.01) {
+                this.redFlash.active = false;
+                this.redFlash.intensity = 0;
             }
         }
     }
@@ -3838,6 +3879,27 @@ class VibeSurvivor {
         
         // Restore transformation
         this.ctx.restore();
+        
+        // Draw red flash effect (after camera transformation is restored)
+        this.drawRedFlash();
+    }
+
+    drawRedFlash() {
+        if (this.redFlash && this.redFlash.active && this.redFlash.intensity > 0) {
+            // Create red neon flash overlay
+            this.ctx.fillStyle = `rgba(255, 0, 50, ${this.redFlash.intensity})`;
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            
+            // Add neon glow effect
+            this.ctx.shadowColor = '#ff0032';
+            this.ctx.shadowBlur = 20;
+            this.ctx.fillStyle = `rgba(255, 0, 50, ${this.redFlash.intensity * 0.3})`;
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            
+            // Reset shadow
+            this.ctx.shadowColor = 'transparent';
+            this.ctx.shadowBlur = 0;
+        }
     }
     
     renderStartScreenBackground() {
