@@ -360,8 +360,8 @@ class VibeSurvivor {
             
             .header-health-fill {
                 height: 100%;
-                background: linear-gradient(90deg, #ff4444, #44ff44);
-                transition: width 0.3s ease;
+                background-color: #00ff00; /* Default green, will be overridden by JavaScript */
+                transition: width 0.3s ease, background-color 0.3s ease;
                 border-radius: 3px;
             }
             
@@ -2449,10 +2449,8 @@ class VibeSurvivor {
                 owner: 'enemy' // Important: mark as enemy projectile
             };
             this.projectiles.push(missile);
-            console.log('Boss missile created:', missile.x, missile.y, 'Type:', missile.type);
         });
         
-        console.log('Total projectiles after boss missile creation:', this.projectiles.length);
     }
     
     spawnEnemies() {
@@ -2466,7 +2464,7 @@ class VibeSurvivor {
         }
         
         // Check for exact boss spawn at 5 minutes (300 seconds)
-        if (this.gameTime >= 1 && !this.bossSpawned && !this.enemies.some(enemy => enemy.behavior === 'boss')) {
+        if (this.gameTime >= 300 && !this.bossSpawned && !this.enemies.some(enemy => enemy.behavior === 'boss')) {
             this.spawnBoss();
             this.bossSpawned = true;
             return; // Don't spawn regular enemies this frame
@@ -2890,10 +2888,6 @@ class VibeSurvivor {
     }
     
     updateProjectiles() {
-        const initialBossMissileCount = this.projectiles.filter(p => p.type === 'boss-missile').length;
-        if (initialBossMissileCount > 0) {
-            console.log('Start updateProjectiles with', initialBossMissileCount, 'boss missiles');
-        }
         
         this.projectiles.forEach((projectile, index) => {
             // Update position based on type
@@ -2929,7 +2923,6 @@ class VibeSurvivor {
                     break;
                     
                 case 'boss-missile':
-                    console.log('Boss missile updating:', projectile.x, projectile.y, 'Life:', projectile.life);
                     // Boss missiles home in on the player
                     if (projectile.homing) {
                         const dx = this.player.x - projectile.x;
@@ -2971,9 +2964,6 @@ class VibeSurvivor {
             const distanceFromPlayer = Math.sqrt(dx * dx + dy * dy);
             
             if (projectile.life <= 0 || (distanceFromPlayer > 800 && projectile.type !== 'boss-missile')) {
-                if (projectile.type === 'boss-missile') {
-                    console.log('Boss missile removed - Life:', projectile.life, 'Distance:', distanceFromPlayer);
-                }
                     
                 if (projectile.type === 'missile' && projectile.explosionRadius) {
                     this.createExplosion(projectile.x, projectile.y, projectile.explosionRadius, projectile.damage * 0.7);
@@ -2985,10 +2975,6 @@ class VibeSurvivor {
             }
         });
         
-        const finalBossMissileCount = this.projectiles.filter(p => p.type === 'boss-missile').length;
-        if (initialBossMissileCount > 0) {
-            console.log('End updateProjectiles with', finalBossMissileCount, 'boss missiles (started with', initialBossMissileCount, ')');
-        }
     }
     
     updateParticles() {
@@ -3083,7 +3069,7 @@ class VibeSurvivor {
         });
         
         // New weapons (if not at max weapons)
-        if (this.weapons.length < 3) {
+        if (this.weapons.length < 4) {
             const availableWeapons = ['spread', 'laser', 'plasma', 'shotgun', 'lightning', 'flamethrower', 'railgun', 'missiles'];
             const currentTypes = this.weapons.map(w => w.type);
             
@@ -3479,18 +3465,11 @@ class VibeSurvivor {
         
         
         // Check enemy projectiles hitting player - collect indices to remove first
-        const bossMissilesBeforeCollision = this.projectiles.filter(p => p.type === 'boss-missile').length;
-        if (bossMissilesBeforeCollision > 0) {
-            console.log('Starting collision detection with', bossMissilesBeforeCollision, 'boss missiles');
-        }
         
         const projectilesToRemove = [];
         for (let pIndex = 0; pIndex < this.projectiles.length; pIndex++) {
             const projectile = this.projectiles[pIndex];
             if (projectile.owner === 'enemy') {
-                if (projectile.type === 'boss-missile') {
-                    console.log('Boss missile collision check:', projectile.x, projectile.y);
-                }
                 const dx = projectile.x - this.player.x;
                 const dy = projectile.y - this.player.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
@@ -3506,9 +3485,6 @@ class VibeSurvivor {
                         this.createScreenShake(8);
                     }
                     
-                    if (projectile.type === 'boss-missile') {
-                        console.log('Boss missile hit player and will be removed');
-                    }
                     projectilesToRemove.push(pIndex);
                     
                     // Check for game over
@@ -4287,7 +4263,6 @@ class VibeSurvivor {
                     break;
                     
                 case 'boss-missile':
-                    console.log('Rendering boss missile at:', projectile.x, projectile.y);
                     this.ctx.translate(projectile.x, projectile.y);
                     this.ctx.rotate(Math.atan2(projectile.vy, projectile.vx));
                     
