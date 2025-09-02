@@ -66,6 +66,9 @@ class GameManager {
         // Close any existing game first
         this.closeCurrentGame();
         
+        // Add body class to prevent terminal height changes
+        document.body.classList.add('game-modal-open');
+        
         // Check if Vibe Survivor is loaded, if not load it
         if (window.vibeSurvivor) {
             this.vibeSurvivor = window.vibeSurvivor;
@@ -120,6 +123,8 @@ class GameManager {
     }
     
     closeCurrentGame() {
+        // Remove game modal class to restore normal terminal behavior
+        document.body.classList.remove('game-modal-open');
         if (this.currentGame === 'vibe-runner' && this.vibeRunner) {
             // Close Vibe Runner if it has a close method
             const runnerContainer = document.getElementById('vibe-runner-container');

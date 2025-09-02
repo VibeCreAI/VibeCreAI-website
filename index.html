@@ -606,8 +606,8 @@
             transition: height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
-        /* Increase hero height when terminal is active */
-        body.terminal-active .hero {
+        /* Increase hero height when terminal is active (but not when game modal is open) */
+        body.terminal-active:not(.game-modal-open) .hero {
             height: calc(100vh + 100px);
         }
         
@@ -621,7 +621,7 @@
         
         /* Mobile-specific fix for navigation links with terminal open */
         @media (max-width: 480px) {
-            body.terminal-active .hero {
+            body.terminal-active:not(.game-modal-open) .hero {
                 height: calc(100vh + 150px);
             }
             

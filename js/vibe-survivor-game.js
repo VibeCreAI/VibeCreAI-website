@@ -1504,6 +1504,9 @@ class VibeSurvivor {
     startGame() {
         // Starting game with complete reinitialization
         
+        // Add body class to prevent terminal height changes during gameplay
+        document.body.classList.add('game-modal-open');
+        
         // Reset pause state and hide pause menu
         this.isPaused = false;
         const pauseMenu = document.getElementById('pause-menu');
@@ -4992,6 +4995,9 @@ class VibeSurvivor {
     closeGame() {
         this.gameRunning = false;
         this.isPaused = false; // Reset pause state
+        
+        // Remove body class to restore normal terminal behavior
+        document.body.classList.remove('game-modal-open');
         
         // Cancel any running game loop
         if (this.gameLoopId) {
