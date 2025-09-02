@@ -1434,116 +1434,6 @@
 
         /* Responsive */
         @media (max-width: 768px) {
-            /* Moderate hero section height increase for mobile button accessibility */
-            .hero {
-                min-height: 110vh; /* Reduced from 140vh to 110vh for better proportion */
-            }
-            
-            /* Ensure CTA buttons have proper positioning and z-index on mobile */
-            .cta-container {
-                position: relative;
-                z-index: 100;
-                margin-bottom: 60px; /* Increased margin for better spacing */
-                padding-bottom: 20px; /* Additional padding for safety */
-            }
-            
-            .hero-title {
-                font-size: 3rem;
-            }
-
-            .glitch {
-                font-size: 3rem;
-            }
-
-            .nav-links {
-                position: fixed;
-                top: 0;
-                right: -100%;
-                width: 100%;
-                height: 100vh;
-                background: rgba(0, 0, 0, 0.98);
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                transition: right 0.3s ease;
-            }
-            
-            .nav-links a {
-                font-size: 2.5rem;
-                font-weight: bold;
-                letter-spacing: 0.2em;
-                text-transform: uppercase;
-                margin: 20px 0;
-                padding: 15px 30px;
-                border-radius: 10px;
-                transition: all 0.3s ease;
-            }
-            
-            .nav-links a:hover {
-                background: rgba(0, 255, 255, 0.1);
-                border-color: var(--primary-color);
-                transform: scale(1.05);
-            }
-
-            .nav-links.active {
-                right: 0;
-            }
-
-            .menu-toggle {
-                display: flex;
-                z-index: 1001;
-            }
-
-            .cta-container {
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .cta-button {
-                width: 200px;
-                text-align: center;
-            }
-
-            header {
-                padding: 20px;
-            }
-
-            .about, .apps, .contact {
-                padding: 80px 20px;
-            }
-
-            .contact-info {
-                flex-direction: column;
-                gap: 20px;
-            }
-
-            .form-group {
-                flex-direction: column;
-            }
-
-            .form-group input {
-                max-width: 100%;
-            }
-
-            .tagline {
-                min-height: 3rem; /* Fixed height to accommodate 2 lines */
-                line-height: 1.5;
-                text-align: center;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 1rem; /* Slightly smaller on mobile */
-            }
-            
-            .vibe-switcher {
-                margin-right: 10px;
-            }
-            
-            .vibe-text {
-                display: none;
-            }
-            
-            /* Terminal mobile improvements */
             .source-code-terminal {
                 width: 95vw; /* Use more of the viewport width on mobile */
                 max-height: 520px; /* Increased by one line height for mobile */
@@ -1552,7 +1442,7 @@
             
             .source-code-terminal.active {
                 max-height: 520px; /* Match the max-height above */
-                padding: 15px;
+                padding: 0 15px 15px 15px;
             }
             
             .terminal-content {
@@ -1605,7 +1495,7 @@
         
         .source-code-terminal.active {
             max-height: 520px; /* Increased height to ensure cursor visibility */
-            padding: 20px;
+            padding: 0 20px 20px 20px;
             border-color: #666;
         }
         
@@ -1714,29 +1604,123 @@
             color: #ff6b6b;
         }
         
-        .terminal-hint {
-            position: absolute;
-            top: 10px;
-            left: 15px;
-            color: #ffffff;
-            font-size: 0.9rem;
-            opacity: 0.9;
+        /* Terminal Header Bar */
+        .terminal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 30px;
+            background: #2d2d2d;
+            padding: 0 10px;
+            border-bottom: 1px solid #555;
             font-family: 'Courier New', Courier, monospace;
-            pointer-events: none;
-            animation: terminalHintFade 3s ease-out;
-            font-weight: bold;
+            font-size: 0.8rem;
+            color: #ffffff;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            box-sizing: border-box;
+            margin: 0;
         }
         
-        @keyframes terminalHintFade {
-            0%, 70% { opacity: 0.7; }
-            100% { opacity: 0; }
+        .terminal-title {
+            color: #ffffff;
+            font-weight: normal;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
         }
+        
+        .terminal-window-controls {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .window-control {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            background: transparent;
+            color: #ffffff;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 2px;
+            transition: background-color 0.2s ease, color 0.2s ease;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+        }
+        
+        .window-control:hover {
+            background: #555;
+        }
+        
+        .window-control.minimize:hover {
+            background: #4a4a4a;
+        }
+        
+        .window-control.maximize:hover {
+            background: #4a4a4a;
+        }
+        
+        .window-control.close:hover {
+            background: #e81123;
+            color: #ffffff;
+        }
+        
+
         
         @media (max-width: 768px) {
-            .terminal-hint {
-                font-size: 0.8rem;
-                top: 8px;
-                left: 10px;
+            .menu-toggle {
+                display: flex;
+            }
+            
+            .nav-links {
+                display: none;
+                position: fixed;
+                top: 0;
+                right: 0;
+                width: 300px;
+                height: 100vh;
+                background: rgba(0, 0, 0, 0.95);
+                backdrop-filter: blur(15px);
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                gap: 2rem;
+                z-index: 1000;
+                border-left: 2px solid var(--primary-color);
+                transform: translateX(100%);
+                transition: transform 0.3s ease, opacity 0.3s ease;
+            }
+            
+            .nav-links.active {
+                display: flex;
+                transform: translateX(0);
+                opacity: 1;
+            }
+            
+            .nav-links li {
+                margin: 0;
+            }
+            
+            .nav-links a {
+                font-size: 1.2rem;
+                padding: 1rem 2rem;
+                border-radius: 10px;
+                transition: all 0.3s ease;
+                text-align: center;
+                min-width: 150px;
+            }
+            
+            .nav-links a:hover {
+                background: rgba(0, 255, 255, 0.1);
+                transform: scale(1.05);
             }
         }
         
@@ -1838,8 +1822,15 @@
             <div class="tagline-container">
                 <div class="tagline" id="tagline"></div>
                 <div class="source-code-terminal" id="source-code-terminal">
-                    <span class="terminal-close" id="close-terminal">×</span>
-                    <div class="terminal-hint" id="terminal-hint">Click '/next' to navigate</div>
+                    <div class="terminal-header">
+                        <div class="terminal-title">Click '/next' to navigate:</div>
+                        <div class="terminal-window-controls">
+                            <span class="window-control minimize" title="Minimize">−</span>
+                            <span class="window-control maximize" title="Maximize">□</span>
+                            <span class="window-control close" id="close-terminal" title="Close">×</span>
+                        </div>
+                    </div>
+
                     <div class="terminal-content" id="terminal-content"></div>
                 </div>
             </div>
@@ -2253,10 +2244,10 @@
             const taglines = [
                 "Building the future with AI...",
                 "Solo developer + AI agents = ∞",
-                "Creating innovative digital experiences",
+                "Creating fun digital experiences",
                 "Vibe coding in progress...",
-                "Find a hidden easter egg...",
-                "Where creativity meets artificial intelligence"
+                "Press this to open terminal!",
+                "Where creativity meets AI"
             ];
             
             let taglineCounter = 0;
@@ -2479,19 +2470,48 @@
         const navLinks = document.getElementById('nav-links');
         let menuOpen = false;
         
+        // Initialize hamburger menu with starting rotation value
+        anime.set(menuToggle, { rotate: 0 });
+        
+        // Initialize nav links to ensure consistent starting state
+        const navLinksItems = navLinks.querySelectorAll('li');
+        anime.set(navLinks, {
+            translateX: '100%',
+            opacity: 0
+        });
+        anime.set(navLinksItems, {
+            translateY: 0,
+            opacity: 1,
+            scale: 1,
+            textShadow: '0 0 0px rgba(0, 255, 255, 0)'
+        });
+        
         menuToggle.addEventListener('click', () => {
             menuOpen = !menuOpen;
+            const links = navLinks.querySelectorAll('li'); // Declare once at function scope
             
             if (menuOpen) {
                 // Opening animation
                 menuToggle.classList.add('active');
                 navLinks.classList.add('active');
                 
+                // Reset nav menu to starting position before animating
+                anime.set(navLinks, {
+                    translateX: '100%',
+                    opacity: 0
+                });
+                anime.set(links, {
+                    translateY: 50,
+                    opacity: 0,
+                    scale: 0.8,
+                    textShadow: '0 0 0px rgba(0, 255, 255, 0)'
+                });
+                
                 // Animate the hamburger button transformation
                 anime({
                     targets: menuToggle,
                     scale: [1, 1.1, 1],
-                    rotate: [0, 180, 360],
+                    rotate: '+=360',
                     duration: 600,
                     easing: 'easeOutBack'
                 });
@@ -2506,7 +2526,6 @@
                 });
                 
                 // Staggered animation for nav links
-                const links = navLinks.querySelectorAll('li');
                 anime({
                     targets: links,
                     translateY: [50, 0],
@@ -2537,7 +2556,7 @@
                 anime({
                     targets: menuToggle,
                     scale: [1, 0.9, 1],
-                    rotate: [0, -180, -360],
+                    rotate: '-=360',
                     duration: 400,
                     easing: 'easeInBack',
                     complete: () => {
@@ -2546,7 +2565,6 @@
                 });
                 
                 // Animate nav links out with stagger
-                const links = navLinks.querySelectorAll('li');
                 anime({
                     targets: links,
                     translateY: [0, -30],
@@ -2603,6 +2621,108 @@
                 });
             }
         });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (menuOpen && !menuToggle.contains(e.target) && !navLinks.contains(e.target)) {
+                // Use the same closing animation as the toggle button
+                menuOpen = false;
+                
+                // Closing animation for hamburger button
+                anime({
+                    targets: menuToggle,
+                    scale: [1, 0.9, 1],
+                    rotate: '-=360',
+                    duration: 400,
+                    easing: 'easeInBack',
+                    complete: () => {
+                        menuToggle.classList.remove('active');
+                    }
+                });
+                
+                // Animate nav links out with stagger
+                anime({
+                    targets: links,
+                    translateY: [0, -30],
+                    opacity: [1, 0],
+                    scale: [1, 0.8],
+                    duration: 300,
+                    delay: anime.stagger(50),
+                    easing: 'easeInBack'
+                });
+                
+                // Slide out the mobile menu
+                anime({
+                    targets: navLinks,
+                    translateX: ['0%', '100%'],
+                    opacity: [1, 0],
+                    duration: 400,
+                    delay: 150,
+                    easing: 'easeInExpo',
+                    complete: () => {
+                        navLinks.classList.remove('active');
+                        // Reset transforms for next opening
+                        anime.set(links, {
+                            translateY: 0,
+                            opacity: 1,
+                            scale: 1,
+                            textShadow: '0 0 0px rgba(0, 255, 255, 0)'
+                        });
+                    }
+                });
+            }
+        });
+
+        // Close menu when touching outside (mobile)
+        document.addEventListener('touchstart', (e) => {
+            if (menuOpen && !menuToggle.contains(e.target) && !navLinks.contains(e.target)) {
+                // Use the same closing animation as the toggle button
+                menuOpen = false;
+                
+                // Closing animation for hamburger button
+                anime({
+                    targets: menuToggle,
+                    scale: [1, 0.9, 1],
+                    rotate: '-=360',
+                    duration: 400,
+                    easing: 'easeInBack',
+                    complete: () => {
+                        menuToggle.classList.remove('active');
+                    }
+                });
+                
+                // Animate nav links out with stagger
+                anime({
+                    targets: links,
+                    translateY: [0, -30],
+                    opacity: [1, 0],
+                    scale: [1, 0.8],
+                    duration: 300,
+                    delay: anime.stagger(50),
+                    easing: 'easeInBack'
+                });
+                
+                // Slide out the mobile menu
+                anime({
+                    targets: navLinks,
+                    translateX: ['0%', '100%'],
+                    opacity: [1, 0],
+                    duration: 400,
+                    delay: 150,
+                    easing: 'easeInExpo',
+                    complete: () => {
+                        navLinks.classList.remove('active');
+                        // Reset transforms for next opening
+                        anime.set(links, {
+                            translateY: 0,
+                            opacity: 1,
+                            scale: 1,
+                            textShadow: '0 0 0px rgba(0, 255, 255, 0)'
+                        });
+                    }
+                });
+            }
+        }, {passive: true});
 
         // Smooth Scrolling
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
