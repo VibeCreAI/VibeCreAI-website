@@ -21,7 +21,8 @@ class VibeSurvivor {
             invulnerable: 0,
             dashCooldown: 0,
             trail: [],
-            passives: {}
+            passives: {},
+            trailMultiplier: 1.0
         };
         
         // Game properties
@@ -1639,7 +1640,8 @@ class VibeSurvivor {
             invulnerable: 0,
             dashCooldown: 0,
             trail: [],
-            passives: {}
+            passives: {},
+            trailMultiplier: 1.0
         };
         
         // Reset weapons to single basic weapon
@@ -1767,7 +1769,8 @@ class VibeSurvivor {
         
         // Update trail
         this.player.trail.push({ x: this.player.x, y: this.player.y });
-        if (this.player.trail.length > 8) {
+        const maxTrailLength = Math.floor(8 * (this.player.trailMultiplier || 1.0));
+        if (this.player.trail.length > maxTrailLength) {
             this.player.trail.shift();
         }
         
@@ -3066,6 +3069,12 @@ class VibeSurvivor {
             // Collect orb
             if (distance < 15) {
                 this.player.xp += orb.value;
+                
+                // Update trail multiplier based on XP progress
+                const xpRequired = this.player.level * 5 + 10;
+                const xpProgress = this.player.xp / xpRequired;
+                this.player.trailMultiplier = 1.0 + (xpProgress * 2.0);
+                
                 this.xpOrbs.splice(index, 1);
             } else if (orb.life-- <= 0) {
                 this.xpOrbs.splice(index, 1);
@@ -3100,6 +3109,14 @@ class VibeSurvivor {
         if (this.player.xp >= xpRequired) {
             this.player.xp -= xpRequired;
             this.player.level++;
+            this.player.trailMultiplier = 1.0; // Reset trail length
+            
+            // Force trail to shrink back to base length immediately
+            const baseMaxLength = 8;
+            while (this.player.trail.length > baseMaxLength) {
+                this.player.trail.shift();
+            }
+            
             this.showLevelUpChoices();
         }
     }
