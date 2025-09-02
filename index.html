@@ -1863,6 +1863,19 @@
                 transform-origin: center;
             }
             
+            /* Prevent scaling from affecting game modals */
+            .vibe-survivor-modal,
+            .vibe-runner-modal,
+            .runner-modal {
+                transform: none !important;
+            }
+            
+            .vibe-survivor-modal *,
+            .vibe-runner-modal *,
+            .runner-modal * {
+                transform: none !important;
+            }
+            
             .hero-title {
                 font-size: 5.7rem; /* 95% of 6rem */
             }
