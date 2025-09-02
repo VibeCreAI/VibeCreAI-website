@@ -281,7 +281,6 @@ class VibeSurvivor {
                 left: 0;
                 width: 100%;
                 height: calc(100vh-40px);
-                margin-bottom: 40xp;
                 background: transparent;
                 backdrop-filter: blur(10px);
                 display: flex;
@@ -296,7 +295,6 @@ class VibeSurvivor {
                 background: linear-gradient(135deg, #0a0a1a 0%, #1a0a2a 100%);
                 border-radius: 20px;
                 padding: 0;
-                margin-bottom: 20px;
                 width: 90%;
                 max-width: 1500px;
                 height: calc(95dvh - 20px);
