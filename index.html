@@ -2232,6 +2232,11 @@
                         complete: () => {
                             loadingScreen.style.display = 'none';
                             initAnimations();
+                            
+                            // Apply browser-specific performance optimizations
+                            if (window.PerformanceManager) {
+                                window.PerformanceManager.applyBrowserOptimizations();
+                            }
                         }
                     });
                 }
@@ -2363,6 +2368,132 @@
             }
         }
 
+        // Global Performance Management System
+        const PerformanceManager = {
+            neuralNetworkPaused: false,
+            matrixRainPaused: false,
+            
+            pauseBackgroundAnimations() {
+                console.log('Pausing background animations for game performance');
+                
+                // Pause neural network animation
+                if (neuralNetworkAnimation && !this.neuralNetworkPaused) {
+                    cancelAnimationFrame(neuralNetworkAnimation);
+                    this.neuralNetworkPaused = true;
+                    
+                    // Clear neural network canvas to reduce GPU load
+                    const neuralCanvas = document.getElementById('neural-network');
+                    if (neuralCanvas) {
+                        const ctx = neuralCanvas.getContext('2d');
+                        ctx.clearRect(0, 0, neuralCanvas.width, neuralCanvas.height);
+                    }
+                }
+                
+                // Pause matrix rain animation
+                if (matrixInterval && !this.matrixRainPaused) {
+                    clearInterval(matrixInterval);
+                    matrixInterval = null;
+                    this.matrixRainPaused = true;
+                    
+                    // Set matrix canvas to semi-transparent for subtle effect
+                    const matrixCanvas = document.getElementById('matrix');
+                    if (matrixCanvas) {
+                        const ctx = matrixCanvas.getContext('2d');
+                        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+                        ctx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
+                    }
+                }
+            },
+            
+            resumeBackgroundAnimations() {
+                console.log('Resuming background animations');
+                
+                // Resume neural network animation
+                if (this.neuralNetworkPaused && typeof initNeuralNetwork === 'function') {
+                    this.neuralNetworkPaused = false;
+                    
+                    // Restart neural network with current state
+                    const neuralCanvas = document.getElementById('neural-network');
+                    if (neuralCanvas) {
+                        // Re-initialize neural network animation
+                        initNeuralNetwork();
+                    }
+                }
+                
+                // Resume matrix rain animation
+                if (this.matrixRainPaused && typeof initMatrixRain === 'function') {
+                    this.matrixRainPaused = false;
+                    
+                    // Restart matrix rain with current state
+                    const matrixCanvas = document.getElementById('matrix');
+                    if (matrixCanvas) {
+                        // Re-initialize matrix rain
+                        initMatrixRain();
+                    }
+                }
+            },
+            
+            // Browser detection for performance optimizations
+            detectBrowser() {
+                const userAgent = navigator.userAgent;
+                if (userAgent.includes('Chrome') && !userAgent.includes('Edge')) {
+                    return 'chrome';
+                } else if (userAgent.includes('Firefox')) {
+                    return 'firefox';
+                } else if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) {
+                    return 'safari';
+                }
+                return 'other';
+            },
+            
+            // Apply browser-specific optimizations
+            applyBrowserOptimizations() {
+                const browser = this.detectBrowser();
+                
+                if (browser === 'chrome') {
+                    // Chrome-specific optimizations
+                    console.log('Applying Chrome performance optimizations');
+                    
+                    // Suggest hardware acceleration
+                    const style = document.createElement('style');
+                    style.textContent = `
+                        #neural-network, #matrix, #survivor-canvas {
+                            transform: translateZ(0);
+                            -webkit-transform: translateZ(0);
+                            will-change: transform;
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }
+            },
+            
+            // Memory optimization suggestions
+            optimizeMemory() {
+                // Force garbage collection hint (if available)
+                if (window.gc && typeof window.gc === 'function') {
+                    try {
+                        window.gc();
+                    } catch (e) {
+                        // Ignore if gc is not available
+                    }
+                }
+                
+                // Clear any unused canvas data
+                const canvases = document.querySelectorAll('canvas');
+                canvases.forEach(canvas => {
+                    if (canvas.id !== 'survivor-canvas' && canvas.id !== 'neural-network' && canvas.id !== 'matrix') {
+                        const ctx = canvas.getContext('2d');
+                        if (ctx) {
+                            ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        }
+                    }
+                });
+            }
+        };
+        
+        // Make PerformanceManager globally accessible
+        window.PerformanceManager = PerformanceManager;
+        
         // Initialize all animations
         function initAnimations() {
             // Hero title drop-down animation with logo typing
@@ -2591,7 +2722,10 @@
                 });
                 
                 frame++;
-                neuralNetworkAnimation = requestAnimationFrame(animate);
+                // Only continue animation if not paused
+                if (!window.PerformanceManager || !window.PerformanceManager.neuralNetworkPaused) {
+                    neuralNetworkAnimation = requestAnimationFrame(animate);
+                }
             }
             
             // Resize handler for neural network

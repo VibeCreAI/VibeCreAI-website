@@ -55,6 +55,10 @@ class VibeSurvivor {
         // Initialize speed scaling (will be properly set when canvas is created)
         this.speedScale = 1.0;
         
+        // Performance optimization - detect if we should reduce rendering quality
+        this.performanceMode = false;
+        this.frameSkipCounter = 0;
+        
         // Initialize object pools
         this.initializeProjectilePool();
         this.touchControls = {
@@ -1291,9 +1295,17 @@ class VibeSurvivor {
             modal.style.display = 'flex';
         }
         
+        // Pause background animations for better game performance
+        if (window.PerformanceManager) {
+            window.PerformanceManager.pauseBackgroundAnimations();
+        }
+        
         try {
             this.canvas = document.getElementById('survivor-canvas');
-            this.ctx = this.canvas.getContext('2d');
+            this.ctx = this.canvas.getContext('2d', { 
+                alpha: false, // No transparency needed - better performance
+                desynchronized: true // Allow browser to optimize rendering
+            });
             this.resizeCanvas();
             
             // Ensure canvas renders initial background for start screen
@@ -1584,6 +1596,14 @@ class VibeSurvivor {
         
         this.resetGame();
         
+        // Optimize memory before starting intensive gameplay
+        if (window.PerformanceManager) {
+            window.PerformanceManager.optimizeMemory();
+        }
+        
+        // Auto-detect performance mode based on browser and device
+        this.detectPerformanceMode();
+        
         // Make sure game screen exists before trying to activate it
         const screens = document.querySelectorAll('.vibe-survivor-screen');
         screens.forEach(screen => screen.classList.remove('active'));
@@ -1676,6 +1696,16 @@ class VibeSurvivor {
     
     gameLoop() {
         if (!this.gameRunning || !this.canvas || !this.ctx) return;
+        
+        // Performance optimization: Skip frames if needed
+        if (this.performanceMode) {
+            this.frameSkipCounter++;
+            if (this.frameSkipCounter % 2 === 0) {
+                // Skip every other frame for 30fps instead of 60fps
+                this.gameLoopId = requestAnimationFrame(() => this.gameLoop());
+                return;
+            }
+        }
         
         // Only update game state if not paused, but always draw current state
         if (!this.isPaused) {
@@ -1863,6 +1893,38 @@ class VibeSurvivor {
         return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
                ('ontouchstart' in window) ||
                (navigator.maxTouchPoints > 0);
+    }
+
+    detectPerformanceMode() {
+        // Auto-enable performance mode for specific conditions
+        const userAgent = navigator.userAgent.toLowerCase();
+        
+        // Enable performance mode for Chrome (which tends to be slower with this game)
+        if (userAgent.includes('chrome') && !userAgent.includes('edge')) {
+            console.log('Chrome detected - enabling performance mode for better gameplay');
+            this.performanceMode = true;
+        }
+        
+        // Enable for older mobile devices
+        if (this.isMobile && (
+            userAgent.includes('android 4') || 
+            userAgent.includes('android 5') ||
+            userAgent.includes('iphone os 9') ||
+            userAgent.includes('iphone os 10')
+        )) {
+            console.log('Older mobile device detected - enabling performance mode');
+            this.performanceMode = true;
+        }
+        
+        // Check for low-end hardware indicators
+        if (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2) {
+            console.log('Low-end hardware detected - enabling performance mode');
+            this.performanceMode = true;
+        }
+        
+        if (this.performanceMode) {
+            console.log('Performance mode enabled - game will run at 30fps for better performance');
+        }
     }
     
     preventBackgroundScrolling() {
@@ -5137,6 +5199,11 @@ class VibeSurvivor {
             }
             
             this.showStartScreen();
+        }
+        
+        // Resume background animations when closing game
+        if (window.PerformanceManager) {
+            window.PerformanceManager.resumeBackgroundAnimations();
         } else {
             // If modal doesn't exist, recreate it but keep it hidden
             console.log('Modal not found, recreating hidden modal');
