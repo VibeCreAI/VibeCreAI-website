@@ -2705,7 +2705,7 @@ class VibeSurvivor {
             fast: {
                 radius: 8,
                 health: 12,
-                speed: 3.0,
+                speed: 3.75,
                 contactDamage: 8,
                 color: '#ffff00', // Neon yellow
                 behavior: 'dodge'
@@ -2713,7 +2713,7 @@ class VibeSurvivor {
             tank: {
                 radius: 15,
                 health: 80,
-                speed: 0.75,
+                speed: 1.0,
                 contactDamage: 20,
                 color: '#ff0040', // Neon red
                 behavior: 'tank'
@@ -2721,7 +2721,7 @@ class VibeSurvivor {
             flyer: {
                 radius: 12,
                 health: 25,
-                speed: 2.25,
+                speed: 2.5,
                 contactDamage: 12,
                 color: '#0080ff', // Neon blue
                 behavior: 'fly'
@@ -2737,7 +2737,7 @@ class VibeSurvivor {
             boss: {
                 radius: 30,
                 health: 1000,
-                speed: 1.2,
+                speed: 1.5,
                 contactDamage: 50,
                 color: '#F000FF', // Neon purple
                 behavior: 'boss'
@@ -3217,7 +3217,7 @@ class VibeSurvivor {
     
     getWeaponName(type) {
         const names = {
-            'basic': 'Magic Missile',
+            'basic': 'Basic Missile',
             'rapid': 'Rapid Fire',
             'spread': 'Spread Shot',
             'spread_shot': 'Spread Shot',
