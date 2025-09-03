@@ -3083,7 +3083,7 @@ class VibeSurvivor {
                 // Update trail multiplier based on XP progress
                 const xpRequired = this.player.level * 5 + 10;
                 const xpProgress = this.player.xp / xpRequired;
-                this.player.trailMultiplier = 1.0 + (xpProgress * 2.0);
+                this.player.trailMultiplier = 1.0 + (xpProgress * 3.0);
                 
                 this.xpOrbs.splice(index, 1);
             } else if (orb.life-- <= 0) {
