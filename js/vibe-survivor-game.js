@@ -408,9 +408,10 @@ class VibeSurvivor {
             
             .header-xp-fill {
                 height: 100%;
-                background: linear-gradient(90deg, #4444ff, #ffff44);
+                background: linear-gradient(90deg, #00ffff, #00cccc);
                 transition: width 0.3s ease;
                 border-radius: 3px;
+                box-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
             }
             
             .header-health-text, .header-level-text, .header-time {
@@ -4117,6 +4118,54 @@ class VibeSurvivor {
             glowSize * 2
         );
         
+        // Draw HP bar above player
+        this.ctx.save();
+        
+        // HP bar positioning and styling
+        const hpBarWidth = 30;
+        const hpBarHeight = 4;
+        const hpBarOffset = 25; // Distance above player
+        
+        // HP bar background
+        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+        this.ctx.fillRect(
+            this.player.x - hpBarWidth / 2,
+            this.player.y - hpBarOffset,
+            hpBarWidth,
+            hpBarHeight
+        );
+        
+        // HP bar border
+        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+        this.ctx.lineWidth = 1;
+        this.ctx.strokeRect(
+            this.player.x - hpBarWidth / 2,
+            this.player.y - hpBarOffset,
+            hpBarWidth,
+            hpBarHeight
+        );
+        
+        // HP bar fill
+        const healthPercent = this.player.health / this.player.maxHealth;
+        const fillWidth = hpBarWidth * healthPercent;
+        
+        // Color based on health level
+        let fillColor = '#00ff00'; // Green for high health
+        if (healthPercent < 0.6) fillColor = '#ffff00'; // Yellow for medium health
+        if (healthPercent < 0.3) fillColor = '#ff0000'; // Red for low health
+        
+        this.ctx.fillStyle = fillColor;
+        this.ctx.shadowBlur = 2;
+        this.ctx.shadowColor = fillColor;
+        this.ctx.fillRect(
+            this.player.x - hpBarWidth / 2,
+            this.player.y - hpBarOffset,
+            fillWidth,
+            hpBarHeight
+        );
+        
+        this.ctx.restore();
+
         // Draw arrow player
         this.ctx.save();
         this.ctx.translate(this.player.x, this.player.y);
