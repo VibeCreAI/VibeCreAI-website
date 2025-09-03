@@ -52,8 +52,6 @@ class VibeSurvivor {
         // Mobile touch controls
         this.isMobile = this.detectMobile();
         
-        // Initialize speed scaling (will be properly set when canvas is created)
-        this.speedScale = 1.0;
         
         // Performance optimization - detect if we should reduce rendering quality
         this.performanceMode = false;
@@ -291,10 +289,10 @@ class VibeSurvivor {
             
             .vibe-survivor-modal {
                 position: fixed;
-                top: 0;
+                top: 10px;
                 left: 0;
                 width: 100%;
-                height: calc(100vh-40px);
+                height: calc(100dvh - 40px);
                 background: transparent;
                 backdrop-filter: blur(10px);
                 display: flex;
@@ -309,10 +307,10 @@ class VibeSurvivor {
                 background: linear-gradient(135deg, #0a0a1a 0%, #1a0a2a 100%);
                 border-radius: 20px;
                 padding: 0;
-                width: 90%;
-                max-width: 1500px;
-                height: calc(95dvh - 20px);
-                max-height: calc(95dvh - 20px);
+                width: 95%;
+                max-width: 900px;
+                height: calc(100dvh - 15px);
+                max-height: calc(100dvh - 20px);
                 display: flex;
                 flex-direction: column;
                 border: 2px solid #00ffff;
@@ -754,18 +752,8 @@ class VibeSurvivor {
             }
 
             #survivor-canvas {
-                background: #000;
-                border: 2px solid #00ffff;
                 border-radius: 10px;
                 box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
-                width: calc(100% - 40px);
-                max-width: 760px; /* Performance-optimized max width */
-                height: calc(100% - 100px); /* Full container height minus small margin */
-                max-width: calc(130%);
-                object-fit: contain;
-                display: block;
-                margin: 10px auto 10px;
-                margin-bottom: 20px;
             }
 
 
@@ -1370,13 +1358,7 @@ class VibeSurvivor {
                 return;
             }
             
-            // Calculate speed scaling factor to maintain consistent perceived speed
-            // Base reference: mobile canvas width (~400px)
-            const baseCanvasWidth = 400;
-            this.speedScale = Math.max(1.0, this.canvas.width / baseCanvasWidth);
-            
-            // Update player and enemy speeds based on canvas size
-            this.updateSpeedScaling();
+            // Speed scaling removed - game speed should be consistent across all screen sizes
             
             // Don't override CSS - let responsive breakpoints handle sizing
             // CSS already handles display: block, margins, and positioning
@@ -1394,43 +1376,6 @@ class VibeSurvivor {
         }
     }
     
-    updateSpeedScaling() {
-        // Apply speed scaling to maintain consistent perceived speed across different canvas sizes
-        if (!this.speedScale) this.speedScale = 1.0;
-        
-        // Base speeds (designed for mobile ~400px width)
-        const basePlayerSpeed = 3;
-        const baseEnemySpeedMultiplier = 1.0;
-        const baseProjectileSpeedMultiplier = 1.0;
-        
-        // Update player speed
-        if (this.player) {
-            this.player.speed = basePlayerSpeed * this.speedScale;
-        }
-        
-        // Update existing enemy speeds
-        this.enemies.forEach(enemy => {
-            if (enemy.baseSpeed === undefined) {
-                // Store original speed if not already stored
-                enemy.baseSpeed = enemy.speed;
-            }
-            enemy.speed = enemy.baseSpeed * this.speedScale * baseEnemySpeedMultiplier;
-        });
-        
-        // Update existing projectile speeds
-        this.projectiles.forEach(projectile => {
-            if (projectile.baseSpeed === undefined && (projectile.vx || projectile.vy)) {
-                // Calculate and store base speed from velocity
-                projectile.baseSpeed = Math.sqrt(projectile.vx * projectile.vx + projectile.vy * projectile.vy);
-            }
-            if (projectile.baseSpeed && projectile.baseSpeed > 0) {
-                const angle = Math.atan2(projectile.vy, projectile.vx);
-                const newSpeed = projectile.baseSpeed * this.speedScale * baseProjectileSpeedMultiplier;
-                projectile.vx = Math.cos(angle) * newSpeed;
-                projectile.vy = Math.sin(angle) * newSpeed;
-            }
-        });
-    }
     
     // Modal header management methods
     hideModalHeader() {
@@ -1661,7 +1606,7 @@ class VibeSurvivor {
             x: 0,
             y: 0,
             radius: 15,
-            speed: 3 * (this.speedScale || 1.0), // Apply speed scaling
+            speed: 4, // Fixed speed for consistent gameplay
             health: 100,
             maxHealth: 100,
             xp: 0,
@@ -2310,7 +2255,7 @@ class VibeSurvivor {
         const projectile = this.getPooledProjectile();
         
         // Calculate scaled projectile speed for consistent gameplay
-        const scaledSpeed = weapon.projectileSpeed * (this.speedScale || 1.0);
+        const scaledSpeed = weapon.projectileSpeed;
         
         // Set projectile properties
         projectile.x = this.player.x;
@@ -2332,7 +2277,7 @@ class VibeSurvivor {
         const spreadCount = 3 + Math.floor(weapon.level / 3);
         const spreadAngle = Math.PI / 6; // 30 degrees
         
-        const scaledSpeed = weapon.projectileSpeed * (this.speedScale || 1.0);
+        const scaledSpeed = weapon.projectileSpeed;
         
         for (let i = 0; i < spreadCount; i++) {
             const offsetAngle = angle + (i - Math.floor(spreadCount / 2)) * (spreadAngle / spreadCount);
@@ -2525,7 +2470,7 @@ class VibeSurvivor {
         projectile.size = 3;
         projectile.homing = true;
         projectile.explosionRadius = 60;
-        projectile.speed = (weapon.projectileSpeed || 3) * (this.speedScale || 1.0);
+        projectile.speed = (weapon.projectileSpeed || 6);
         projectile.baseSpeed = weapon.projectileSpeed || 3;
         
         this.projectiles.push(projectile);
@@ -2644,8 +2589,8 @@ class VibeSurvivor {
         const config = this.getEnemyConfig(type);
         
         // Calculate scaled speed for consistent gameplay across canvas sizes
-        const baseSpeed = config.speed * (1 + Math.floor(this.gameTime / 60) * 0.1);
-        const scaledSpeed = baseSpeed * (this.speedScale || 1.0);
+        const baseSpeed = config.speed * (1 + Math.floor(this.gameTime / 60) * 0.2);
+        const scaledSpeed = baseSpeed;
         
         const enemy = {
             x: x,
@@ -2685,7 +2630,7 @@ class VibeSurvivor {
         const y = this.player.y + Math.sin(angle) * spawnDistance;
         
         const config = this.getEnemyConfig('boss');
-        const scaledSpeed = config.speed * (this.speedScale || 1.0);
+        const scaledSpeed = config.speed;
         
         this.enemies.push({
             x: x,
