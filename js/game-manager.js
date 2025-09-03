@@ -44,10 +44,16 @@ class GameManager {
     }
     
     launchVibeRunner() {
-        console.log('Launching Vibe Runner...');
+        console.log('🎮 LAUNCHING VIBE RUNNER - Pausing background animations...');
         
         // Close any existing game first
         this.closeCurrentGame();
+        
+        // Pause background animations for performance
+        this.pauseBackgroundAnimations();
+        
+        // Add body class to prevent terminal height changes
+        document.body.classList.add('game-modal-open');
         
         // Ensure Vibe Runner is available
         if (window.vibeRunner) {
@@ -61,10 +67,13 @@ class GameManager {
     }
     
     launchVibeSurvivor() {
-        // Launching Vibe Survivor
+        console.log('🎮 LAUNCHING VIBE SURVIVOR - Pausing background animations...');
         
         // Close any existing game first
         this.closeCurrentGame();
+        
+        // Pause background animations for performance
+        this.pauseBackgroundAnimations();
         
         // Add body class to prevent terminal height changes
         document.body.classList.add('game-modal-open');
@@ -146,6 +155,56 @@ class GameManager {
         }
         
         this.currentGame = null;
+    }
+    
+    pauseBackgroundAnimations() {
+        console.log('🛑 PAUSING: Background animations for game launch...');
+        
+        // Use the existing PerformanceManager system
+        if (window.PerformanceManager) {
+            window.PerformanceManager.pauseBackgroundAnimations();
+            console.log('✅ Background animations paused using PerformanceManager');
+        } else {
+            // Fallback: direct animation stopping
+            try {
+                // Cancel specific animation frames
+                if (window.neuralNetworkAnimation) {
+                    cancelAnimationFrame(window.neuralNetworkAnimation);
+                    window.neuralNetworkAnimation = null;
+                    console.log('💀 Neural network animation stopped');
+                }
+                
+                if (window.matrixInterval) {
+                    clearInterval(window.matrixInterval);
+                    window.matrixInterval = null;
+                    console.log('💀 Matrix rain animation stopped');
+                }
+                
+                // Clear and hide canvases
+                const neuralCanvas = document.getElementById('neural-network');
+                if (neuralCanvas) {
+                    const ctx = neuralCanvas.getContext('2d');
+                    ctx.fillStyle = '#0a0a0a';
+                    ctx.fillRect(0, 0, neuralCanvas.width, neuralCanvas.height);
+                    neuralCanvas.style.display = 'none';
+                    console.log('💀 Neural canvas cleared and hidden');
+                }
+                
+                const matrixCanvas = document.getElementById('matrix');
+                if (matrixCanvas) {
+                    const ctx = matrixCanvas.getContext('2d');
+                    ctx.fillStyle = '#0a0a0a';
+                    ctx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
+                    matrixCanvas.style.display = 'none';
+                    console.log('💀 Matrix canvas cleared and hidden');
+                }
+                
+                console.log('✅ Background animations paused using fallback method');
+                
+            } catch (e) {
+                console.warn('Error pausing background animations:', e);
+            }
+        }
     }
     
     showLoadingScreen(gameName) {

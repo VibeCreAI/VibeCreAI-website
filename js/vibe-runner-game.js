@@ -624,25 +624,39 @@ class VibeRunner {
     }
     
     closeGame() {
+        console.log('🔄 Closing Vibe Runner - Refreshing page for clean reset...');
+        
+        // Stop game immediately to prevent any lingering processes
+        this.gameActive = false;
+        
+        // Cancel any running game loop
+        if (this.animationId) {
+            cancelAnimationFrame(this.animationId);
+            this.animationId = null;
+        }
+        
+        // Stop background music immediately
+        try {
+            this.backgroundMusic.pause();
+            this.backgroundMusic.currentTime = 0;
+        } catch (e) {
+            console.warn('Could not stop background music:', e);
+        }
+        
+        // Hide game UI immediately for smooth visual transition
         const container = document.getElementById('vibe-runner-container');
         if (container) {
             container.classList.add('vibe-runner-hidden');
-        } else {
-            console.log('Vibe Runner container not found during close - already removed');
         }
         
-        // Stop background music when game window closes
-        this.backgroundMusic.pause();
-        this.backgroundMusic.currentTime = 0;
+        // Remove game modal class
+        document.body.classList.remove('game-modal-open');
         
-        if (this.gameActive) {
-            this.gameActive = false;
-            cancelAnimationFrame(this.animationId);
-        }
-        
-        // Use the same mobile detection function as main page
-        const isMobile = this.isMobileDevice();
-        
+        // Brief delay to allow final cleanup, then refresh
+        setTimeout(() => {
+            console.log('🔄 Refreshing page for complete reset...');
+            window.location.reload();
+        }, 200);
     }
     
     

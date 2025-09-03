@@ -1827,6 +1827,38 @@
             }
         }
         
+        /* Desktop Navigation - Show header menu, hide hamburger */
+        @media (min-width: 769px) {
+            .menu-toggle {
+                display: none !important;
+            }
+            
+            .nav-links {
+                display: flex !important;
+                position: static !important;
+                width: auto !important;
+                height: auto !important;
+                background: transparent !important;
+                flex-direction: row !important;
+                backdrop-filter: none !important;
+                padding: 0 !important;
+                gap: 30px !important;
+                transform: none !important;
+                opacity: 1 !important;
+            }
+            
+            .nav-links li {
+                transform: none !important;
+                opacity: 1 !important;
+            }
+            
+            .nav-links a {
+                color: var(--text-color) !important;
+                font-size: 1rem !important;
+                padding: 5px 10px !important;
+            }
+        }
+        
         /* Very Narrow Screen Optimizations */
         @media (max-width: 480px) {
             .app-showcase {
@@ -2374,35 +2406,52 @@
             matrixRainPaused: false,
             
             pauseBackgroundAnimations() {
-                console.log('Pausing background animations for game performance');
+                console.log('🛑 PAUSING: Background animations for game performance...');
                 
-                // Pause neural network animation
-                if (neuralNetworkAnimation && !this.neuralNetworkPaused) {
+                // Force pause neural network animation
+                if (neuralNetworkAnimation) {
                     cancelAnimationFrame(neuralNetworkAnimation);
-                    this.neuralNetworkPaused = true;
-                    
-                    // Clear neural network canvas to reduce GPU load
-                    const neuralCanvas = document.getElementById('neural-network');
-                    if (neuralCanvas) {
-                        const ctx = neuralCanvas.getContext('2d');
-                        ctx.clearRect(0, 0, neuralCanvas.width, neuralCanvas.height);
-                    }
+                    neuralNetworkAnimation = null;
+                    console.log('💀 Neural network animation stopped');
+                }
+                this.neuralNetworkPaused = true;
+                
+                // Clear and hide neural network canvas to reduce GPU load
+                const neuralCanvas = document.getElementById('neural-network');
+                if (neuralCanvas) {
+                    const ctx = neuralCanvas.getContext('2d');
+                    ctx.fillStyle = '#0a0a0a';
+                    ctx.fillRect(0, 0, neuralCanvas.width, neuralCanvas.height);
+                    neuralCanvas.style.display = 'none';
+                    console.log('💀 Neural canvas cleared and hidden');
                 }
                 
-                // Pause matrix rain animation
-                if (matrixInterval && !this.matrixRainPaused) {
+                // Force pause matrix rain animation
+                if (matrixInterval) {
                     clearInterval(matrixInterval);
                     matrixInterval = null;
-                    this.matrixRainPaused = true;
-                    
-                    // Set matrix canvas to semi-transparent for subtle effect
-                    const matrixCanvas = document.getElementById('matrix');
-                    if (matrixCanvas) {
-                        const ctx = matrixCanvas.getContext('2d');
-                        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-                        ctx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
-                    }
+                    console.log('💀 Matrix rain animation stopped');
                 }
+                this.matrixRainPaused = true;
+                
+                // Clear and hide matrix canvas
+                const matrixCanvas = document.getElementById('matrix');
+                if (matrixCanvas) {
+                    const ctx = matrixCanvas.getContext('2d');
+                    ctx.fillStyle = '#0a0a0a';
+                    ctx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
+                    matrixCanvas.style.display = 'none';
+                    console.log('💀 Matrix canvas cleared and hidden');
+                }
+                
+                // Pause tagline animation
+                if (window.taglineTimeout) {
+                    clearTimeout(window.taglineTimeout);
+                    window.taglineTimeout = null;
+                    console.log('💀 Tagline animation stopped');
+                }
+                
+                console.log('✅ Background animations paused successfully');
             },
             
             resumeBackgroundAnimations() {
@@ -2578,10 +2627,12 @@
             let taglineCounter = 0;
             const nextTagline = () => {
                 taglineScramble.setText(taglines[taglineCounter]).then(() => {
-                    setTimeout(nextTagline, 3000);
+                    window.taglineTimeout = setTimeout(nextTagline, 3000);
                 });
                 taglineCounter = (taglineCounter + 1) % taglines.length;
             };
+            window.taglineScramble = taglineScramble;
+            window.nextTagline = nextTagline;
             nextTagline();
             
             // Start particle system

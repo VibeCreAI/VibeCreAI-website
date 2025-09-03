@@ -5139,11 +5139,11 @@ class VibeSurvivor {
     
 
     closeGame() {
-        this.gameRunning = false;
-        this.isPaused = false; // Reset pause state
+        console.log('🔄 Closing Vibe Survivor - Refreshing page for clean reset...');
         
-        // Remove body class to restore normal terminal behavior
-        document.body.classList.remove('game-modal-open');
+        // Stop game immediately to prevent any lingering processes
+        this.gameRunning = false;
+        this.isPaused = false;
         
         // Cancel any running game loop
         if (this.gameLoopId) {
@@ -5151,68 +5151,28 @@ class VibeSurvivor {
             this.gameLoopId = null;
         }
         
-        // Hide pause menu if it's open
-        const pauseMenu = document.getElementById('pause-menu');
-        if (pauseMenu) {
-            pauseMenu.style.display = 'none';
-        }
-        
-        // Restore body scrolling behavior
-        this.restoreBackgroundScrolling();
-        
-        // Hide pause button when closing game
-        const pauseBtn = document.getElementById('pause-btn');
-        if (pauseBtn) {
-            pauseBtn.style.display = 'none';
-        }
-        
-        // Reset dash button to consistent position (same as CSS default)
-        const dashBtn = document.getElementById('mobile-dash-btn');
-        if (dashBtn) {
-            // Always set to the same position as the original CSS
-            dashBtn.style.right = '50px';
-            dashBtn.style.bottom = '80px';
-        }
-        
-        // Stop background music
+        // Stop background music immediately
         try {
             this.backgroundMusic.pause();
             this.backgroundMusic.currentTime = 0;
-            console.log('Background music stopped');
         } catch (e) {
             console.warn('Could not stop background music:', e);
         }
         
-        // Remove any fresh modals that might exist
-        const freshModal = document.getElementById('fresh-game-over-modal');
-        if (freshModal) {
-            freshModal.remove();
+        // Hide game UI immediately for smooth visual transition
+        const container = document.getElementById('vibe-survivor-container');
+        if (container) {
+            container.classList.add('vibe-survivor-hidden');
         }
         
-        const modal = document.getElementById('vibe-survivor-modal');
-        if (modal) {
-            modal.style.display = 'none';
-            
-            const container = document.getElementById('vibe-survivor-container');
-            if (container) {
-                container.classList.add('vibe-survivor-hidden');
-            }
-            
-            this.showStartScreen();
-        }
+        // Remove game modal class
+        document.body.classList.remove('game-modal-open');
         
-        // Resume background animations when closing game
-        if (window.PerformanceManager) {
-            window.PerformanceManager.resumeBackgroundAnimations();
-        } else {
-            // If modal doesn't exist, recreate it but keep it hidden
-            console.log('Modal not found, recreating hidden modal');
-            this.createGameModal();
-            const newModal = document.getElementById('vibe-survivor-modal');
-            if (newModal) {
-                newModal.style.display = 'none';
-            }
-        }
+        // Brief delay to allow final cleanup, then refresh
+        setTimeout(() => {
+            console.log('🔄 Refreshing page for complete reset...');
+            window.location.reload();
+        }, 200);
     }
     
     reopenGame() {
