@@ -1606,7 +1606,7 @@ class VibeSurvivor {
             x: 0,
             y: 0,
             radius: 15,
-            speed: 4, // Fixed speed for consistent gameplay
+            speed: 6, // Fixed speed for consistent gameplay
             health: 100,
             maxHealth: 100,
             xp: 0,
@@ -2697,7 +2697,7 @@ class VibeSurvivor {
             basic: {
                 radius: 10,
                 health: 20,
-                speed: 1.0,
+                speed: 1.5,
                 contactDamage: 10,
                 color: '#ff00ff', // Neon pink
                 behavior: 'chase'
@@ -2705,7 +2705,7 @@ class VibeSurvivor {
             fast: {
                 radius: 8,
                 health: 12,
-                speed: 2.0,
+                speed: 3.0,
                 contactDamage: 8,
                 color: '#ffff00', // Neon yellow
                 behavior: 'dodge'
@@ -2713,7 +2713,7 @@ class VibeSurvivor {
             tank: {
                 radius: 15,
                 health: 80,
-                speed: 0.5,
+                speed: 0.75,
                 contactDamage: 20,
                 color: '#ff0040', // Neon red
                 behavior: 'tank'
@@ -2721,7 +2721,7 @@ class VibeSurvivor {
             flyer: {
                 radius: 12,
                 health: 25,
-                speed: 1.5,
+                speed: 2.25,
                 contactDamage: 12,
                 color: '#0080ff', // Neon blue
                 behavior: 'fly'
@@ -2729,7 +2729,7 @@ class VibeSurvivor {
             phantom: {
                 radius: 9,
                 health: 15,
-                speed: 1.0,
+                speed: 1.5,
                 contactDamage: 2,
                 color: '#74EE15', // Neon green
                 behavior: 'teleport'
@@ -2737,7 +2737,7 @@ class VibeSurvivor {
             boss: {
                 radius: 30,
                 health: 1000,
-                speed: 0.8,
+                speed: 1.2,
                 contactDamage: 50,
                 color: '#F000FF', // Neon purple
                 behavior: 'boss'

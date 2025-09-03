@@ -2451,6 +2451,13 @@
                     console.log('💀 Tagline animation stopped');
                 }
                 
+                // Pause particle system
+                if (particleInterval) {
+                    clearInterval(particleInterval);
+                    particleInterval = null;
+                    console.log('💀 Particle system stopped');
+                }
+                
                 console.log('✅ Background animations paused successfully');
             },
             
@@ -2479,6 +2486,12 @@
                         // Re-initialize matrix rain
                         initMatrixRain();
                     }
+                }
+                
+                // Resume particle system
+                if (!particleInterval && typeof createParticles === 'function') {
+                    createParticles();
+                    console.log('✅ Particle system resumed');
                 }
             },
             
@@ -2647,10 +2660,11 @@
 
 
         // Particle System
+        let particleInterval;
         function createParticles() {
             const colors = ['#00ffff', '#2bb4db', '#ff00ff'];
             
-            setInterval(() => {
+            particleInterval = setInterval(() => {
                 const particle = document.createElement('div');
                 particle.className = 'particle';
                 particle.style.left = Math.random() * window.innerWidth + 'px';
