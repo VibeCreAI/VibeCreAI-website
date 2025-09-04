@@ -12,7 +12,7 @@ class VibeSurvivor {
             x: 0,
             y: 0,
             radius: 15,
-            speed: 3,
+            speed: 2.0,
             health: 100,
             maxHealth: 100,
             xp: 0,
@@ -35,9 +35,9 @@ class VibeSurvivor {
             type: 'basic',
             level: 1,
             damage: 15,
-            fireRate: 30,
+            fireRate: 20,
             range: 250,
-            projectileSpeed: 8,
+            projectileSpeed: 4,
             lastFire: 0
         }];
         
@@ -56,6 +56,25 @@ class VibeSurvivor {
         // Performance optimization - detect if we should reduce rendering quality
         this.performanceMode = false;
         this.frameSkipCounter = 0;
+        
+        // Frame rate monitoring and adaptive quality
+        this.frameRateMonitor = {
+            lastFrameTime: 0,
+            frameCount: 0,
+            currentFPS: 60,
+            targetFPS: 60,
+            minFPS: 30,
+            fpsHistory: [],
+            averageFPS: 60,
+            adaptiveQuality: {
+                particleCount: 1.0,
+                effectQuality: 1.0,
+                renderDistance: 1.0,
+                trailLength: 1.0
+            },
+            checkInterval: 30, // Check every 30 frames
+            lastCheck: 0
+        };
         
         // Initialize object pools
         this.initializeProjectilePool();
@@ -1363,6 +1382,11 @@ class VibeSurvivor {
             // Don't override CSS - let responsive breakpoints handle sizing
             // CSS already handles display: block, margins, and positioning
             
+            // Reinitialize offscreen canvases after resize
+            if (this.hasOffscreenCanvases) {
+                this.initializeOffscreenCanvases();
+            }
+            
             // If game isn't running, render start screen background (but avoid infinite loop)
             if (!this.gameRunning && !this._isRenderingBackground) {
                 this._isRenderingBackground = true;
@@ -1535,6 +1559,10 @@ class VibeSurvivor {
             }
             // Canvas ready
             this.resizeCanvas();
+            
+            // Initialize offscreen canvases for performance
+            this.initializeOffscreenCanvases();
+            
         } catch (e) {
             console.error('Canvas initialization failed:', e);
             return;
@@ -1606,7 +1634,7 @@ class VibeSurvivor {
             x: 0,
             y: 0,
             radius: 15,
-            speed: 4.5, // Fixed speed for consistent gameplay
+            speed: 2.0, // Fixed speed for consistent gameplay
             health: 100,
             maxHealth: 100,
             xp: 0,
@@ -1626,7 +1654,7 @@ class VibeSurvivor {
             damage: 15,
             fireRate: 30,
             range: 250,
-            projectileSpeed: 8,
+            projectileSpeed: 6,
             lastFire: 0
         }];
         
@@ -1637,17 +1665,55 @@ class VibeSurvivor {
         this.xpOrbs = [];
         this.notifications = [];
         
+        // Reset object pools - mark all as inactive
+        if (this.projectilePool) {
+            this.projectilePool.forEach(projectile => projectile.active = false);
+        }
+        if (this.particlePool) {
+            this.particlePool.forEach(particle => particle.active = false);
+        }
+        if (this.enemyPool) {
+            this.enemyPool.forEach(enemy => enemy.active = false);
+        }
+        
+        // Reset frame rate monitoring
+        this.frameRateMonitor.frameCount = 0;
+        this.frameRateMonitor.lastFrameTime = 0;
+        this.frameRateMonitor.fpsHistory = [];
+        this.frameRateMonitor.averageFPS = 60;
+        this.frameRateMonitor.lastCheck = 0;
+        
+        // Reset adaptive quality to defaults
+        this.frameRateMonitor.adaptiveQuality = {
+            particleCount: 1.0,
+            effectQuality: 1.0,
+            renderDistance: 1.0,
+            trailLength: 1.0
+        };
+        
+        // Initialize dirty rectangle system
+        this.dirtyRectangles = [];
+        this.lastEntityPositions = new Map();
+        this.staticCanvasCache = null;
+        this.backgroundCanvasCache = null;
+        
+        this.performanceMode = false;
+        this.frameSkipCounter = 0;
+        
         this.camera = { x: 0, y: 0 };
     }
     
     gameLoop() {
         if (!this.gameRunning || !this.canvas || !this.ctx) return;
         
-        // Performance optimization: Skip frames if needed
+        // Update frame rate monitoring
+        this.updateFrameRate();
+        
+        // Performance optimization: Skip frames if needed (FIXED LOGIC)
         if (this.performanceMode) {
             this.frameSkipCounter++;
-            if (this.frameSkipCounter % 2 === 0) {
-                // Skip every other frame for 30fps instead of 60fps
+            // Only skip if counter is odd (runs every other frame = 30fps)
+            if (this.frameSkipCounter % 2 === 1) {
                 this.gameLoopId = requestAnimationFrame(() => this.gameLoop());
                 return;
             }
@@ -1842,34 +1908,20 @@ class VibeSurvivor {
     }
 
     detectPerformanceMode() {
-        // Auto-enable performance mode for specific conditions
+        // DISABLED: Don't auto-enable performance mode
+        // Let the adaptive system handle performance based on actual FPS measurements
+        
+        // Only enable for very old mobile devices
         const userAgent = navigator.userAgent.toLowerCase();
-        
-        // Enable performance mode for Chrome (which tends to be slower with this game)
-        if (userAgent.includes('chrome') && !userAgent.includes('edge')) {
-            console.log('Chrome detected - enabling performance mode for better gameplay');
-            this.performanceMode = true;
-        }
-        
-        // Enable for older mobile devices
         if (this.isMobile && (
             userAgent.includes('android 4') || 
-            userAgent.includes('android 5') ||
-            userAgent.includes('iphone os 9') ||
-            userAgent.includes('iphone os 10')
+            userAgent.includes('iphone os 9')
         )) {
-            console.log('Older mobile device detected - enabling performance mode');
+            console.log('Very old mobile device detected - enabling performance mode');
             this.performanceMode = true;
-        }
-        
-        // Check for low-end hardware indicators
-        if (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2) {
-            console.log('Low-end hardware detected - enabling performance mode');
-            this.performanceMode = true;
-        }
-        
-        if (this.performanceMode) {
-            console.log('Performance mode enabled - game will run at 30fps for better performance');
+        } else {
+            console.log('Starting in normal performance mode - will adapt based on actual FPS');
+            this.performanceMode = false;
         }
     }
     
@@ -2223,14 +2275,7 @@ class VibeSurvivor {
         }
     }
     
-    // Object pooling methods for performance
-    getPooledProjectile() {
-        if (this.projectilePool.length > 0) {
-            return this.projectilePool.pop();
-        } else {
-            return {}; // Create new object if pool is empty
-        }
-    }
+    // Object pooling methods for performance - removed duplicate method
     
     returnProjectileToPool(projectile) {
         // Reset all properties to default values
@@ -2484,7 +2529,7 @@ class VibeSurvivor {
         if (healthPercent > 0.7) {
             spreadAngles = [-0.3, 0, 0.3]; // 3 missiles with spread
             damage = 25;
-            speed = 3;
+            speed = 2.5;
             homingStrength = 0.05;
             color = '#FF0066'; // Pink
         }
@@ -2492,7 +2537,7 @@ class VibeSurvivor {
         else if (healthPercent > 0.3) {
             spreadAngles = [-0.6, -0.3, 0, 0.3, 0.6]; // 5 missiles with wider spread
             damage = 30;
-            speed = 3.5;
+            speed = 2.75;
             homingStrength = 0.07;
             color = '#FF3366'; // Brighter pink
         }
@@ -2500,7 +2545,7 @@ class VibeSurvivor {
         else {
             spreadAngles = [-0.9, -0.6, -0.3, 0, 0.3, 0.6, 0.9]; // 7 missiles, wide spread
             damage = 35;
-            speed = 4;
+            speed = 3;
             homingStrength = 0.10;
             color = '#FF0033'; // Deep red
         }
@@ -2697,7 +2742,7 @@ class VibeSurvivor {
             basic: {
                 radius: 10,
                 health: 20,
-                speed: 1.5,
+                speed: 0.75,
                 contactDamage: 10,
                 color: '#ff00ff', // Neon pink
                 behavior: 'chase'
@@ -2705,7 +2750,7 @@ class VibeSurvivor {
             fast: {
                 radius: 8,
                 health: 12,
-                speed: 3.75,
+                speed: 1.875,
                 contactDamage: 8,
                 color: '#ffff00', // Neon yellow
                 behavior: 'dodge'
@@ -2713,7 +2758,7 @@ class VibeSurvivor {
             tank: {
                 radius: 15,
                 health: 80,
-                speed: 1.0,
+                speed: 0.5,
                 contactDamage: 20,
                 color: '#ff0040', // Neon red
                 behavior: 'tank'
@@ -2721,7 +2766,7 @@ class VibeSurvivor {
             flyer: {
                 radius: 12,
                 health: 25,
-                speed: 2.5,
+                speed: 1.25,
                 contactDamage: 12,
                 color: '#0080ff', // Neon blue
                 behavior: 'fly'
@@ -2729,7 +2774,7 @@ class VibeSurvivor {
             phantom: {
                 radius: 9,
                 health: 15,
-                speed: 1.5,
+                speed: 0.75,
                 contactDamage: 2,
                 color: '#74EE15', // Neon green
                 behavior: 'teleport'
@@ -2737,7 +2782,7 @@ class VibeSurvivor {
             boss: {
                 radius: 30,
                 health: 1000,
-                speed: 1.5,
+                speed: 0.75,
                 contactDamage: 50,
                 color: '#F000FF', // Neon purple
                 behavior: 'boss'
@@ -3066,7 +3111,26 @@ class VibeSurvivor {
     }
     
     updateParticles() {
-        // Particles completely removed for performance
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+            const particle = this.particles[i];
+            
+            // Update position
+            particle.x += particle.vx;
+            particle.y += particle.vy;
+            
+            // Update life
+            particle.life -= 0.016; // Approximate 60fps decay
+            
+            // Apply drag for realistic deceleration
+            particle.vx *= 0.98;
+            particle.vy *= 0.98;
+            
+            // Remove dead particles and return to pool
+            if (particle.life <= 0) {
+                this.returnParticleToPool(particle);
+                this.particles.splice(i, 1);
+            }
+        }
     }
     
     updateXPOrbs() {
@@ -3630,6 +3694,31 @@ class VibeSurvivor {
             color: '#FF6600'
         });
         
+        // Create explosion particles with adaptive quality
+        const quality = this.frameRateMonitor.adaptiveQuality;
+        const baseParticleCount = 15;
+        const particleCount = Math.floor(baseParticleCount * quality.particleCount);
+        
+        for (let i = 0; i < particleCount; i++) {
+            const particle = this.getPooledParticle();
+            if (particle) {
+                const angle = (Math.PI * 2 * i) / particleCount;
+                const speed = 3 + Math.random() * 4;
+                
+                particle.x = x;
+                particle.y = y;
+                particle.vx = Math.cos(angle) * speed;
+                particle.vy = Math.sin(angle) * speed;
+                particle.size = 2 + Math.random() * 3;
+                particle.color = ['#FF6600', '#FF9900', '#FFCC00'][Math.floor(Math.random() * 3)];
+                particle.life = 0.8 + Math.random() * 0.4;
+                particle.maxLife = particle.life;
+                particle.type = 'explosion';
+                
+                this.particles.push(particle);
+            }
+        }
+        
         // Damage enemies in radius
         this.enemies.forEach(enemy => {
             const dx = enemy.x - x;
@@ -3764,14 +3853,9 @@ class VibeSurvivor {
     }
     
     updateCamera() {
-        // Smooth camera following the player
-        const targetX = this.player.x - this.canvas.width / 2;
-        const targetY = this.player.y - this.canvas.height / 2;
-        
-        // Smooth camera movement (lerp)
-        const lerpFactor = 0.05;
-        this.camera.x += (targetX - this.camera.x) * lerpFactor;
-        this.camera.y += (targetY - this.camera.y) * lerpFactor;
+        // Immediate camera following the player (no smooth lerp for now)
+        this.camera.x = this.player.x - this.canvas.width / 2;
+        this.camera.y = this.player.y - this.canvas.height / 2;
     }
 
     
@@ -3795,8 +3879,9 @@ class VibeSurvivor {
     
     // Object pooling for projectiles
     initializeProjectilePool() {
+        // Projectile pool
         this.projectilePool = [];
-        this.poolSize = 100; // Pre-allocate 100 projectiles
+        this.poolSize = 200; // Increased pool size for better performance
         
         // Pre-create projectiles
         for (let i = 0; i < this.poolSize; i++) {
@@ -3804,7 +3889,36 @@ class VibeSurvivor {
                 x: 0, y: 0, vx: 0, vy: 0,
                 damage: 0, speed: 0, life: 0,
                 size: 3, color: '#ffffff',
-                type: 'basic', active: false
+                type: 'basic', active: false,
+                trail: [], rotation: 0,
+                homing: false, target: null
+            });
+        }
+        
+        // Particle pool for explosions and effects
+        this.particlePool = [];
+        this.particlePoolSize = 500;
+        
+        for (let i = 0; i < this.particlePoolSize; i++) {
+            this.particlePool.push({
+                x: 0, y: 0, vx: 0, vy: 0,
+                size: 2, color: '#ffffff',
+                life: 1, maxLife: 1, active: false,
+                type: 'basic'
+            });
+        }
+        
+        // Enemy pool for frequently spawned enemies
+        this.enemyPool = [];
+        this.enemyPoolSize = 50;
+        
+        for (let i = 0; i < this.enemyPoolSize; i++) {
+            this.enemyPool.push({
+                x: 0, y: 0, vx: 0, vy: 0,
+                health: 100, maxHealth: 100,
+                size: 20, color: '#ff0000',
+                type: 'basic', active: false,
+                lastHit: 0, flashTime: 0
             });
         }
     }
@@ -3813,20 +3927,305 @@ class VibeSurvivor {
     getPooledProjectile() {
         for (let i = 0; i < this.projectilePool.length; i++) {
             if (!this.projectilePool[i].active) {
-                this.projectilePool[i].active = true;
-                return this.projectilePool[i];
+                const projectile = this.projectilePool[i];
+                projectile.active = true;
+                projectile.trail = []; // Reset trail
+                projectile.rotation = 0;
+                projectile.homing = false;
+                projectile.target = null;
+                return projectile;
             }
         }
         
-        // If no available projectile in pool, create a new one
+        // If no available projectile in pool, expand pool dynamically
         const newProjectile = {
             x: 0, y: 0, vx: 0, vy: 0,
             damage: 0, speed: 0, life: 0,
             size: 3, color: '#ffffff',
-            type: 'basic', active: true
+            type: 'basic', active: true,
+            trail: [], rotation: 0,
+            homing: false, target: null
         };
         this.projectilePool.push(newProjectile);
         return newProjectile;
+    }
+
+    getPooledParticle() {
+        for (let i = 0; i < this.particlePool.length; i++) {
+            if (!this.particlePool[i].active) {
+                const particle = this.particlePool[i];
+                particle.active = true;
+                return particle;
+            }
+        }
+        
+        // If no available particle in pool, expand pool dynamically
+        const newParticle = {
+            x: 0, y: 0, vx: 0, vy: 0,
+            size: 2, color: '#ffffff',
+            life: 1, maxLife: 1, active: true,
+            type: 'basic'
+        };
+        this.particlePool.push(newParticle);
+        return newParticle;
+    }
+    
+    returnParticleToPool(particle) {
+        particle.active = false;
+        particle.life = 1;
+        particle.maxLife = 1;
+        particle.vx = 0;
+        particle.vy = 0;
+    }
+    
+    getPooledEnemy() {
+        for (let i = 0; i < this.enemyPool.length; i++) {
+            if (!this.enemyPool[i].active) {
+                const enemy = this.enemyPool[i];
+                enemy.active = true;
+                enemy.lastHit = 0;
+                enemy.flashTime = 0;
+                return enemy;
+            }
+        }
+        
+        // If no available enemy in pool, expand pool dynamically
+        const newEnemy = {
+            x: 0, y: 0, vx: 0, vy: 0,
+            health: 100, maxHealth: 100,
+            size: 20, color: '#ff0000',
+            type: 'basic', active: true,
+            lastHit: 0, flashTime: 0
+        };
+        this.enemyPool.push(newEnemy);
+        return newEnemy;
+    }
+    
+    returnEnemyToPool(enemy) {
+        enemy.active = false;
+        enemy.health = enemy.maxHealth;
+        enemy.lastHit = 0;
+        enemy.flashTime = 0;
+        enemy.vx = 0;
+        enemy.vy = 0;
+    }
+
+    
+    updateFrameRate() {
+        const currentTime = performance.now();
+        if (this.frameRateMonitor.lastFrameTime > 0) {
+            const deltaTime = currentTime - this.frameRateMonitor.lastFrameTime;
+            this.frameRateMonitor.currentFPS = Math.round(1000 / deltaTime);
+            
+            // Only update history occasionally to reduce overhead
+            if (this.frameRateMonitor.frameCount % 5 === 0) {
+                this.frameRateMonitor.fpsHistory.push(this.frameRateMonitor.currentFPS);
+                if (this.frameRateMonitor.fpsHistory.length > 20) {
+                    this.frameRateMonitor.fpsHistory.shift();
+                }
+                
+                // Calculate average FPS
+                const sum = this.frameRateMonitor.fpsHistory.reduce((a, b) => a + b, 0);
+                this.frameRateMonitor.averageFPS = sum / this.frameRateMonitor.fpsHistory.length;
+            }
+        }
+        this.frameRateMonitor.lastFrameTime = currentTime;
+        this.frameRateMonitor.frameCount++;
+        
+        // Check quality less frequently to reduce overhead
+        if (this.frameRateMonitor.frameCount % 60 === 0) { // Every 60 frames instead of 30
+            this.adjustQuality();
+            this.frameRateMonitor.lastCheck = this.frameRateMonitor.frameCount;
+        }
+    }
+    
+    adjustQuality() {
+        const avgFPS = this.frameRateMonitor.averageFPS;
+        const targetFPS = this.frameRateMonitor.targetFPS;
+        const minFPS = this.frameRateMonitor.minFPS;
+        const quality = this.frameRateMonitor.adaptiveQuality;
+        
+        // FIXED: Be much more conservative about enabling performance mode
+        // Only enable performance mode if FPS is extremely low for extended period
+        if (avgFPS < 15 && this.frameRateMonitor.fpsHistory.length >= 30) {
+            // Only enable if consistently below 15 FPS
+            const recentLowFPS = this.frameRateMonitor.fpsHistory.slice(-10).every(fps => fps < 20);
+            if (recentLowFPS) {
+                quality.particleCount = Math.max(0.5, quality.particleCount - 0.1);
+                quality.effectQuality = Math.max(0.7, quality.effectQuality - 0.1);
+                quality.renderDistance = Math.max(0.8, quality.renderDistance - 0.05);
+                quality.trailLength = Math.max(0.7, quality.trailLength - 0.1);
+                this.performanceMode = true;
+                console.log('Performance mode enabled due to consistent low FPS:', avgFPS);
+            }
+        } else if (avgFPS > 45) {
+            // Good performance - restore quality and disable performance mode
+            quality.particleCount = Math.min(1.0, quality.particleCount + 0.05);
+            quality.effectQuality = Math.min(1.0, quality.effectQuality + 0.05);
+            quality.renderDistance = Math.min(1.0, quality.renderDistance + 0.02);
+            quality.trailLength = Math.min(1.0, quality.trailLength + 0.05);
+            this.performanceMode = false;
+        }
+        
+        // Never enable performance mode on initial load
+        if (this.frameRateMonitor.frameCount < 120) { // First 2 seconds
+            this.performanceMode = false;
+        }
+    }
+
+    // Dirty Rectangle Rendering System
+    addDirtyRectangle(x, y, width, height) {
+        // Add buffer around dirty area for proper cleanup
+        const buffer = 10;
+        this.dirtyRectangles.push({
+            x: x - buffer,
+            y: y - buffer, 
+            width: width + buffer * 2,
+            height: height + buffer * 2
+        });
+    }
+    
+    mergeDirtyRectangles() {
+        if (this.dirtyRectangles.length === 0) return [];
+        
+        // Sort rectangles by x position
+        this.dirtyRectangles.sort((a, b) => a.x - b.x);
+        
+        const merged = [];
+        let current = this.dirtyRectangles[0];
+        
+        for (let i = 1; i < this.dirtyRectangles.length; i++) {
+            const rect = this.dirtyRectangles[i];
+            
+            // Check if rectangles overlap or are adjacent
+            if (rect.x <= current.x + current.width + 20) { // 20px tolerance for merging
+                // Merge rectangles
+                const right = Math.max(current.x + current.width, rect.x + rect.width);
+                const bottom = Math.max(current.y + current.height, rect.y + rect.height);
+                current.x = Math.min(current.x, rect.x);
+                current.y = Math.min(current.y, rect.y);
+                current.width = right - current.x;
+                current.height = bottom - current.y;
+            } else {
+                merged.push(current);
+                current = rect;
+            }
+        }
+        merged.push(current);
+        
+        return merged;
+    }
+    
+    trackEntityMovement(entity, id) {
+        // DISABLED: Skip entity tracking for now to improve performance
+        // We can re-enable this later once base performance is stable
+        return;
+    }
+
+    // OffscreenCanvas and Static Element Caching
+    initializeOffscreenCanvases() {
+        if (!this.canvas) return;
+        
+        try {
+            // SIMPLIFIED: Only create grid cache for now
+            // Skip complex offscreen canvas setup that might cause performance issues
+            
+            if (typeof OffscreenCanvas !== 'undefined') {
+                this.gridOffscreen = new OffscreenCanvas(this.canvas.width, this.canvas.height);
+                this.gridOffscreenCtx = this.gridOffscreen.getContext('2d');
+            } else {
+                // Fallback for browsers without OffscreenCanvas
+                this.gridOffscreen = document.createElement('canvas');
+                this.gridOffscreen.width = this.canvas.width;
+                this.gridOffscreen.height = this.canvas.height;
+                this.gridOffscreenCtx = this.gridOffscreen.getContext('2d');
+            }
+            
+            // Pre-render the grid (but don't block if it fails)
+            this.prerenderGrid();
+            
+            this.hasOffscreenCanvases = true;
+            console.log('Grid caching enabled');
+            
+        } catch (e) {
+            console.warn('OffscreenCanvas setup failed, using normal rendering:', e);
+            this.hasOffscreenCanvases = false;
+            this.gridOffscreen = null;
+            this.gridOffscreenCtx = null;
+        }
+    }
+    
+    prerenderGrid() {
+        if (!this.gridOffscreenCtx) return;
+        
+        const ctx = this.gridOffscreenCtx;
+        const width = this.gridOffscreen.width;
+        const height = this.gridOffscreen.height;
+        
+        // Clear the grid canvas
+        ctx.clearRect(0, 0, width, height);
+        
+        // Render the grid pattern
+        ctx.strokeStyle = 'rgba(0, 255, 255, 0.1)';
+        ctx.lineWidth = 1;
+        
+        const gridSize = 60;
+        const cameraOffsetX = this.camera.x % gridSize;
+        const cameraOffsetY = this.camera.y % gridSize;
+        
+        // Vertical lines
+        for (let x = -cameraOffsetX; x < width + gridSize; x += gridSize) {
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, height);
+            ctx.stroke();
+        }
+        
+        // Horizontal lines
+        for (let y = -cameraOffsetY; y < height + gridSize; y += gridSize) {
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(width, y);
+            ctx.stroke();
+        }
+        
+        this.gridCacheValid = true;
+    }
+    
+    renderCachedBackground() {
+        if (!this.hasOffscreenCanvases || !this.gridCacheValid) {
+            return false; // Fall back to regular rendering
+        }
+        
+        // Copy the pre-rendered grid to main canvas
+        this.ctx.drawImage(this.gridOffscreen, 0, 0);
+        return true;
+    }
+
+    // Performance monitoring display (optional debug feature)
+    drawPerformanceStats() {
+        if (!this.showPerformanceStats) return;
+        
+        this.ctx.save();
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        this.ctx.fillRect(10, 10, 200, 120);
+        
+        this.ctx.fillStyle = '#00ff00';
+        this.ctx.font = '12px monospace';
+        
+        const fps = Math.round(this.frameRateMonitor.currentFPS);
+        const avgFps = Math.round(this.frameRateMonitor.averageFPS);
+        const quality = this.frameRateMonitor.adaptiveQuality;
+        
+        this.ctx.fillText(`FPS: ${fps} (avg: ${avgFps})`, 15, 25);
+        this.ctx.fillText(`Performance: ${this.performanceMode ? 'LOW' : 'NORMAL'}`, 15, 40);
+        this.ctx.fillText(`Particles: ${Math.round(quality.particleCount * 100)}%`, 15, 55);
+        this.ctx.fillText(`Effects: ${Math.round(quality.effectQuality * 100)}%`, 15, 70);
+        this.ctx.fillText(`Trails: ${Math.round(quality.trailLength * 100)}%`, 15, 85);
+        this.ctx.fillText(`Enemies: ${this.enemies.length}`, 15, 100);
+        this.ctx.fillText(`Projectiles: ${this.projectiles.length}`, 15, 115);
+        
+        this.ctx.restore();
     }
     
     // Return projectile to pool
@@ -3863,7 +4262,7 @@ class VibeSurvivor {
     draw() {
         if (!this.canvas || !this.ctx) return;
         
-        // Clear canvas with dark background
+        // Always use full screen rendering for now
         this.ctx.fillStyle = '#0a0a0a';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         
@@ -3876,7 +4275,9 @@ class VibeSurvivor {
         }
         this.ctx.translate(-this.camera.x + shakeX, -this.camera.y + shakeY);
         
+        // Always draw grid directly (bypass caching issues)
         this.drawGrid();
+        
         this.drawPlayer();
         this.drawEnemies();
         this.drawProjectiles();
@@ -3885,11 +4286,13 @@ class VibeSurvivor {
         this.drawParticles();
         this.drawNotifications();
         
-        // Restore transformation
         this.ctx.restore();
         
-        // Draw red flash effect (after camera transformation is restored)
+        // Draw red flash effect (always full screen, after camera transformation)
         this.drawRedFlash();
+        
+        // Clear dirty rectangles for next frame (keeping the system but not using it)
+        this.dirtyRectangles = [];
     }
 
     drawRedFlash() {
@@ -3931,39 +4334,39 @@ class VibeSurvivor {
     }
     
     drawGrid() {
-    // Set grid styling with light gray color
-    this.ctx.strokeStyle = 'rgba(200, 200, 200, 0.3)';
-    this.ctx.lineWidth = 1;
-    
-    const gridSize = 60;
-    
-    // Calculate visible world area based on camera position, ensuring full canvas coverage
-    const halfCanvasWidth = this.canvas.width / 1;
-    const halfCanvasHeight = this.canvas.height / 1;
-    
-    // Calculate grid bounds to ensure complete canvas coverage with extra margin
-    const margin = gridSize * 10;
-    const startX = Math.floor((this.camera.x - halfCanvasWidth - margin) / gridSize) * gridSize;
-    const endX = Math.ceil((this.camera.x + halfCanvasWidth + margin) / gridSize) * gridSize;
-    const startY = Math.floor((this.camera.y - halfCanvasHeight - margin) / gridSize) * gridSize;
-    const endY = Math.ceil((this.camera.y + halfCanvasHeight + margin) / gridSize) * gridSize;
-    
-    // Draw vertical lines in world coordinates
-    for (let x = startX; x <= endX; x += gridSize) {
-        this.ctx.beginPath();
-        this.ctx.moveTo(x, startY);
-        this.ctx.lineTo(x, endY);
-        this.ctx.stroke();
+        // Set grid styling with cyan neon color (more visible)
+        this.ctx.strokeStyle = 'rgba(0, 255, 255, 0.15)';
+        this.ctx.lineWidth = 1;
+        
+        const gridSize = 60;
+        
+        // Calculate visible world area based on camera position - FIXED BOUNDS
+        const canvasWidth = this.canvas.width;
+        const canvasHeight = this.canvas.height;
+        
+        // Calculate grid bounds to FULLY COVER the visible canvas area
+        const margin = gridSize * 3; // Extra margin to ensure full coverage
+        const startX = Math.floor((this.camera.x - margin) / gridSize) * gridSize;
+        const endX = Math.ceil((this.camera.x + canvasWidth + margin) / gridSize) * gridSize;
+        const startY = Math.floor((this.camera.y - margin) / gridSize) * gridSize;
+        const endY = Math.ceil((this.camera.y + canvasHeight + margin) / gridSize) * gridSize;
+        
+        // Draw vertical lines in world coordinates
+        for (let x = startX; x <= endX; x += gridSize) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(x, startY);
+            this.ctx.lineTo(x, endY);
+            this.ctx.stroke();
+        }
+        
+        // Draw horizontal lines in world coordinates
+        for (let y = startY; y <= endY; y += gridSize) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(startX, y);
+            this.ctx.lineTo(endX, y);
+            this.ctx.stroke();
+        }
     }
-    
-    // Draw horizontal lines in world coordinates
-    for (let y = startY; y <= endY; y += gridSize) {
-        this.ctx.beginPath();
-        this.ctx.moveTo(startX, y);
-        this.ctx.lineTo(endX, y);
-        this.ctx.stroke();
-    }
-}
     
     drawPlayer() {
         this.ctx.save();
@@ -4025,7 +4428,7 @@ class VibeSurvivor {
         if (angleDiff < -180) angleDiff += 360;
         this.player.angle += angleDiff * 0.2;
         
-        // Draw trail with neon cyan segments
+        // Draw trail with neon cyan segments (ALWAYS VISIBLE)
         if (this.player.trail.length > 1) {
             this.ctx.strokeStyle = '#00ffff';
             this.ctx.lineWidth = 3;
@@ -4153,368 +4556,329 @@ class VibeSurvivor {
     }
     
     drawEnemies() {
-        this.enemies.forEach(enemy => {
+        if (this.enemies.length === 0) return;
+        
+        // Batch enemies by behavior type to reduce context state changes
+        const enemiesByType = {};
+        
+        for (const enemy of this.enemies) {
             // Frustum culling: Only render enemies visible on screen
             if (!this.isInViewport(enemy.x, enemy.y, enemy.radius)) {
-                return; // Skip rendering this enemy
-            }
-            // Cache context transformations for performance
-            this.ctx.save();
-            this.ctx.translate(enemy.x, enemy.y);
-            // Only apply rotation to tank and boss enemies for performance
-            if (enemy.behavior === 'tank' || enemy.behavior === 'boss') {
-                this.ctx.rotate(enemy.angle);
+                continue;
             }
             
-            // Use enemy's config color directly with neon effect
-            const enemyColor = enemy.color;
-            const glowColor = enemy.color;
+            if (!enemiesByType[enemy.behavior]) {
+                enemiesByType[enemy.behavior] = [];
+            }
+            enemiesByType[enemy.behavior].push(enemy);
+        }
+        
+        this.ctx.save();
+        
+        // Render basic enemies with simplified visuals - FIXED BEHAVIOR NAMES
+        const basicTypes = ['chase', 'dodge', 'fly', 'teleport']; // Updated to match actual behavior values
+        for (const type of basicTypes) {
+            const enemies = enemiesByType[type];
+            if (!enemies) continue;
             
-            // Special pulsing glow for boss enemies
-            if (enemy.behavior === 'boss') {
-                const pulseIntensity = 0.7 + Math.sin(Date.now() * 0.005) * 0.3;
-                this.ctx.shadowBlur = 30 * pulseIntensity;
-                this.ctx.shadowColor = '#FF00FF';
+            for (const enemy of enemies) {
+                this.ctx.save();
+                this.ctx.translate(enemy.x, enemy.y);
                 
-                // Additional outer glow layer
-                const outerGradient = this.ctx.createRadialGradient(0, 0, 0, 0, 0, enemy.radius * 3);
-                outerGradient.addColorStop(0, `rgba(255, 0, 255, ${0.3 * pulseIntensity})`);
-                outerGradient.addColorStop(1, 'rgba(255, 0, 255, 0)');
-                this.ctx.fillStyle = outerGradient;
-                this.ctx.fillRect(-enemy.radius * 3, -enemy.radius * 3, enemy.radius * 6, enemy.radius * 6);
-            }
-            
-            // Enemy glow effect
-            const gradient = this.ctx.createRadialGradient(0, 0, 0, 0, 0, enemy.radius * 2);
-            gradient.addColorStop(0, enemyColor + '40');
-            gradient.addColorStop(1, enemyColor + '00');
-            this.ctx.fillStyle = gradient;
-            this.ctx.fillRect(-enemy.radius * 2, -enemy.radius * 2, enemy.radius * 4, enemy.radius * 4);
-            
-            // Neon wireframe styling
-            this.ctx.shadowBlur = 20;
-            this.ctx.shadowColor = enemyColor;
-            this.ctx.strokeStyle = enemyColor;
-            this.ctx.lineWidth = 2;
-            this.ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
-            
-            // Different wireframe shapes for different enemy types
-            switch (enemy.behavior) {
-                case 'tank':
-                    // Wireframe square
-                    this.ctx.strokeRect(-enemy.radius, -enemy.radius, enemy.radius * 2, enemy.radius * 2);
+                // ALWAYS render glow effect for basic enemies (fixed visibility issue)
+                this.ctx.shadowBlur = 15;
+                this.ctx.shadowColor = enemy.color || '#00ffff';
+                
+                // Simple wireframe circle - ALWAYS render
+                this.ctx.strokeStyle = enemy.color || '#00ffff';
+                this.ctx.lineWidth = 2;
+                this.ctx.beginPath();
+                this.ctx.arc(0, 0, enemy.radius || 15, 0, Math.PI * 2);
+                this.ctx.stroke();
+                
+                // Always show inner cross pattern for visibility
+                this.ctx.shadowBlur = 0; // Reset shadow for inner pattern
+                this.ctx.strokeStyle = (enemy.color || '#00ffff') + '80';
+                this.ctx.lineWidth = 1;
+                this.ctx.beginPath();
+                const r = enemy.radius || 15;
+                this.ctx.moveTo(-r * 0.7, 0);
+                this.ctx.lineTo(r * 0.7, 0);
+                this.ctx.moveTo(0, -r * 0.7);
+                this.ctx.lineTo(0, r * 0.7);
+                this.ctx.stroke();
+                
+                // Health bar (always show when damaged)
+                if (enemy.health < enemy.maxHealth) {
+                    const barWidth = (enemy.radius || 15) * 1.5;
+                    const barHeight = 2;
+                    const healthPercent = enemy.health / enemy.maxHealth;
                     
-                    // Inner grid pattern
-                    this.ctx.strokeStyle = enemyColor + '80';
-                    this.ctx.lineWidth = 1;
-                    for (let i = -enemy.radius + 10; i < enemy.radius; i += 10) {
+                    this.ctx.fillStyle = '#333';
+                    this.ctx.fillRect(-barWidth / 2, -(enemy.radius || 15) - 6, barWidth, barHeight);
+                    
+                    this.ctx.fillStyle = healthPercent > 0.5 ? '#0f0' : healthPercent > 0.25 ? '#ff0' : '#f00';
+                    this.ctx.fillRect(-barWidth / 2, -(enemy.radius || 15) - 6, barWidth * healthPercent, barHeight);
+                }
+                
+                this.ctx.restore();
+            }
+        }
+        
+        // Render special enemies with more detail
+        const specialTypes = ['tank', 'boss'];
+        for (const type of specialTypes) {
+            const enemies = enemiesByType[type];
+            if (!enemies) continue;
+            
+            for (const enemy of enemies) {
+                this.ctx.save();
+                this.ctx.translate(enemy.x, enemy.y);
+                
+                // Apply rotation only for tank and boss
+                if (type === 'tank' || type === 'boss') {
+                    this.ctx.rotate(enemy.angle || 0);
+                }
+                
+                // Enhanced glow for special enemies
+                this.ctx.shadowBlur = (type === 'boss' ? 30 : 20);
+                this.ctx.shadowColor = enemy.color || '#ff00ff';
+                
+                if (type === 'boss') {
+                    const pulseIntensity = 0.7 + Math.sin(Date.now() * 0.005) * 0.3;
+                    this.ctx.shadowBlur *= pulseIntensity;
+                }
+                
+                this.ctx.strokeStyle = enemy.color || '#ff00ff';
+                this.ctx.lineWidth = type === 'boss' ? 3 : 2;
+                
+                switch (type) {
+                    case 'tank':
+                        // Wireframe square
+                        const r = enemy.radius || 20;
+                        this.ctx.strokeRect(-r, -r, r * 2, r * 2);
+                        
+                        // Grid pattern
+                        this.ctx.strokeStyle = (enemy.color || '#ff00ff') + '60';
+                        this.ctx.lineWidth = 1;
                         this.ctx.beginPath();
-                        this.ctx.moveTo(i, -enemy.radius);
-                        this.ctx.lineTo(i, enemy.radius);
+                        this.ctx.moveTo(-r, 0);
+                        this.ctx.lineTo(r, 0);
+                        this.ctx.moveTo(0, -r);
+                        this.ctx.lineTo(0, r);
+                        this.ctx.stroke();
+                        break;
+                        
+                    case 'boss':
+                        // Large octagon wireframe
+                        const rb = enemy.radius || 40;
+                        this.ctx.beginPath();
+                        for (let i = 0; i < 8; i++) {
+                            const angle = (Math.PI * 2 * i) / 8;
+                            const x = Math.cos(angle) * rb;
+                            const y = Math.sin(angle) * rb;
+                            if (i === 0) {
+                                this.ctx.moveTo(x, y);
+                            } else {
+                                this.ctx.lineTo(x, y);
+                            }
+                        }
+                        this.ctx.closePath();
                         this.ctx.stroke();
                         
+                        // Inner cross pattern
+                        this.ctx.strokeStyle = (enemy.color || '#ff00ff') + '80';
+                        this.ctx.lineWidth = 2;
                         this.ctx.beginPath();
-                        this.ctx.moveTo(-enemy.radius, i);
-                        this.ctx.lineTo(enemy.radius, i);
+                        this.ctx.moveTo(-rb * 0.7, -rb * 0.7);
+                        this.ctx.lineTo(rb * 0.7, rb * 0.7);
+                        this.ctx.moveTo(-rb * 0.7, rb * 0.7);
+                        this.ctx.lineTo(rb * 0.7, -rb * 0.7);
                         this.ctx.stroke();
-                    }
-                    break;
-                    
-                case 'flyer':
-                    // Wireframe triangle
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(0, -enemy.radius);
-                    this.ctx.lineTo(enemy.radius, enemy.radius);
-                    this.ctx.lineTo(-enemy.radius, enemy.radius);
-                    this.ctx.closePath();
-                    this.ctx.stroke();
-                    
-                    // Inner wireframe lines
-                    this.ctx.strokeStyle = enemyColor + '80';
-                    this.ctx.lineWidth = 1;
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(0, -enemy.radius / 2);
-                    this.ctx.lineTo(enemy.radius / 2, enemy.radius / 2);
-                    this.ctx.lineTo(-enemy.radius / 2, enemy.radius / 2);
-                    this.ctx.closePath();
-                    this.ctx.stroke();
-                    
-                    // Center lines
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(0, -enemy.radius);
-                    this.ctx.lineTo(0, enemy.radius / 3);
-                    this.ctx.stroke();
-                    break;
-                    
-                case 'phantom':
-                    this.ctx.globalAlpha = 0.7;
-                    // Wireframe hexagon with animation
-                    this.ctx.beginPath();
-                    for (let i = 0; i < 6; i++) {
-                        const angle = (Math.PI * 2 * i) / 6;
-                        const radius = enemy.radius + Math.sin(this.frameCount * 0.1 + i) * 2;
-                        const x = Math.cos(angle) * radius;
-                        const y = Math.sin(angle) * radius;
-                        if (i === 0) {
-                            this.ctx.moveTo(x, y);
-                        } else {
-                            this.ctx.lineTo(x, y);
-                        }
-                    }
-                    this.ctx.closePath();
-                    this.ctx.stroke();
-                    
-                    // Inner hexagon pattern
-                    this.ctx.strokeStyle = enemyColor + '60';
-                    this.ctx.lineWidth = 1;
-                    this.ctx.beginPath();
-                    for (let i = 0; i < 6; i++) {
-                        const angle = (Math.PI * 2 * i) / 6;
-                        const radius = enemy.radius * 0.5;
-                        const x = Math.cos(angle) * radius;
-                        const y = Math.sin(angle) * radius;
-                        if (i === 0) {
-                            this.ctx.moveTo(x, y);
-                        } else {
-                            this.ctx.lineTo(x, y);
-                        }
-                    }
-                    this.ctx.closePath();
-                    this.ctx.stroke();
-                    break;
-                    
-                case 'boss':
-                    // Large octagon wireframe for boss
-                    this.ctx.lineWidth = 3;
-                    this.ctx.beginPath();
-                    for (let i = 0; i < 8; i++) {
-                        const angle = (Math.PI * 2 * i) / 8;
-                        const radius = enemy.radius;
-                        const x = Math.cos(angle) * radius;
-                        const y = Math.sin(angle) * radius;
-                        if (i === 0) {
-                            this.ctx.moveTo(x, y);
-                        } else {
-                            this.ctx.lineTo(x, y);
-                        }
-                    }
-                    this.ctx.closePath();
-                    this.ctx.stroke();
-                    
-                    // Inner cross pattern
-                    this.ctx.strokeStyle = enemyColor + '80';
-                    this.ctx.lineWidth = 2;
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(-enemy.radius, 0);
-                    this.ctx.lineTo(enemy.radius, 0);
-                    this.ctx.moveTo(0, -enemy.radius);
-                    this.ctx.lineTo(0, enemy.radius);
-                    this.ctx.moveTo(-enemy.radius * 0.7, -enemy.radius * 0.7);
-                    this.ctx.lineTo(enemy.radius * 0.7, enemy.radius * 0.7);
-                    this.ctx.moveTo(-enemy.radius * 0.7, enemy.radius * 0.7);
-                    this.ctx.lineTo(enemy.radius * 0.7, -enemy.radius * 0.7);
-                    this.ctx.stroke();
-                    break;
-                    
-                default:
-                    // Wireframe circle
-                    this.ctx.beginPath();
-                    this.ctx.arc(0, 0, enemy.radius, 0, Math.PI * 2);
-                    this.ctx.stroke();
-                    
-                    // Inner circle grid
-                    this.ctx.strokeStyle = enemyColor + '80';
-                    this.ctx.lineWidth = 1;
-                    this.ctx.beginPath();
-                    this.ctx.arc(0, 0, enemy.radius * 0.6, 0, Math.PI * 2);
-                    this.ctx.stroke();
-                    
-                    // Cross lines
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(-enemy.radius, 0);
-                    this.ctx.lineTo(enemy.radius, 0);
-                    this.ctx.moveTo(0, -enemy.radius);
-                    this.ctx.lineTo(0, enemy.radius);
-                    this.ctx.stroke();
-                    break;
-            }
-            
-            // Health bar with neon styling
-            if (enemy.health < enemy.maxHealth) {
-                const barWidth = enemy.radius * 2;
-                const barHeight = 3;
-                const healthPercent = enemy.health / enemy.maxHealth;
-                
-                this.ctx.fillStyle = '#333';
-                this.ctx.fillRect(-barWidth / 2, -enemy.radius - 8, barWidth, barHeight);
-                
-                this.ctx.fillStyle = healthPercent > 0.5 ? '#00ff00' : healthPercent > 0.25 ? '#ffff00' : '#ff0000';
-                this.ctx.shadowBlur = 10;
-                this.ctx.shadowColor = this.ctx.fillStyle;
-                this.ctx.fillRect(-barWidth / 2, -enemy.radius - 8, barWidth * healthPercent, barHeight);
-            }
-            
-            // Burning effect with neon style
-            if (enemy.burning) {
-                this.ctx.globalAlpha = 0.8;
-                this.ctx.fillStyle = '#ff6600';
-                this.ctx.shadowBlur = 15;
-                this.ctx.shadowColor = '#ff6600';
-                for (let i = 0; i < 3; i++) {
-                    const x = (Math.random() - 0.5) * enemy.radius;
-                    const y = (Math.random() - 0.5) * enemy.radius;
-                    this.ctx.fillRect(x, y, 2, 4);
+                        break;
                 }
+                
+                // Health bar for special enemies
+                if (enemy.health < enemy.maxHealth) {
+                    const barWidth = (enemy.radius || 20) * 2;
+                    const barHeight = 3;
+                    const healthPercent = enemy.health / enemy.maxHealth;
+                    
+                    this.ctx.fillStyle = '#333';
+                    this.ctx.fillRect(-barWidth / 2, -(enemy.radius || 20) - 8, barWidth, barHeight);
+                    
+                    this.ctx.fillStyle = healthPercent > 0.5 ? '#0f0' : healthPercent > 0.25 ? '#ff0' : '#f00';
+                    this.ctx.shadowBlur = 10;
+                    this.ctx.shadowColor = this.ctx.fillStyle;
+                    this.ctx.fillRect(-barWidth / 2, -(enemy.radius || 20) - 8, barWidth * healthPercent, barHeight);
+                }
+                
+                this.ctx.restore();
             }
-            
-            this.ctx.restore();
-        });
+        }
+        
+        this.ctx.restore();
     }
     
     drawProjectiles() {
-        this.projectiles.forEach(projectile => {
+        if (this.projectiles.length === 0) return;
+        
+        // Batch projectiles by type to reduce state changes
+        const projectilesByType = {};
+        
+        for (const projectile of this.projectiles) {
             // Frustum culling: Only render projectiles visible on screen
-            const inViewport = this.isInViewport(projectile.x, projectile.y, projectile.size || 3);
-            if (projectile.type === 'boss-missile') {
+            if (!this.isInViewport(projectile.x, projectile.y, projectile.size || 3)) {
+                continue;
             }
-            if (!inViewport) {
-                return; // Skip rendering this projectile
-            }
-            this.ctx.save();
             
-            switch (projectile.type) {
-                case 'basic':
-                case 'spread':
-                case 'shotgun':
-                    this.ctx.fillStyle = projectile.color;
-                    this.ctx.beginPath();
-                    this.ctx.arc(projectile.x, projectile.y, projectile.size, 0, Math.PI * 2);
-                    this.ctx.fill();
-                    break;
-                    
-                case 'laser':
-                case 'railgun':
-                    this.ctx.strokeStyle = projectile.color;
-                    this.ctx.lineWidth = projectile.size;
-                    this.ctx.globalAlpha = 0.8;
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(projectile.x - projectile.vx * 3, projectile.y - projectile.vy * 3);
-                    this.ctx.lineTo(projectile.x, projectile.y);
-                    this.ctx.stroke();
-                    break;
-                    
-                case 'plasma':
-                    const gradient = this.ctx.createRadialGradient(
-                        projectile.x, projectile.y, 0,
-                        projectile.x, projectile.y, projectile.size * 2
-                    );
-                    gradient.addColorStop(0, projectile.color);
-                    gradient.addColorStop(1, projectile.color + '00');
-                    this.ctx.fillStyle = gradient;
-                    this.ctx.fillRect(
-                        projectile.x - projectile.size * 2,
-                        projectile.y - projectile.size * 2,
-                        projectile.size * 4,
-                        projectile.size * 4
-                    );
-                    
-                    this.ctx.fillStyle = projectile.color;
-                    this.ctx.beginPath();
-                    this.ctx.arc(projectile.x, projectile.y, projectile.size, 0, Math.PI * 2);
-                    this.ctx.fill();
-                    break;
-                    
-                case 'flame':
-                    this.ctx.fillStyle = projectile.color;
-                    this.ctx.globalAlpha = 0.7;
-                    for (let i = 0; i < 3; i++) {
-                        const x = projectile.x + (Math.random() - 0.5) * 6;
-                        const y = projectile.y + (Math.random() - 0.5) * 6;
+            if (!projectilesByType[projectile.type]) {
+                projectilesByType[projectile.type] = [];
+            }
+            projectilesByType[projectile.type].push(projectile);
+        }
+        
+        // Render batched projectiles
+        this.ctx.save();
+        
+        // Render basic/spread/shotgun projectiles together (simple circles)
+        const basicTypes = ['basic', 'spread', 'shotgun'];
+        for (const type of basicTypes) {
+            const projectiles = projectilesByType[type];
+            if (!projectiles) continue;
+            
+            this.ctx.beginPath();
+            for (const projectile of projectiles) {
+                this.ctx.fillStyle = projectile.color;
+                this.ctx.arc(projectile.x, projectile.y, projectile.size, 0, Math.PI * 2);
+                this.ctx.fill();
+                this.ctx.beginPath();
+            }
+        }
+        
+        // Render laser/railgun projectiles (lines)
+        const laserTypes = ['laser', 'railgun'];
+        for (const type of laserTypes) {
+            const projectiles = projectilesByType[type];
+            if (!projectiles) continue;
+            
+            this.ctx.globalAlpha = 0.8;
+            this.ctx.beginPath();
+            for (const projectile of projectiles) {
+                this.ctx.strokeStyle = projectile.color;
+                this.ctx.lineWidth = projectile.size;
+                this.ctx.moveTo(projectile.x - projectile.vx * 3, projectile.y - projectile.vy * 3);
+                this.ctx.lineTo(projectile.x, projectile.y);
+                this.ctx.stroke();
+            }
+            this.ctx.globalAlpha = 1;
+        }
+        
+        // Render complex projectiles individually (plasma, flame, lightning, missiles)
+        const complexTypes = ['plasma', 'flame', 'lightning', 'missile', 'boss-missile'];
+        for (const type of complexTypes) {
+            const projectiles = projectilesByType[type];
+            if (!projectiles) continue;
+            
+            for (const projectile of projectiles) {
+                this.ctx.save();
+                
+                switch (type) {
+                    case 'plasma':
+                        // Simplified plasma effect for performance
+                        this.ctx.fillStyle = projectile.color;
+                        this.ctx.globalAlpha = 0.7;
                         this.ctx.beginPath();
-                        this.ctx.arc(x, y, projectile.size + Math.random() * 2, 0, Math.PI * 2);
+                        this.ctx.arc(projectile.x, projectile.y, projectile.size * 1.5, 0, Math.PI * 2);
                         this.ctx.fill();
-                    }
-                    break;
-                    
-                case 'lightning':
-                    this.ctx.strokeStyle = projectile.color;
-                    this.ctx.lineWidth = 3;
-                    this.ctx.globalAlpha = Math.max(0.1, projectile.life / 30);
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(projectile.x, projectile.y);
-                    
-                    // Jagged lightning effect
-                    const steps = 5;
-                    for (let i = 1; i <= steps; i++) {
-                        const progress = i / steps;
-                        const x = projectile.x + (projectile.targetX - projectile.x) * progress + (Math.random() - 0.5) * 20;
-                        const y = projectile.y + (projectile.targetY - projectile.y) * progress + (Math.random() - 0.5) * 20;
-                        this.ctx.lineTo(x, y);
-                    }
-                    this.ctx.stroke();
-                    break;
-                    
-                case 'missile':
-                    this.ctx.translate(projectile.x, projectile.y);
-                    this.ctx.rotate(Math.atan2(projectile.vy, projectile.vx));
-                    
-                    // Missile body
-                    this.ctx.fillStyle = projectile.color;
-                    this.ctx.fillRect(-6, -2, 12, 4);
-                    
-                    // Missile tip
-                    this.ctx.fillStyle = '#FF6B35';
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(6, 0);
-                    this.ctx.lineTo(3, -2);
-                    this.ctx.lineTo(3, 2);
-                    this.ctx.closePath();
-                    this.ctx.fill();
-                    
-                    // Exhaust trail
-                    this.ctx.fillStyle = '#FF4444';
-                    this.ctx.globalAlpha = 0.6;
-                    for (let i = 0; i < 3; i++) {
-                        this.ctx.fillRect(-6 - i * 3, -1, 3, 2);
-                    }
-                    break;
-                    
-                case 'boss-missile':
-                    this.ctx.translate(projectile.x, projectile.y);
-                    this.ctx.rotate(Math.atan2(projectile.vy, projectile.vx));
-                    
-                    // Boss missile body - larger and more menacing
-                    this.ctx.fillStyle = projectile.color;
-                    this.ctx.fillRect(-8, -3, 16, 6);
-                    
-                    // Boss missile tip - more aggressive
-                    this.ctx.fillStyle = '#FF0000';
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(8, 0);
-                    this.ctx.lineTo(4, -3);
-                    this.ctx.lineTo(4, 3);
-                    this.ctx.closePath();
-                    this.ctx.fill();
-                    
-                    // Simplified glow effect
-                    this.ctx.fillStyle = '#FF0066';
-                    this.ctx.fillRect(-6, -2, 12, 4);
-                    
-                    // Exhaust trail - more intense
-                    this.ctx.shadowBlur = 0;
-                    this.ctx.fillStyle = '#FF0066';
-                    this.ctx.globalAlpha = 0.8;
-                    for (let i = 0; i < 4; i++) {
-                        const alpha = 0.8 - (i * 0.2);
-                        this.ctx.globalAlpha = alpha;
-                        this.ctx.fillRect(-8 - i * 4, -2, 4, 4);
-                    }
-                    this.ctx.globalAlpha = 1;
-                    break;
+                        
+                        this.ctx.globalAlpha = 1;
+                        this.ctx.beginPath();
+                        this.ctx.arc(projectile.x, projectile.y, projectile.size, 0, Math.PI * 2);
+                        this.ctx.fill();
+                        break;
+                        
+                    case 'flame':
+                        this.ctx.fillStyle = projectile.color;
+                        this.ctx.globalAlpha = 0.7;
+                        // Simplified flame - reduce from 3 to 1 circle for performance
+                        const x = projectile.x + (Math.random() - 0.5) * 3;
+                        const y = projectile.y + (Math.random() - 0.5) * 3;
+                        this.ctx.beginPath();
+                        this.ctx.arc(x, y, projectile.size + Math.random(), 0, Math.PI * 2);
+                        this.ctx.fill();
+                        break;
+                        
+                    case 'lightning':
+                        this.ctx.strokeStyle = projectile.color;
+                        this.ctx.lineWidth = 2;
+                        this.ctx.globalAlpha = Math.max(0.1, projectile.life / 30);
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(projectile.x, projectile.y);
+                        
+                        // Simplified lightning - fewer steps for performance
+                        const steps = 3;
+                        for (let i = 1; i <= steps; i++) {
+                            const progress = i / steps;
+                            const x = projectile.x + (projectile.targetX - projectile.x) * progress + (Math.random() - 0.5) * 10;
+                            const y = projectile.y + (projectile.targetY - projectile.y) * progress + (Math.random() - 0.5) * 10;
+                            this.ctx.lineTo(x, y);
+                        }
+                        this.ctx.stroke();
+                        break;
+                        
+                    case 'missile':
+                        this.ctx.translate(projectile.x, projectile.y);
+                        this.ctx.rotate(Math.atan2(projectile.vy, projectile.vx));
+                        
+                        // Missile body
+                        this.ctx.fillStyle = projectile.color;
+                        this.ctx.fillRect(-6, -2, 12, 4);
+                        
+                        // Missile tip
+                        this.ctx.fillStyle = '#FF6B35';
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(6, 0);
+                        this.ctx.lineTo(3, -2);
+                        this.ctx.lineTo(3, 2);
+                        this.ctx.closePath();
+                        this.ctx.fill();
+                        
+                        // Simplified exhaust trail
+                        this.ctx.fillStyle = '#FF4444';
+                        this.ctx.globalAlpha = 0.6;
+                        this.ctx.fillRect(-9, -1, 3, 2);
+                        break;
+                        
+                    case 'boss-missile':
+                        this.ctx.translate(projectile.x, projectile.y);
+                        this.ctx.rotate(Math.atan2(projectile.vy, projectile.vx));
+                        
+                        // Boss missile body
+                        this.ctx.fillStyle = projectile.color;
+                        this.ctx.fillRect(-8, -3, 16, 6);
+                        
+                        // Boss missile tip
+                        this.ctx.fillStyle = '#FF0000';
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(8, 0);
+                        this.ctx.lineTo(4, -3);
+                        this.ctx.lineTo(4, 3);
+                        this.ctx.closePath();
+                        this.ctx.fill();
+                        
+                        // Simplified exhaust trail
+                        this.ctx.fillStyle = '#FF0066';
+                        this.ctx.globalAlpha = 0.8;
+                        this.ctx.fillRect(-12, -2, 4, 4);
+                        break;
+                }
+                
+                this.ctx.restore();
             }
-            
-            this.ctx.restore();
-        });
+        }
+        
+        this.ctx.restore();
     }
     
     drawXPOrbs() {
@@ -4594,7 +4958,82 @@ class VibeSurvivor {
     }
     
     drawParticles() {
-        // Particles completely removed for performance
+        if (this.particles.length === 0) return;
+        
+        const quality = this.frameRateMonitor.adaptiveQuality;
+        
+        // Use simpler rendering for better performance
+        if (quality.effectQuality < 0.6) {
+            // Ultra-fast particle rendering - single color, no alpha blending
+            this.ctx.save();
+            this.ctx.fillStyle = '#00ffff';
+            
+            for (const particle of this.particles) {
+                if (!this.isInViewport(particle.x, particle.y, particle.size)) continue;
+                
+                // Simple rectangle instead of circle for speed
+                const size = particle.size * (particle.life / particle.maxLife);
+                this.ctx.fillRect(particle.x - size/2, particle.y - size/2, size, size);
+            }
+            this.ctx.restore();
+            return;
+        }
+        
+        // Batch particles by color to reduce state changes (medium quality)
+        const particlesByColor = {};
+        
+        for (const particle of this.particles) {
+            if (!this.isInViewport(particle.x, particle.y, particle.size)) continue;
+            
+            // Quantize colors to reduce the number of batches
+            let batchColor = particle.color;
+            if (quality.effectQuality < 0.8) {
+                // Simplify to primary colors for batching
+                if (particle.color.includes('ff6') || particle.color.includes('FF6')) batchColor = '#ff6600';
+                else if (particle.color.includes('ff9') || particle.color.includes('FF9')) batchColor = '#ff9900';
+                else if (particle.color.includes('ffc') || particle.color.includes('FFC')) batchColor = '#ffcc00';
+                else batchColor = '#00ffff'; // Default cyan
+            }
+            
+            if (!particlesByColor[batchColor]) {
+                particlesByColor[batchColor] = [];
+            }
+            particlesByColor[batchColor].push(particle);
+        }
+        
+        // Render batched particles with minimal alpha blending
+        this.ctx.save();
+        
+        for (const color in particlesByColor) {
+            const particles = particlesByColor[color];
+            this.ctx.fillStyle = color;
+            
+            if (quality.effectQuality > 0.8) {
+                // High quality - individual alpha per particle
+                for (const particle of particles) {
+                    const alpha = (particle.life / particle.maxLife) * 0.8;
+                    this.ctx.globalAlpha = alpha;
+                    const size = particle.size * alpha;
+                    
+                    // Use rectangles instead of circles for performance
+                    this.ctx.fillRect(particle.x - size/2, particle.y - size/2, size, size);
+                }
+            } else {
+                // Medium quality - batched alpha, simpler shapes
+                this.ctx.globalAlpha = 0.7;
+                
+                // Draw all particles of this color at once
+                for (const particle of particles) {
+                    const lifeFactor = particle.life / particle.maxLife;
+                    const size = particle.size * lifeFactor;
+                    
+                    // Simple filled rectangles for speed
+                    this.ctx.fillRect(particle.x - size/2, particle.y - size/2, size, size);
+                }
+            }
+        }
+        
+        this.ctx.restore();
     }
     
     drawNotifications() {
