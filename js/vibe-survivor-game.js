@@ -2598,7 +2598,7 @@ class VibeSurvivor {
         this.frameCount++;
         
         // Performance limit: maximum number of enemies on screen
-        const maxEnemies = 20; // Optimized for better mobile/desktop performance
+        const maxEnemies = 30; // Increased for performance testing
         
         if (this.enemies.length >= maxEnemies) {
             return; // Don't spawn more if at limit
@@ -2803,7 +2803,7 @@ class VibeSurvivor {
                 behavior: 'teleport'
             },
             boss: {
-                radius: 30,
+                radius: 40,
                 health: 1000,
                 speed: 0.75,
                 contactDamage: 50,
@@ -4676,12 +4676,18 @@ class VibeSurvivor {
                 }
                 
                 // Enhanced glow for special enemies
-                this.ctx.shadowBlur = (type === 'boss' ? 30 : 20);
+                this.ctx.shadowBlur = (type === 'boss' ? 40 : 20);
                 this.ctx.shadowColor = enemy.color || '#ff00ff';
                 
                 if (type === 'boss') {
-                    const pulseIntensity = 0.7 + Math.sin(Date.now() * 0.005) * 0.3;
+                    // More intense pulsing effect
+                    const pulseIntensity = 0.8 + Math.sin(Date.now() * 0.008) * 0.5;
                     this.ctx.shadowBlur *= pulseIntensity;
+                    
+                    // Add outer glow ring
+                    this.ctx.globalAlpha = 0.3;
+                    this.ctx.shadowBlur = 60;
+                    this.ctx.shadowColor = '#FF00FF';
                 }
                 
                 this.ctx.strokeStyle = enemy.color || '#ff00ff';
@@ -4730,6 +4736,9 @@ class VibeSurvivor {
                         this.ctx.moveTo(-rb * 0.7, rb * 0.7);
                         this.ctx.lineTo(rb * 0.7, -rb * 0.7);
                         this.ctx.stroke();
+                        
+                        // Reset alpha for boss after glow effect
+                        this.ctx.globalAlpha = 1.0;
                         break;
                 }
                 
