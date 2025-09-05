@@ -44,6 +44,29 @@ class VibeRunner {
         // Mobile device detection
         this.isMobile = this.detectMobile();
         
+        // Frame rate monitoring and adaptive quality (Phase 1 Optimization)
+        this.frameRateMonitor = {
+            lastFrameTime: 0,
+            frameCount: 0,
+            currentFPS: 60,
+            targetFPS: 60,
+            minFPS: 30,
+            fpsHistory: [],
+            averageFPS: 60,
+            adaptiveQuality: {
+                particleCount: 1.0,
+                effectQuality: 1.0,
+                shadowBlur: 1.0,
+                trailLength: 1.0
+            },
+            checkInterval: 30,
+            lastCheck: 0
+        };
+        
+        // Object pools (Phase 1 Optimization)
+        this.particlePool = [];
+        this.obstacleBlockPool = [];
+        
         // Level scripting / pattern options
         this.levelEndDistance = 10000; // meters
         this.useScripted = true; // default to scripted obstacle patterns
@@ -107,7 +130,7 @@ class VibeRunner {
             },
             'gravity_flip': {
                 name: 'Gravity Flip Zone',
-                difficulty: 3,
+                difficulty: 2,
                 length: 15,
                 generate: () => this.generateGravityFlipZone()
             },
@@ -353,8 +376,8 @@ class VibeRunner {
                 background: rgba(255, 0, 255, 0.1);
                 border: 2px solid #ff00ff;
                 color: #ff00ff;
-                width: 40px;
-                height: 40px;
+                width: 30px;
+                height: 30px;
                 border-radius: 50%;
                 font-size: 24px;
                 font-weight: bold;
@@ -701,10 +724,27 @@ class VibeRunner {
         }, { passive: false });
         this.canvas.addEventListener('mouseleave', () => this.isPressed = false);
         
-        // ESC to close
+        // ESC to close and Spacebar for fly up
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && !document.getElementById('vibe-runner-container').classList.contains('vibe-runner-hidden')) {
                 this.closeGame();
+            }
+            // Add spacebar support for fly up (same as mouse click)
+            if (e.key === ' ' || e.code === 'Space') {
+                e.preventDefault(); // Prevent page scroll
+                if (this.gameActive && !document.getElementById('vibe-runner-container').classList.contains('vibe-runner-hidden')) {
+                    this.isPressed = true;
+                }
+            }
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            // Release spacebar support for fly up
+            if (e.key === ' ' || e.code === 'Space') {
+                e.preventDefault(); // Prevent page scroll
+                if (this.gameActive && !document.getElementById('vibe-runner-container').classList.contains('vibe-runner-hidden')) {
+                    this.isPressed = false;
+                }
             }
         });
     }
@@ -732,6 +772,9 @@ class VibeRunner {
         this.obstacles = [];
         this.particles = [];
         this.frameCount = 0;
+        
+        // Initialize object pools (Phase 1 Optimization)
+        this.initializeParticlePools();
         this.nextObstacleDistance = 100;
         this.gridOffset = 0;
         
@@ -775,6 +818,9 @@ class VibeRunner {
     gameLoop(currentTime) {
         if (!this.gameActive) return;
         
+        // Frame rate monitoring (Phase 1 Optimization)
+        this.monitorFrameRate(currentTime);
+        
         const deltaTime = currentTime - this.lastTime;
         this.lastTime = currentTime;
         
@@ -788,6 +834,87 @@ class VibeRunner {
         
         this.draw();
         this.animationId = requestAnimationFrame((time) => this.gameLoop(time));
+    }
+    
+    // Frame Rate Monitoring (Phase 1 Optimization)
+    monitorFrameRate(currentTime) {
+        if (this.frameRateMonitor.lastFrameTime === 0) {
+            this.frameRateMonitor.lastFrameTime = currentTime;
+            return;
+        }
+        
+        const deltaTime = currentTime - this.frameRateMonitor.lastFrameTime;
+        this.frameRateMonitor.currentFPS = deltaTime > 0 ? 1000 / deltaTime : 60;
+        this.frameRateMonitor.lastFrameTime = currentTime;
+        
+        this.frameRateMonitor.frameCount++;
+        this.frameRateMonitor.fpsHistory.push(this.frameRateMonitor.currentFPS);
+        
+        if (this.frameRateMonitor.fpsHistory.length > 60) {
+            this.frameRateMonitor.fpsHistory.shift();
+        }
+        
+        if (this.frameRateMonitor.frameCount - this.frameRateMonitor.lastCheck >= this.frameRateMonitor.checkInterval) {
+            this.updateAdaptiveQuality();
+            this.frameRateMonitor.lastCheck = this.frameRateMonitor.frameCount;
+        }
+    }
+    
+    updateAdaptiveQuality() {
+        const avgFPS = this.frameRateMonitor.fpsHistory.reduce((a, b) => a + b, 0) / this.frameRateMonitor.fpsHistory.length;
+        this.frameRateMonitor.averageFPS = avgFPS;
+        
+        if (avgFPS < this.frameRateMonitor.minFPS) {
+            // Reduce quality for better performance
+            this.frameRateMonitor.adaptiveQuality.particleCount = Math.max(0.3, this.frameRateMonitor.adaptiveQuality.particleCount - 0.1);
+            this.frameRateMonitor.adaptiveQuality.effectQuality = Math.max(0.5, this.frameRateMonitor.adaptiveQuality.effectQuality - 0.1);
+            this.frameRateMonitor.adaptiveQuality.shadowBlur = Math.max(0.3, this.frameRateMonitor.adaptiveQuality.shadowBlur - 0.1);
+            this.frameRateMonitor.adaptiveQuality.trailLength = Math.max(0.5, this.frameRateMonitor.adaptiveQuality.trailLength - 0.1);
+        } else if (avgFPS > this.frameRateMonitor.targetFPS - 5) {
+            // Increase quality when performance allows
+            this.frameRateMonitor.adaptiveQuality.particleCount = Math.min(1.0, this.frameRateMonitor.adaptiveQuality.particleCount + 0.05);
+            this.frameRateMonitor.adaptiveQuality.effectQuality = Math.min(1.0, this.frameRateMonitor.adaptiveQuality.effectQuality + 0.05);
+            this.frameRateMonitor.adaptiveQuality.shadowBlur = Math.min(1.0, this.frameRateMonitor.adaptiveQuality.shadowBlur + 0.05);
+            this.frameRateMonitor.adaptiveQuality.trailLength = Math.min(1.0, this.frameRateMonitor.adaptiveQuality.trailLength + 0.05);
+        }
+    }
+    
+    // Object Pooling System (Phase 1 Optimization)
+    getPooledParticle() {
+        if (this.particlePool.length > 0) {
+            return this.particlePool.pop();
+        }
+        return {
+            x: 0, y: 0, vx: 0, vy: 0, 
+            life: 0, maxLife: 0, 
+            color: '#ffffff', size: 1, 
+            alpha: 1, type: 'default'
+        };
+    }
+    
+    releaseParticle(particle) {
+        // Reset particle properties
+        particle.x = 0;
+        particle.y = 0;
+        particle.vx = 0;
+        particle.vy = 0;
+        particle.life = 0;
+        particle.alpha = 1;
+        particle.type = 'default';
+        
+        this.particlePool.push(particle);
+    }
+    
+    initializeParticlePools() {
+        // Pre-allocate particle objects
+        for (let i = 0; i < 100; i++) {
+            this.particlePool.push({
+                x: 0, y: 0, vx: 0, vy: 0,
+                life: 0, maxLife: 0,
+                color: '#ffffff', size: 1,
+                alpha: 1, type: 'default'
+            });
+        }
     }
     
     update(dt) {
@@ -955,24 +1082,31 @@ class VibeRunner {
         for (let i = this.particles.length - 1; i >= 0; i--) {
             const particle = this.particles[i];
             particle.x -= this.gameSpeed * 0.5;
-            particle.y += particle.vy;
+            particle.x += particle.vx || 0; // Handle vx for pooled particles
+            particle.y += particle.vy || 0;
             particle.life -= 0.02;
+            particle.alpha = particle.life / (particle.maxLife || 1);
             
             if (particle.life <= 0 || particle.x < -10) {
+                this.releaseParticle(particle);
                 this.particles.splice(i, 1);
             }
         }
         
-        // Add new particles
-        if (Math.random() < 0.3) {
-            this.particles.push({
-                x: this.player.x - 10,
-                y: this.player.y + (Math.random() - 0.5) * 10,
-                vy: (Math.random() - 0.5) * 2,
-                size: Math.random() * 3 + 1,
-                life: 1.0,
-                color: this.isPressed ? '#00ffff' : '#ff00ff'
-            });
+        // Add new particles (Object Pooling Optimization)
+        if (Math.random() < 0.3 * this.frameRateMonitor.adaptiveQuality.particleCount) {
+            const particle = this.getPooledParticle();
+            particle.x = this.player.x - 10;
+            particle.y = this.player.y + (Math.random() - 0.5) * 10;
+            particle.vx = 0;
+            particle.vy = (Math.random() - 0.5) * 2;
+            particle.size = Math.random() * 3 + 1;
+            particle.life = 1.0;
+            particle.maxLife = 1.0;
+            particle.color = this.isPressed ? '#00ffff' : '#ff00ff';
+            particle.alpha = 1.0;
+            particle.type = 'trail';
+            this.particles.push(particle);
         }
         
         // Update stars
@@ -1034,7 +1168,7 @@ class VibeRunner {
             return pattern.difficulty <= Math.ceil(this.difficulty);
         });
         
-        if (availablePatterns.length > 0 && Math.random() < 0.3) { // Reduce frequency of special patterns
+        if (availablePatterns.length > 0 && Math.random() < 0.5) { // Increased frequency for better gameplay variety
             const patternKey = availablePatterns[Math.floor(Math.random() * availablePatterns.length)];
             const pattern = this.patternLibrary[patternKey];
             this.currentPattern = pattern;
@@ -1552,33 +1686,41 @@ class VibeRunner {
     }
     
     createPortalEffect(x, y) {
-        // Create particle burst effect for portal
-        for (let i = 0; i < 20; i++) {
-            const angle = (Math.PI * 2 * i) / 20;
-            this.particles.push({
-                x: x,
-                y: y,
-                vx: Math.cos(angle) * 5,
-                vy: Math.sin(angle) * 5,
-                size: 4,
-                life: 1.0,
-                color: '#ffff00'
-            });
+        // Create particle burst effect for portal (Object Pooling)
+        const particleCount = Math.floor(20 * this.frameRateMonitor.adaptiveQuality.particleCount);
+        for (let i = 0; i < particleCount; i++) {
+            const angle = (Math.PI * 2 * i) / particleCount;
+            const particle = this.getPooledParticle();
+            particle.x = x;
+            particle.y = y;
+            particle.vx = Math.cos(angle) * 5;
+            particle.vy = Math.sin(angle) * 5;
+            particle.size = 4;
+            particle.life = 1.0;
+            particle.maxLife = 1.0;
+            particle.color = '#ffff00';
+            particle.alpha = 1.0;
+            particle.type = 'portal';
+            this.particles.push(particle);
         }
     }
     
     createJumpEffect(x, y) {
-        // Create particle burst for jump pad
-        for (let i = 0; i < 10; i++) {
-            this.particles.push({
-                x: x + (Math.random() - 0.5) * 20,
-                y: y,
-                vx: (Math.random() - 0.5) * 3,
-                vy: -Math.random() * 5 - 2,
-                size: 3,
-                life: 1.0,
-                color: '#00ff00'
-            });
+        // Create particle burst for jump pad (Object Pooling)
+        const particleCount = Math.floor(10 * this.frameRateMonitor.adaptiveQuality.particleCount);
+        for (let i = 0; i < particleCount; i++) {
+            const particle = this.getPooledParticle();
+            particle.x = x + (Math.random() - 0.5) * 20;
+            particle.y = y;
+            particle.vx = (Math.random() - 0.5) * 3;
+            particle.vy = -Math.random() * 5 - 2;
+            particle.size = 3;
+            particle.life = 1.0;
+            particle.maxLife = 1.0;
+            particle.color = '#00ff00';
+            particle.alpha = 1.0;
+            particle.type = 'jump';
+            this.particles.push(particle);
         }
     }
     
@@ -1943,13 +2085,19 @@ class VibeRunner {
         // Draw grid
         this.drawNeonGrid();
         
-        // Draw obstacles with neon effect
+        // Draw obstacles with neon effect (Phase 2 Optimization)
         for (const obstacle of this.obstacles) {
+            // Viewport culling - only draw visible obstacles
+            if (obstacle.x + (obstacle.maxWidth || 100) < 0 || obstacle.x > this.canvas.width + 50) {
+                continue;
+            }
+            
             // Draw blocks
             if (obstacle.blocks) {
                 for (const block of obstacle.blocks) {
-                    // Neon glow
-                                        this.ctx.shadowBlur = 20;
+                    // Adaptive neon glow
+                    const shadowBlur = 20 * this.frameRateMonitor.adaptiveQuality.shadowBlur;
+                    this.ctx.shadowBlur = shadowBlur;
                     this.ctx.shadowColor = '#ff00ff';
                     
                     // Draw block
@@ -1967,28 +2115,32 @@ class VibeRunner {
                         block.height - 10
                     );
                     
-                    // Grid pattern inside
-                    this.ctx.strokeStyle = 'rgba(255, 0, 255, 0.3)';
-                    this.ctx.lineWidth = 0.5;
-                    for (let i = 10; i < block.width; i += 10) {
-                        this.ctx.beginPath();
-                        this.ctx.moveTo(obstacle.x + block.x + i, block.y);
-                        this.ctx.lineTo(obstacle.x + block.x + i, block.y + block.height);
-                        this.ctx.stroke();
-                    }
-                    for (let i = 10; i < block.height; i += 10) {
-                        this.ctx.beginPath();
-                        this.ctx.moveTo(obstacle.x + block.x, block.y + i);
-                        this.ctx.lineTo(obstacle.x + block.x + block.width, block.y + i);
-                        this.ctx.stroke();
+                    // Grid pattern inside (Adaptive quality optimization)
+                    if (this.frameRateMonitor.adaptiveQuality.effectQuality > 0.7) {
+                        this.ctx.strokeStyle = 'rgba(255, 0, 255, 0.3)';
+                        this.ctx.lineWidth = 0.5;
+                        const gridStep = Math.ceil(10 / this.frameRateMonitor.adaptiveQuality.effectQuality);
+                        for (let i = gridStep; i < block.width; i += gridStep) {
+                            this.ctx.beginPath();
+                            this.ctx.moveTo(obstacle.x + block.x + i, block.y);
+                            this.ctx.lineTo(obstacle.x + block.x + i, block.y + block.height);
+                            this.ctx.stroke();
+                        }
+                        for (let i = gridStep; i < block.height; i += gridStep) {
+                            this.ctx.beginPath();
+                            this.ctx.moveTo(obstacle.x + block.x, block.y + i);
+                            this.ctx.lineTo(obstacle.x + block.x + block.width, block.y + i);
+                            this.ctx.stroke();
+                        }
                     }
                 }
             }
             
-            // Draw triangles
+            // Draw triangles (Phase 2 Optimization)
             if (obstacle.triangles) {
                 for (const triangle of obstacle.triangles) {
-                    this.ctx.shadowBlur = this.enableGlow ? 20 : 0;
+                    const adaptiveShadowBlur = (this.enableGlow ? 20 : 0) * this.frameRateMonitor.adaptiveQuality.shadowBlur;
+                    this.ctx.shadowBlur = adaptiveShadowBlur;
                     this.ctx.shadowColor = '#ff00ff';
                     this.ctx.strokeStyle = '#ff00ff';
                     this.ctx.fillStyle = 'rgba(255, 0, 255, 0.1)';
@@ -2036,13 +2188,116 @@ class VibeRunner {
         
         this.ctx.shadowBlur = 0;
         
-        // Draw particles
-        for (const particle of this.particles) {
-            this.ctx.fillStyle = particle.color;
-            this.ctx.globalAlpha = particle.life * 0.6;
-            this.ctx.fillRect(particle.x, particle.y, particle.size, particle.size);
+        // Draw gravity portals
+        for (const portal of this.gravityPortals) {
+            // Viewport culling
+            if (portal.x + 60 < 0 || portal.x > this.canvas.width + 50) {
+                continue;
+            }
+            
+            this.ctx.save();
+            this.ctx.translate(portal.x, portal.y);
+            this.ctx.rotate((portal.rotation || 0) * Math.PI / 180);
+            
+            // Portal outer ring
+            this.ctx.shadowBlur = 30;
+            this.ctx.shadowColor = '#ffff00';
+            this.ctx.strokeStyle = '#ffff00';
+            this.ctx.lineWidth = 3;
+            this.ctx.beginPath();
+            this.ctx.arc(0, 0, 25, 0, Math.PI * 2);
+            this.ctx.stroke();
+            
+            // Portal inner ring
+            this.ctx.strokeStyle = '#ffffff';
+            this.ctx.lineWidth = 2;
+            this.ctx.beginPath();
+            this.ctx.arc(0, 0, 15, 0, Math.PI * 2);
+            this.ctx.stroke();
+            
+            // Portal center dot
+            this.ctx.fillStyle = '#ffff00';
+            this.ctx.beginPath();
+            this.ctx.arc(0, 0, 5, 0, Math.PI * 2);
+            this.ctx.fill();
+            
+            // Portal arrows indicating gravity flip
+            this.ctx.strokeStyle = '#ffffff';
+            this.ctx.lineWidth = 2;
+            // Up arrow
+            this.ctx.beginPath();
+            this.ctx.moveTo(-5, -10);
+            this.ctx.lineTo(0, -15);
+            this.ctx.lineTo(5, -10);
+            this.ctx.stroke();
+            // Down arrow
+            this.ctx.beginPath();
+            this.ctx.moveTo(-5, 10);
+            this.ctx.lineTo(0, 15);
+            this.ctx.lineTo(5, 10);
+            this.ctx.stroke();
+            
+            this.ctx.restore();
         }
-        this.ctx.globalAlpha = 1;
+        
+        // Draw jump pads
+        for (const pad of this.jumpPads) {
+            // Viewport culling
+            if (pad.x + 60 < 0 || pad.x > this.canvas.width + 50) {
+                continue;
+            }
+            
+            this.ctx.save();
+            
+            // Jump pad base
+            this.ctx.shadowBlur = 15;
+            this.ctx.shadowColor = '#00ff00';
+            this.ctx.strokeStyle = '#00ff00';
+            this.ctx.fillStyle = 'rgba(0, 255, 0, 0.2)';
+            this.ctx.lineWidth = 2;
+            
+            const compression = pad.compression || 0;
+            const height = 15 - compression * 5; // Compress when used
+            
+            this.ctx.fillRect(pad.x - 25, pad.y - height, 50, height);
+            this.ctx.strokeRect(pad.x - 25, pad.y - height, 50, height);
+            
+            // Jump pad arrow
+            this.ctx.strokeStyle = '#ffffff';
+            this.ctx.lineWidth = 3;
+            this.ctx.beginPath();
+            this.ctx.moveTo(pad.x - 10, pad.y - 5);
+            this.ctx.lineTo(pad.x, pad.y - 15);
+            this.ctx.lineTo(pad.x + 10, pad.y - 5);
+            this.ctx.stroke();
+            
+            this.ctx.restore();
+        }
+        
+        // Draw particles (Phase 2 Optimization - Batched rendering)
+        if (this.particles.length > 0) {
+            this.ctx.save();
+            
+            // Group particles by color for batched rendering
+            const particlesByColor = {};
+            for (const particle of this.particles) {
+                if (!particlesByColor[particle.color]) {
+                    particlesByColor[particle.color] = [];
+                }
+                particlesByColor[particle.color].push(particle);
+            }
+            
+            // Render each color group together
+            for (const color in particlesByColor) {
+                this.ctx.fillStyle = color;
+                for (const particle of particlesByColor[color]) {
+                    this.ctx.globalAlpha = (particle.alpha || particle.life) * 0.6 * this.frameRateMonitor.adaptiveQuality.particleCount;
+                    this.ctx.fillRect(particle.x, particle.y, particle.size, particle.size);
+                }
+            }
+            
+            this.ctx.restore();
+        }
         
         // Draw player trail
         this.drawPlayerTrail();
@@ -2080,12 +2335,16 @@ class VibeRunner {
         // How far to push older samples to the left per step (simulates forward motion)
         const scrollPerStep = this.gameSpeed * 0.7; // tune factor for desired slope
         
-        for (let i = 0; i < this.player.trail.length - 1; i++) {
+        // Optimize trail rendering based on adaptive quality
+        const maxTrailSegments = Math.floor((this.player.trail.length - 1) * this.frameRateMonitor.adaptiveQuality.trailLength);
+        const step = Math.max(1, Math.floor((this.player.trail.length - 1) / maxTrailSegments));
+        
+        for (let i = 0; i < this.player.trail.length - 1; i += step) {
             const point = this.player.trail[i];
-            const nextPoint = this.player.trail[i + 1];
+            const nextPoint = this.player.trail[Math.min(i + step, this.player.trail.length - 1)];
             
             const age1 = (this.player.trail.length - 1) - i;
-            const age2 = (this.player.trail.length - 1) - (i + 1);
+            const age2 = (this.player.trail.length - 1) - Math.min(i + step, this.player.trail.length - 1);
             
             // Shift older points left to simulate world scrolling; also shift vertically to enforce 45° look
             const shiftX1 = age1 * scrollPerStep;
@@ -2100,8 +2359,8 @@ class VibeRunner {
             const x2 = nextPoint.x - shiftX2;
             const y2 = nextPoint.y + shiftY2;
             
-            this.ctx.strokeStyle = `rgba(0, 255, 255, ${point.life * 0.7})`;
-            this.ctx.lineWidth = Math.max(1, 3 * point.life);
+            this.ctx.strokeStyle = `rgba(0, 255, 255, ${point.life * 0.7 * this.frameRateMonitor.adaptiveQuality.effectQuality})`;
+            this.ctx.lineWidth = Math.max(1, 3 * point.life * this.frameRateMonitor.adaptiveQuality.effectQuality);
             this.ctx.beginPath();
             this.ctx.moveTo(x1, y1);
             this.ctx.lineTo(x2, y2);
@@ -2114,13 +2373,18 @@ class VibeRunner {
         this.ctx.translate(this.player.x, this.player.y);
         this.ctx.rotate(this.player.angle * Math.PI / 180);
         
+        // Determine arrow color based on gravity status
+        const isReverseGravity = this.gravityDirection === -1;
+        const arrowColor = isReverseGravity ? '#ffff00' : '#00ffff'; // Yellow for reverse, cyan for normal
+        const shadowColor = isReverseGravity ? '#ffff00' : '#00ffff';
+        
         // Glow effect
         this.ctx.shadowBlur = 20 + this.player.glow * 20;
-        this.ctx.shadowColor = '#00ffff';
+        this.ctx.shadowColor = shadowColor;
         
         // Draw arrow
-        this.ctx.strokeStyle = '#00ffff';
-        this.ctx.fillStyle = 'rgba(0, 255, 255, 0.2)';
+        this.ctx.strokeStyle = arrowColor;
+        this.ctx.fillStyle = isReverseGravity ? 'rgba(255, 255, 0, 0.2)' : 'rgba(0, 255, 255, 0.2)';
         this.ctx.lineWidth = 2;
         
         this.ctx.beginPath();
