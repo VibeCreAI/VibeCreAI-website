@@ -28,6 +28,24 @@ class VibeRunner {
         this.gridOffset = 0;
         this.difficulty = 1;
         
+        // Performance optimization: Cache frequently used calculations
+        this.mathCache = {
+            PI2: Math.PI * 2,
+            PI_180: Math.PI / 180,
+            sqrt2: Math.sqrt(2),
+            sin45: Math.sin(45 * Math.PI / 180),
+            cos45: Math.cos(45 * Math.PI / 180),
+            // Pre-calculated angle values for player
+            angleNeg45: -45,
+            angle45: 45,
+            angle0: 0,
+            // Cached strings to avoid concatenation
+            meterSuffix: 'm',
+            // Cached calculation results
+            lastDistanceFloor: 0,
+            lastDistanceRaw: 0
+        };
+        
         // Geometry Dash inspired mechanics
         this.gravityDirection = 1; // 1 = normal, -1 = inverted
         this.gravityPortals = [];
@@ -923,7 +941,15 @@ class VibeRunner {
         
         // Update distance (use float accumulation, show integer)
         this.distance += this.gameSpeed * 0.2;
-        document.getElementById('distance-display').textContent = Math.floor(this.distance) + 'm';
+        
+        // Optimize DOM updates - only update every 5 frames
+        if (this.frameCount % 5 === 0) {
+            const currentDistanceFloor = Math.floor(this.distance);
+            if (currentDistanceFloor !== this.mathCache.lastDistanceFloor) {
+                this.mathCache.lastDistanceFloor = currentDistanceFloor;
+                document.getElementById('distance-display').textContent = currentDistanceFloor + this.mathCache.meterSuffix;
+            }
+        }
         
         // Update difficulty based on distance
         this.difficulty = 1 + Math.floor(this.distance / 500);
@@ -950,11 +976,11 @@ class VibeRunner {
         const gravityMultiplier = this.gravityDirection;
         if (this.isPressed) {
             this.player.y -= this.player.speed * gravityMultiplier;
-            this.player.angle = -45 * gravityMultiplier;
+            this.player.angle = this.mathCache.angleNeg45 * gravityMultiplier; // Cached angle
             this.player.glow = Math.min(this.player.glow + 0.1, 1);
         } else {
             this.player.y += this.player.speed * 1.3 * gravityMultiplier;
-            this.player.angle = 45 * gravityMultiplier;
+            this.player.angle = this.mathCache.angle45 * gravityMultiplier; // Cached angle
             this.player.glow = Math.max(this.player.glow - 0.1, 0);
         }
         
@@ -969,7 +995,7 @@ class VibeRunner {
         // Face forward (0°) at the top or bottom edges
         const atEdge = (this.player.y <= 20 || this.player.y >= this.canvas.height - 20);
         if (atEdge) {
-            this.player.angle = 0;
+            this.player.angle = this.mathCache.angle0; // Cached angle
         }
         
         // Pull player back to optimal X position (responsive for mobile/narrow screens)
@@ -1078,10 +1104,12 @@ class VibeRunner {
             }
         }
         
-        // Update particles
-        for (let i = this.particles.length - 1; i >= 0; i--) {
+        // Update particles - Optimized with cached values
+        const gameSpeedHalf = this.gameSpeed * 0.5;
+        const particleCount = this.particles.length;
+        for (let i = particleCount - 1; i >= 0; i--) {
             const particle = this.particles[i];
-            particle.x -= this.gameSpeed * 0.5;
+            particle.x -= gameSpeedHalf;
             particle.x += particle.vx || 0; // Handle vx for pooled particles
             particle.y += particle.vy || 0;
             particle.life -= 0.02;
@@ -1109,12 +1137,16 @@ class VibeRunner {
             this.particles.push(particle);
         }
         
-        // Update stars
-        for (const star of this.stars) {
+        // Update stars - Optimized with cached canvas width
+        const canvasWidth = this.canvas.width;
+        const canvasHeight = this.canvas.height;
+        const starCount = this.stars.length;
+        for (let i = 0; i < starCount; i++) {
+            const star = this.stars[i];
             star.x -= star.speed;
             if (star.x < 0) {
-                star.x = this.canvas.width;
-                star.y = Math.random() * this.canvas.height;
+                star.x = canvasWidth;
+                star.y = Math.random() * canvasHeight;
             }
         }
     }
@@ -2085,7 +2117,8 @@ class VibeRunner {
         // Draw grid
         this.drawNeonGrid();
         
-        // Draw obstacles with neon effect (Phase 2 Optimization)
+        // Draw obstacles with neon effect
+        
         for (const obstacle of this.obstacles) {
             // Viewport culling - only draw visible obstacles
             if (obstacle.x + (obstacle.maxWidth || 100) < 0 || obstacle.x > this.canvas.width + 50) {
@@ -2094,20 +2127,27 @@ class VibeRunner {
             
             // Draw blocks
             if (obstacle.blocks) {
+                const shadowBlur = 20 * this.frameRateMonitor.adaptiveQuality.shadowBlur;
+                
                 for (const block of obstacle.blocks) {
-                    // Adaptive neon glow
-                    const shadowBlur = 20 * this.frameRateMonitor.adaptiveQuality.shadowBlur;
+                    // Check if this is a bottom obstacle and adjust shadow offset
+                    const isBottomObstacle = block.y > this.canvas.height * 0.6;
+                    const shadowOffsetY = isBottomObstacle ? -5 : 0;
+                    
                     this.ctx.shadowBlur = shadowBlur;
                     this.ctx.shadowColor = '#ff00ff';
-                    
-                    // Draw block
+                    this.ctx.shadowOffsetY = shadowOffsetY;
                     this.ctx.strokeStyle = '#ff00ff';
                     this.ctx.lineWidth = 2;
+                
+                    // Draw block
                     this.ctx.strokeRect(obstacle.x + block.x, block.y, block.width, block.height);
                     
                     // Inner glow
                     this.ctx.strokeStyle = 'rgba(255, 0, 255, 0.5)';
                     this.ctx.lineWidth = 1;
+                    this.ctx.shadowBlur = 0;
+                    this.ctx.shadowOffsetY = 0; // Reset shadow offset
                     this.ctx.strokeRect(
                         obstacle.x + block.x + 5,
                         block.y + 5,
@@ -2120,28 +2160,42 @@ class VibeRunner {
                         this.ctx.strokeStyle = 'rgba(255, 0, 255, 0.3)';
                         this.ctx.lineWidth = 0.5;
                         const gridStep = Math.ceil(10 / this.frameRateMonitor.adaptiveQuality.effectQuality);
-                        for (let i = gridStep; i < block.width; i += gridStep) {
-                            this.ctx.beginPath();
-                            this.ctx.moveTo(obstacle.x + block.x + i, block.y);
-                            this.ctx.lineTo(obstacle.x + block.x + i, block.y + block.height);
-                            this.ctx.stroke();
+                        const blockWidth = block.width;
+                        const blockHeight = block.height;
+                        const baseX = obstacle.x + block.x;
+                        const baseY = block.y;
+                        
+                        // Optimized vertical grid lines
+                        this.ctx.beginPath();
+                        for (let i = gridStep; i < blockWidth; i += gridStep) {
+                            this.ctx.moveTo(baseX + i, baseY);
+                            this.ctx.lineTo(baseX + i, baseY + blockHeight);
                         }
-                        for (let i = gridStep; i < block.height; i += gridStep) {
-                            this.ctx.beginPath();
-                            this.ctx.moveTo(obstacle.x + block.x, block.y + i);
-                            this.ctx.lineTo(obstacle.x + block.x + block.width, block.y + i);
-                            this.ctx.stroke();
+                        this.ctx.stroke();
+                        
+                        // Optimized horizontal grid lines
+                        this.ctx.beginPath();
+                        for (let i = gridStep; i < blockHeight; i += gridStep) {
+                            this.ctx.moveTo(baseX, baseY + i);
+                            this.ctx.lineTo(baseX + blockWidth, baseY + i);
                         }
+                        this.ctx.stroke();
                     }
                 }
             }
             
-            // Draw triangles (Phase 2 Optimization)
+            // Draw triangles
             if (obstacle.triangles) {
                 for (const triangle of obstacle.triangles) {
                     const adaptiveShadowBlur = (this.enableGlow ? 20 : 0) * this.frameRateMonitor.adaptiveQuality.shadowBlur;
+                    
+                    // Check if this is a bottom obstacle and adjust shadow offset
+                    const isBottomObstacle = triangle.y > this.canvas.height * 0.6;
+                    const shadowOffsetY = isBottomObstacle ? -5 : 0;
+                    
                     this.ctx.shadowBlur = adaptiveShadowBlur;
                     this.ctx.shadowColor = '#ff00ff';
+                    this.ctx.shadowOffsetY = shadowOffsetY;
                     this.ctx.strokeStyle = '#ff00ff';
                     this.ctx.fillStyle = 'rgba(255, 0, 255, 0.1)';
                     this.ctx.lineWidth = 2;
@@ -2166,6 +2220,8 @@ class VibeRunner {
                     // Inner glow lines
                     this.ctx.strokeStyle = 'rgba(255, 0, 255, 0.5)';
                     this.ctx.lineWidth = 1;
+                    this.ctx.shadowBlur = 0;
+                    this.ctx.shadowOffsetY = 0; // Reset shadow offset
                     this.ctx.beginPath();
                     for (let i = 0; i < triangle.points.length; i++) {
                         const point1 = triangle.points[i];
