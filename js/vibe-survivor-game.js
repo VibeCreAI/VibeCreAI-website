@@ -1793,8 +1793,31 @@ class VibeSurvivor {
                 dashX = (moveX / magnitude) * dashDistance;
                 dashY = (moveY / magnitude) * dashDistance;
             } else {
-                // Default forward dash if no direction
-                dashY = -dashDistance;
+                // Fallback: check individual keys if moveX/moveY are both 0 (keyboard ghosting issue)
+                let fallbackX = 0, fallbackY = 0;
+                
+                // Check arrow keys individually first (prone to ghosting with spacebar)
+                if (this.keys['arrowup']) fallbackY -= 1;
+                if (this.keys['arrowdown']) fallbackY += 1;
+                if (this.keys['arrowleft']) fallbackX -= 1;
+                if (this.keys['arrowright']) fallbackX += 1;
+                
+                // If no arrow keys detected, try WASD as backup
+                if (fallbackX === 0 && fallbackY === 0) {
+                    if (this.keys['w']) fallbackY -= 1;
+                    if (this.keys['s']) fallbackY += 1;
+                    if (this.keys['a']) fallbackX -= 1;
+                    if (this.keys['d']) fallbackX += 1;
+                }
+                
+                if (fallbackX !== 0 || fallbackY !== 0) {
+                    const magnitude = Math.sqrt(fallbackX * fallbackX + fallbackY * fallbackY);
+                    dashX = (fallbackX / magnitude) * dashDistance;
+                    dashY = (fallbackY / magnitude) * dashDistance;
+                } else {
+                    // Default forward dash if no direction
+                    dashY = -dashDistance;
+                }
             }
             
             this.player.x += dashX;
