@@ -266,9 +266,9 @@ class VibeRunner {
                 top: 0 !important;
                 left: 0 !important;
                 transform: none !important;
-                width: 100vw !important;
+                width: calc(100dvw - 4px) !important;
                 height: 100dvh !important;
-                max-width: 100vw !important;
+                max-width: calc(100dvw - 4px) !important;
                 max-height: 100dvh !important;
                 border-radius: 0 !important;
                 padding: 0 !important;
@@ -287,7 +287,7 @@ class VibeRunner {
             const closeBtn = document.querySelector('.vibe-runner-close-x');
             if (closeBtn) {
                 closeBtn.style.cssText += `
-                    top: max(env(safe-area-inset-top, 15px), 8px) !important;
+                    top: max(env(safe-area-inset-top, 15px), 13px) !important;
                     right: max(env(safe-area-inset-right, 15px), 8px) !important;
                     z-index: 30 !important;
                 `;
@@ -304,8 +304,8 @@ class VibeRunner {
                         top: 50% !important;
                         left: 50% !important;
                         transform: translate(-50%, -50%) !important;
-                        max-width: 90vw !important;
-                        max-height: 70vh !important;
+                        max-width: 90dvw !important;
+                        max-height: 70dvh !important;
                         overflow: auto !important;
                     `;
                 }
@@ -418,7 +418,6 @@ class VibeRunner {
                 border-bottom: 2px solid rgba(0, 255, 255, 0.3);
                 display: flex;
                 justify-content: center;
-                gap: 50px;
                 background: rgba(0, 20, 40, 0.5);
             }
             
@@ -560,7 +559,7 @@ class VibeRunner {
             /* Real mobile device detection */
             @media (max-width: 600px) and (hover: none) and (pointer: coarse) {
                 .vibe-runner-modal {
-                    width: 98%;
+                    width: calc(100% - 4px);
                     height: calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 20px));
                     max-height: calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 20px));
                     border-radius: 10px;
@@ -573,10 +572,18 @@ class VibeRunner {
             /* Desktop at mobile dimensions */
             @media (max-width: 600px) and (hover: hover) {
                 .vibe-runner-modal {
-                    width: 95%;
+                    width: calc(100% - 4px);
                     height: calc(95dvh - 10px);
                     max-height: calc(95dvh - 10px);
                     border-radius: 10px;
+                }
+            }
+            
+            /* General mobile width catch-all (ensures border fix applies to all mobile scenarios) */
+            @media (max-width: 600px) {
+                .vibe-runner-modal {
+                    width: calc(100% - 4px);
+                    max-width: calc(100% - 4px);
                 }
             }
                 

@@ -1,0 +1,66 @@
+/*
+ * VibeCreAI Theme System
+ * Contains all theme definitions and overrides
+ */
+
+/* Default theme - already defined by base CSS variables */
+
+/* Synthwave Theme */
+.theme-synthwave {
+    --primary-color: #ff00ff;
+    --secondary-color: #00ffff;
+    --accent-color: #ff6b6b;
+    --dark-bg: #1a0d26;
+    --text-color: #ffffff;
+    --neon-glow: 
+        0 0 10px rgba(255, 0, 255, 0.8),
+        0 0 20px rgba(255, 0, 255, 0.6),
+        0 0 30px rgba(255, 105, 180, 0.4);
+}
+
+.theme-synthwave body {
+    background: linear-gradient(135deg, #1a0d26 0%, #2d1b3d 50%, #1a0d26 100%);
+}
+
+/* Matrix Theme */
+.theme-matrix {
+    --primary-color: #00ff41;
+    --secondary-color: #39ff14;
+    --accent-color: #00cc33;
+    --dark-bg: #000000;
+    --text-color: #00ff41;
+    --neon-glow: 
+        0 0 10px rgba(0, 255, 65, 0.8),
+        0 0 20px rgba(0, 255, 65, 0.6),
+        0 0 30px rgba(0, 204, 51, 0.4);
+}
+
+.theme-matrix body {
+    background: #000000;
+    color: #00ff41;
+}
+
+.theme-matrix .matrix-rain {
+    opacity: 0.4;
+}
+
+/* Ghost Theme */
+.theme-ghost {
+    --primary-color: #b8b8ff;
+    --secondary-color: #e6e6fa;
+    --accent-color: #9370db;
+    --dark-bg: #1e1e2e;
+    --text-color: #e0e0e0;
+    --neon-glow: 
+        0 0 10px rgba(184, 184, 255, 0.8),
+        0 0 20px rgba(184, 184, 255, 0.6),
+        0 0 30px rgba(147, 112, 219, 0.4);
+}
+
+.theme-ghost body {
+    background: linear-gradient(135deg, #1e1e2e 0%, #2d2d3f 50%, #1e1e2e 100%);
+}
+
+.theme-ghost .matrix-rain {
+    opacity: 0.05;
+}

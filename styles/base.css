@@ -1,0 +1,291 @@
+/*
+ * VibeCreAI Base Styles
+ * Core styles, variables, and foundational elements
+ */
+
+/* Font Face Declaration */
+@font-face {
+    font-family: 'Born2bSportyFont';
+    src: url('../fonts/Born2bSportyFS.otf') format('opentype');
+    font-display: swap; /* Fallback if font fails to load */
+}
+
+/* CSS Custom Properties (Variables) */
+:root {
+    --primary-color: #00ffff;
+    --secondary-color: #ff00ff;
+    --accent-color: #2bb4db;
+    --dark-bg: #0a0a0a;
+    --text-color: #ffffff;
+    --neon-glow: 
+        0 0 10px rgba(0, 255, 255, 0.8),
+        0 0 20px rgba(0, 255, 255, 0.6),
+        0 0 30px rgba(43, 180, 219, 0.4);
+}
+
+/* Global Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--dark-bg);
+    color: var(--text-color);
+    min-width: 380px; /* Minimum website width */
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+}
+
+/* Custom Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 5px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--secondary-color);
+}
+
+/* Container and Layout Utilities */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.section-title {
+    font-size: 3rem;
+    text-align: center;
+    margin-bottom: 60px;
+    color: var(--primary-color);
+    position: relative;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-block;
+    width: 100%;
+}
+
+.section-subtitle {
+    font-size: 1.2rem;
+    text-align: center;
+    margin-bottom: 40px;
+    margin-top: -30px;
+    color: rgba(255, 255, 255, 0.8);
+    font-style: italic;
+    letter-spacing: 0.05em;
+}
+
+.contact-subtitle {
+    font-size: 1.2rem;
+    text-align: center;
+    margin-bottom: 40px;
+    margin-top: -30px;
+    color: var(--primary-color);
+    letter-spacing: 0.05em;
+    opacity: 0.9;
+}
+
+/* Loading Screen Base Styles */
+#loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.loading-text {
+    font-family: 'Born2bSportyFont', monospace;
+    font-size: 3rem;
+    color: var(--primary-color);
+    text-shadow: var(--neon-glow);
+    letter-spacing: 0.2em;
+}
+
+.loading-bar {
+    width: 300px;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.1);
+    margin-top: 30px;
+    position: relative;
+    overflow: hidden;
+}
+
+.loading-progress {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color), var(--accent-color));
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+/* Utility Classes */
+.fade-in {
+    opacity: 0;
+    transform: translateY(30px);
+}
+
+.fade-in.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.perspective-container {
+    perspective: 1000px;
+}
+
+.card-3d {
+    transform-style: preserve-3d;
+    transition: transform 0.3s ease;
+}
+
+/* Base Button Styles */
+.cta-button {
+    padding: 15px 40px;
+    background: transparent;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+    text-decoration: none;
+    font-weight: bold;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    opacity: 0;
+    transform: translateY(30px);
+}
+
+.cta-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: var(--primary-color);
+    transition: left 0.3s ease;
+    z-index: -1;
+}
+
+.cta-button:hover {
+    color: var(--dark-bg);
+    box-shadow: var(--neon-glow);
+}
+
+.cta-button:hover::before {
+    left: 0;
+}
+
+.cta-button.secondary {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.cta-button.secondary::before {
+    background: var(--primary-color);
+}
+
+.cta-button.secondary:hover {
+    box-shadow: var(--neon-glow);
+    color: var(--dark-bg);
+}
+
+/* Typography and Text Styles */
+.tagline {
+    font-family: monospace;
+    font-size: 1.2rem;
+    color: var(--primary-color);
+    margin-bottom: 40px;
+    min-height: 2.5rem;
+    line-height: 1.4;
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.tagline:hover {
+    text-shadow: 0 0 20px rgba(0, 255, 255, 0.8);
+    transform: scale(1.02);
+}
+
+.tagline::after {
+    content: '< / >';
+    position: absolute;
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.7rem;
+    opacity: 0;
+    color: rgba(0, 255, 255, 0.5);
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.tagline:hover::after {
+    opacity: 1;
+}
+
+.tagline .dud {
+    color: rgba(0, 255, 255, 0.5);
+    opacity: 0.6;
+}
+
+/* Particle System Base */
+.particle {
+    position: fixed;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 3;
+}
+
+/* Canvas Elements */
+#neural-network,
+#matrix {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+.matrix-rain {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 2;
+    opacity: 0.1;
+}
