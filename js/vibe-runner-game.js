@@ -626,6 +626,11 @@ class VibeRunner {
         if (container) {
             container.classList.remove('vibe-runner-hidden');
             
+            // Disable body scrolling when game is active
+            document.body.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
+            
         } else {
             console.error('Failed to create Vibe Runner container');
             return;
@@ -696,6 +701,11 @@ class VibeRunner {
         if (container) {
             container.classList.add('vibe-runner-hidden');
         }
+        
+        // Re-enable body scrolling when game closes
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.width = '';
         
         // Remove game modal class
         document.body.classList.remove('game-modal-open');

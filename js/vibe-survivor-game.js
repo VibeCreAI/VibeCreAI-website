@@ -328,8 +328,7 @@ class VibeSurvivor {
                 padding: 0;
                 width: 95%;
                 max-width: 900px;
-                height: calc(100dvh - 15px);
-                max-height: calc(100dvh - 20px);
+                height: calc(100dvh - 100px);
                 display: flex;
                 flex-direction: column;
                 border: 2px solid #00ffff;
@@ -344,8 +343,6 @@ class VibeSurvivor {
             @media screen and (max-width: 768px) {
                 .vibe-survivor-content {
                     width: 95%;
-                    height: calc(100dvh - 15px); /* Use dynamic viewport height */
-                    max-height: calc(100dvh - 20px);
                     border-radius: 15px;
                 }
             }
@@ -353,17 +350,7 @@ class VibeSurvivor {
             @media screen and (max-width: 480px) {
                 .vibe-survivor-content {
                     width: 98%;
-                    height: calc(100dvh - 20px);
-                    max-height: calc(100dvh - 20px);
                     border-radius: 10px;
-                }
-            }
-
-            /* iOS Safari specific fixes */
-            @media screen and (max-width: 768px) and (-webkit-min-device-pixel-ratio: 2) {
-                .vibe-survivor-content {
-                    height: calc(100dvh - env(safe-area-inset-bottom, 0px) - 15px);
-                    max-height: calc(100dvh - env(safe-area-inset-bottom, 0px) - 20px);
                 }
             }
 
@@ -772,7 +759,6 @@ class VibeSurvivor {
 
             #survivor-canvas {
                 border-radius: 10px;
-                box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
             }
 
 
