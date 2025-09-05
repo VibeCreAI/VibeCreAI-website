@@ -3853,9 +3853,21 @@ class VibeSurvivor {
     }
     
     updateCamera() {
-        // Immediate camera following the player (no smooth lerp for now)
-        this.camera.x = this.player.x - this.canvas.width / 2;
-        this.camera.y = this.player.y - this.canvas.height / 2;
+        // Calculate target camera position
+        const targetX = this.player.x - this.canvas.width / 2;
+        const targetY = this.player.y - this.canvas.height / 2;
+        
+        // Use different smoothing based on player state
+        let lerpFactor = 0.1; // Default smooth following
+        
+        // During dash, use faster but still smooth camera movement
+        if (this.player.dashCooldown > 0) {
+            lerpFactor = 0.2; // Faster follow during dash, but not instant
+        }
+        
+        // Smooth camera movement
+        this.camera.x += (targetX - this.camera.x) * lerpFactor;
+        this.camera.y += (targetY - this.camera.y) * lerpFactor;
     }
 
     
