@@ -4616,9 +4616,7 @@ class VibeSurvivor {
                 this.ctx.save();
                 this.ctx.translate(enemy.x, enemy.y);
                 
-                // ALWAYS render glow effect for basic enemies (fixed visibility issue)
-                this.ctx.shadowBlur = 15;
-                this.ctx.shadowColor = enemy.color || '#00ffff';
+                // Remove shadow for better performance and visibility on black background
                 
                 // Simple wireframe circle - ALWAYS render
                 this.ctx.strokeStyle = enemy.color || '#00ffff';
@@ -4628,7 +4626,6 @@ class VibeSurvivor {
                 this.ctx.stroke();
                 
                 // Always show inner cross pattern for visibility
-                this.ctx.shadowBlur = 0; // Reset shadow for inner pattern
                 this.ctx.strokeStyle = (enemy.color || '#00ffff') + '80';
                 this.ctx.lineWidth = 1;
                 this.ctx.beginPath();
@@ -4671,19 +4668,16 @@ class VibeSurvivor {
                     this.ctx.rotate(enemy.angle || 0);
                 }
                 
-                // Enhanced glow for special enemies
-                this.ctx.shadowBlur = (type === 'boss' ? 40 : 20);
-                this.ctx.shadowColor = enemy.color || '#ff00ff';
-                
+                // Add glow effect for boss like player has
                 if (type === 'boss') {
-                    // More intense pulsing effect
-                    const pulseIntensity = 0.8 + Math.sin(Date.now() * 0.008) * 0.5;
-                    this.ctx.shadowBlur *= pulseIntensity;
+                    // Create pulsing radial gradient glow for boss
+                    const glowSize = 60 + Math.sin(Date.now() * 0.008) * 20;
+                    const gradient = this.ctx.createRadialGradient(0, 0, 0, 0, 0, glowSize);
+                    gradient.addColorStop(0, 'rgba(255, 0, 255, 0.4)'); // Magenta glow
+                    gradient.addColorStop(1, 'rgba(255, 0, 255, 0)');
                     
-                    // Add outer glow ring
-                    this.ctx.globalAlpha = 0.3;
-                    this.ctx.shadowBlur = 60;
-                    this.ctx.shadowColor = '#FF00FF';
+                    this.ctx.fillStyle = gradient;
+                    this.ctx.fillRect(-glowSize, -glowSize, glowSize * 2, glowSize * 2);
                 }
                 
                 this.ctx.strokeStyle = enemy.color || '#ff00ff';
@@ -4735,10 +4729,8 @@ class VibeSurvivor {
                         this.ctx.lineTo(rb * 0.7, -rb * 0.7);
                         this.ctx.stroke();
                         
-                        // Reset alpha and shadow after boss drawing is complete
+                        // Reset alpha after boss drawing is complete
                         this.ctx.globalAlpha = 1.0;
-                        this.ctx.shadowBlur = 0;
-                        this.ctx.shadowColor = 'transparent';
                         break;
                 }
                 
@@ -4752,8 +4744,6 @@ class VibeSurvivor {
                     this.ctx.fillRect(-barWidth / 2, -(enemy.radius || 20) - 8, barWidth, barHeight);
                     
                     this.ctx.fillStyle = healthPercent > 0.5 ? '#0f0' : healthPercent > 0.25 ? '#ff0' : '#f00';
-                    this.ctx.shadowBlur = 10;
-                    this.ctx.shadowColor = this.ctx.fillStyle;
                     this.ctx.fillRect(-barWidth / 2, -(enemy.radius || 20) - 8, barWidth * healthPercent, barHeight);
                 }
                 
