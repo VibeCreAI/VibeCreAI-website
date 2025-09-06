@@ -446,6 +446,14 @@ class VibeSurvivor {
                 text-shadow: 0 0 3px rgba(0, 255, 255, 0.8);
             }
             
+            .header-weapon-merge {
+                background: rgba(255, 215, 0, 0.3) !important;
+                border: 1px solid rgba(255, 215, 0, 0.6) !important;
+                color: #FFD700 !important;
+                text-shadow: 0 0 5px rgba(255, 215, 0, 0.8) !important;
+                font-weight: bold !important;
+            }
+            
             /* Ultra-narrow mobile screens */
             @media screen and (max-width: 320px) {
                 .vibe-survivor-header {
@@ -2286,6 +2294,9 @@ class VibeSurvivor {
                     case 'missiles':
                         this.createHomingMissile(weapon, nearestEnemy);
                         break;
+                    case 'homing_laser':
+                        this.createHomingLaserBeam(weapon, nearestEnemy);
+                        break;
                 }
             }
         }
@@ -2535,6 +2546,41 @@ class VibeSurvivor {
         projectile.baseSpeed = weapon.projectileSpeed || 3;
         
         this.projectiles.push(projectile);
+    }
+    
+    createHomingLaserBeam(weapon, nearestEnemy) {
+        if (!nearestEnemy) return; // Need a target for homing
+        
+        // Create multiple projectiles based on projectileCount (starts at 4)
+        const projectileCount = weapon.projectileCount || 4;
+        
+        for (let i = 0; i < projectileCount; i++) {
+            // Get projectile from pool
+            const projectile = this.getPooledProjectile();
+            
+            // Spread projectiles in a fan pattern
+            const spreadAngle = (projectileCount > 1) ? (i / (projectileCount - 1) - 0.5) * 0.6 : 0;
+            const baseAngle = Math.atan2(nearestEnemy.y - this.player.y, nearestEnemy.x - this.player.x);
+            const angle = baseAngle + spreadAngle;
+            
+            projectile.x = this.player.x;
+            projectile.y = this.player.y;
+            projectile.vx = Math.cos(angle) * weapon.projectileSpeed;
+            projectile.vy = Math.sin(angle) * weapon.projectileSpeed;
+            projectile.damage = weapon.damage;
+            projectile.life = 140; // Limited lifetime: 2.3 seconds at 60fps
+            projectile.type = 'homing_laser';
+            projectile.color = '#FFD700'; // Gold color for merge weapon
+            projectile.size = 5;
+            projectile.homing = true;
+            projectile.piercing = true;
+            projectile.hitCount = 0;
+            projectile.maxHits = 10; // Limit to prevent infinite loops
+            projectile.targetEnemy = nearestEnemy;
+            projectile.speed = weapon.projectileSpeed;
+            
+            this.projectiles.push(projectile);
+        }
     }
     
     createBossMissile(boss, healthPercent = 1.0) {
@@ -3152,6 +3198,41 @@ class VibeSurvivor {
                     projectile.y += projectile.vy;
                     break;
                     
+                case 'homing_laser':
+                    if (projectile.homing && projectile.targetEnemy) {
+                        // Check if target enemy is still alive
+                        const targetStillExists = this.enemies.includes(projectile.targetEnemy);
+                        
+                        if (targetStillExists) {
+                            // Homing behavior - gradually turn toward target
+                            const dx = projectile.targetEnemy.x - projectile.x;
+                            const dy = projectile.targetEnemy.y - projectile.y;
+                            const distance = Math.sqrt(dx * dx + dy * dy);
+                            
+                            if (distance > 0) {
+                                const homingStrength = 0.08; // Stronger homing than regular missiles
+                                projectile.vx += (dx / distance) * homingStrength;
+                                projectile.vy += (dy / distance) * homingStrength;
+                                
+                                // Maintain speed limit
+                                const currentSpeed = Math.sqrt(projectile.vx * projectile.vx + projectile.vy * projectile.vy);
+                                if (currentSpeed > projectile.speed) {
+                                    projectile.vx = (projectile.vx / currentSpeed) * projectile.speed;
+                                    projectile.vy = (projectile.vy / currentSpeed) * projectile.speed;
+                                }
+                            }
+                        } else {
+                            // Target is dead, find a new target
+                            const nearestEnemy = this.findNearestEnemy(projectile.x, projectile.y, 300);
+                            if (nearestEnemy) {
+                                projectile.targetEnemy = nearestEnemy;
+                            }
+                        }
+                    }
+                    projectile.x += projectile.vx;
+                    projectile.y += projectile.vy;
+                    break;
+                    
                 case 'lightning':
                     // Lightning bolts don't move, they just display and fade
                     break;
@@ -3364,7 +3445,8 @@ class VibeSurvivor {
             'lightning': 'Lightning',
             'flamethrower': 'Flamethrower',
             'railgun': 'Railgun',
-            'missiles': 'Homing Missiles'
+            'missiles': 'Homing Missiles',
+            'homing_laser': 'Homing Laser'
         };
         return names[type] || 'Unknown Weapon';
     }
@@ -3378,7 +3460,8 @@ class VibeSurvivor {
             'lightning': 'Chain lightning that jumps between enemies',
             'flamethrower': 'Continuous flame stream with burning damage',
             'railgun': 'Ultra high damage piercing shot',
-            'missiles': 'Homing missiles with explosive damage'
+            'missiles': 'Homing missiles with explosive damage',
+            'homing_laser': 'Homing piercing laser beams with limited duration'
         };
         return descriptions[type] || 'Unknown weapon type';
     }
@@ -3560,6 +3643,9 @@ class VibeSurvivor {
         } else if (weapon.level === 8 && weapon.type === 'spread_shot') {
             weapon.type = 'spread';
         }
+        
+        // Check for weapon merges after upgrade
+        this.checkForWeaponMerges();
     }
     
     addNewWeapon(weaponType) {
@@ -3571,7 +3657,8 @@ class VibeSurvivor {
             'lightning': { damage: 20, fireRate: 100, range: 250, projectileSpeed: 0 },
             'flamethrower': { damage: 6, fireRate: 15, range: 120, projectileSpeed: 4 },
             'railgun': { damage: 50, fireRate: 90, range: 500, projectileSpeed: 15, piercing: 999 },
-            'missiles': { damage: 35, fireRate: 120, range: 400, projectileSpeed: 5, homing: true, explosionRadius: 60 }
+            'missiles': { damage: 35, fireRate: 120, range: 400, projectileSpeed: 5, homing: true, explosionRadius: 60 },
+            'homing_laser': { damage: 60, fireRate: 100, range: 400, projectileSpeed: 8, homing: true, piercing: true, isMergeWeapon: true }
         };
         
         const config = weaponConfigs[weaponType];
@@ -3581,6 +3668,55 @@ class VibeSurvivor {
             lastFire: 0,
             ...config
         });
+    }
+    
+    checkForWeaponMerges() {
+        // Check for laser + missiles both at level 3
+        const laserWeapon = this.weapons.find(w => w.type === 'laser' && w.level >= 3);
+        const missilesWeapon = this.weapons.find(w => w.type === 'missiles' && w.level >= 3);
+        
+        if (laserWeapon && missilesWeapon) {
+            this.performWeaponMerge('homing_laser', [laserWeapon, missilesWeapon]);
+        }
+    }
+    
+    performWeaponMerge(mergeWeaponType, sourceWeapons) {
+        // Remove source weapons from array
+        sourceWeapons.forEach(sourceWeapon => {
+            const index = this.weapons.indexOf(sourceWeapon);
+            if (index > -1) {
+                this.weapons.splice(index, 1);
+            }
+        });
+        
+        // Add merged weapon starting at level 1 with projectileCount 4
+        const mergedWeapon = {
+            type: mergeWeaponType,
+            level: 1,
+            lastFire: 0,
+            projectileCount: 4,
+            ...this.getWeaponConfig(mergeWeaponType)
+        };
+        
+        this.weapons.push(mergedWeapon);
+        
+        // Show merge notification
+        this.showUpgradeNotification(`${this.getWeaponName(mergeWeaponType)} - WEAPONS MERGED!`);
+    }
+    
+    getWeaponConfig(weaponType) {
+        const weaponConfigs = {
+            'spread': { damage: 12, fireRate: 40, range: 200, projectileSpeed: 6 },
+            'laser': { damage: 25, fireRate: 60, range: 350, projectileSpeed: 12 },
+            'plasma': { damage: 30, fireRate: 80, range: 300, projectileSpeed: 7 },
+            'shotgun': { damage: 8, fireRate: 45, range: 150, projectileSpeed: 10 },
+            'lightning': { damage: 20, fireRate: 100, range: 250, projectileSpeed: 0 },
+            'flamethrower': { damage: 6, fireRate: 15, range: 120, projectileSpeed: 4 },
+            'railgun': { damage: 50, fireRate: 90, range: 500, projectileSpeed: 15, piercing: 999 },
+            'missiles': { damage: 35, fireRate: 120, range: 400, projectileSpeed: 5, homing: true, explosionRadius: 60 },
+            'homing_laser': { damage: 60, fireRate: 100, range: 400, projectileSpeed: 8, homing: true, piercing: true, isMergeWeapon: true }
+        };
+        return weaponConfigs[weaponType] || {};
     }
     
     addPassiveAbility(passiveId) {
@@ -3620,7 +3756,7 @@ class VibeSurvivor {
             
             let projectileHit = false;
             let hitCount = 0;
-            const maxHits = projectile.piercing || 1;
+            const maxHits = projectile.piercing === true ? 999 : (projectile.piercing || 1);
             
             // Pre-screen enemies by distance for performance
             const nearbyEnemies = this.enemies.filter(enemy => {
@@ -3638,6 +3774,11 @@ class VibeSurvivor {
                 if (distance < enemy.radius + (projectile.size || 3) && hitCount < maxHits) {
                     hitCount++;
                     let damage = projectile.damage;
+                    
+                    // For homing lasers, track hit count on the projectile itself
+                    if (projectile.type === 'homing_laser') {
+                        projectile.hitCount = (projectile.hitCount || 0) + 1;
+                    }
                     
                     // Critical hit chance
                     if (this.player.passives.critical && Math.random() < 0.15) {
@@ -3658,7 +3799,13 @@ class VibeSurvivor {
                         enemy.burning = { damage: projectile.dotDamage, duration: 180 };
                     }
                     
-                    if (!['laser', 'railgun'].includes(projectile.type) || hitCount >= maxHits) {
+                    // Check if projectile should be removed
+                    if (projectile.type === 'homing_laser') {
+                        // Homing laser has limited hits and piercing
+                        if (projectile.hitCount >= (projectile.maxHits || 10)) {
+                            projectileHit = true;
+                        }
+                    } else if (!['laser', 'railgun'].includes(projectile.type) || hitCount >= maxHits) {
                         projectileHit = true;
                     }
                 }
@@ -3906,13 +4053,18 @@ class VibeSurvivor {
     }
     
     showUpgradeNotification(title) {
+        // Calculate stacked position for upgrade notifications
+        const upgradeNotifications = this.notifications.filter(n => n.type === 'upgrade');
+        const stackOffset = upgradeNotifications.length * 40; // Stack with 40px spacing
+        
         this.notifications.push({
             message: `${title} ACQUIRED!`,
             x: this.player.x,
-            y: this.player.y - 30, // Slightly above the player
+            y: this.player.y - 50 - stackOffset, // Base -50, then stack above
             life: 120,
             maxLife: 120,
-            alpha: 1
+            alpha: 1,
+            type: 'upgrade'
         });
     }
     
@@ -3920,10 +4072,11 @@ class VibeSurvivor {
         this.notifications.push({
             message: "⚠️ BOSS APPEARED! ⚠️",
             x: this.player.x,
-            y: this.player.y - 80, // Higher above the player for boss warning
+            y: this.player.y - 120, // Much higher above player for boss warning
             life: 180, // Show longer than regular notifications
             maxLife: 180,
-            alpha: 1
+            alpha: 1,
+            type: 'boss'
         });
     }
     
@@ -3931,10 +4084,11 @@ class VibeSurvivor {
         this.notifications.push({
             message: "🎉 BOSS DEFEATED! DIFFICULTY INCREASED! 🎉",
             x: this.player.x,
-            y: this.player.y - 60,
+            y: this.player.y - 180, // Even higher than boss notification
             life: 200, // Show longer for this important message
             maxLife: 200,
-            alpha: 1
+            alpha: 1,
+            type: 'victory'
         });
     }
     
@@ -4882,6 +5036,50 @@ class VibeSurvivor {
             this.ctx.globalAlpha = 1;
         }
         
+        // Render homing laser projectiles (special curved beams)
+        const homingLasers = projectilesByType['homing_laser'];
+        if (homingLasers) {
+            for (const projectile of homingLasers) {
+                this.ctx.globalAlpha = 0.9;
+                
+                // Draw outer glow
+                this.ctx.strokeStyle = projectile.color;
+                this.ctx.lineWidth = projectile.size + 2;
+                this.ctx.shadowColor = projectile.color;
+                this.ctx.shadowBlur = 10;
+                this.ctx.beginPath();
+                this.ctx.moveTo(projectile.x - projectile.vx * 4, projectile.y - projectile.vy * 4);
+                this.ctx.lineTo(projectile.x, projectile.y);
+                this.ctx.stroke();
+                
+                // Draw inner core
+                this.ctx.shadowBlur = 0;
+                this.ctx.strokeStyle = '#FFFFFF';
+                this.ctx.lineWidth = Math.max(1, projectile.size - 2);
+                this.ctx.beginPath();
+                this.ctx.moveTo(projectile.x - projectile.vx * 4, projectile.y - projectile.vy * 4);
+                this.ctx.lineTo(projectile.x, projectile.y);
+                this.ctx.stroke();
+                
+                // Draw trail particles for homing effect
+                if (Math.random() < 0.3) {
+                    this.ctx.fillStyle = projectile.color;
+                    this.ctx.globalAlpha = 0.6;
+                    this.ctx.beginPath();
+                    this.ctx.arc(
+                        projectile.x - projectile.vx * (2 + Math.random() * 6),
+                        projectile.y - projectile.vy * (2 + Math.random() * 6),
+                        1 + Math.random() * 2,
+                        0,
+                        2 * Math.PI
+                    );
+                    this.ctx.fill();
+                }
+                
+                this.ctx.globalAlpha = 1;
+            }
+        }
+        
         // Render complex projectiles individually (plasma, flame, lightning, missiles)
         const complexTypes = ['plasma', 'flame', 'lightning', 'missile', 'boss-missile'];
         for (const type of complexTypes) {
@@ -5209,11 +5407,15 @@ class VibeSurvivor {
         // Header Weapon display
         const headerWeaponDisplay = document.getElementById('header-weapon-display');
         if (headerWeaponDisplay) {
-            headerWeaponDisplay.innerHTML = this.weapons.map(weapon => `
-                <div class="header-weapon-item">
-                    ${this.getWeaponName(weapon.type)} ${weapon.level}
-                </div>
-            `).join('');
+            headerWeaponDisplay.innerHTML = this.weapons.map(weapon => {
+                const isMergeWeapon = weapon.isMergeWeapon || (weapon.type && weapon.type.includes('homing_laser'));
+                const mergeClass = isMergeWeapon ? ' header-weapon-merge' : '';
+                return `
+                    <div class="header-weapon-item${mergeClass}">
+                        ${this.getWeaponName(weapon.type)} ${weapon.level}
+                    </div>
+                `;
+            }).join('');
         }
         
         // Header Boss counter (only show after first boss defeat)
