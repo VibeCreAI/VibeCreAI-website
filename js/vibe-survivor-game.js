@@ -179,22 +179,28 @@ class VibeSurvivor {
                             <!-- Game Stats in Header -->
                             <div class="header-stats" id="header-stats" style="display: none;">
                                 <div class="header-primary-stats">
-                                    <div class="header-health">
-                                        <div class="header-health-bar">
-                                            <div class="header-health-fill" id="header-health-fill"></div>
+                                    <!-- Stacked Vitals (HP/XP) -->
+                                    <div class="header-vitals">
+                                        <div class="header-health">
+                                            <div class="header-health-bar">
+                                                <div class="header-health-fill" id="header-health-fill"></div>
+                                            </div>
+                                            <span class="header-health-text" id="header-health-text">100</span>
                                         </div>
-                                        <span class="header-health-text" id="header-health-text">100</span>
+                                        
+                                        <div class="header-xp">
+                                            <div class="header-xp-bar">
+                                                <div class="header-xp-fill" id="header-xp-fill"></div>
+                                            </div>
+                                            <span class="header-level-text" id="header-level-text">Lv1</span>
+                                        </div>
                                     </div>
                                     
-                                    <div class="header-xp">
-                                        <div class="header-xp-bar">
-                                            <div class="header-xp-fill" id="header-xp-fill"></div>
-                                        </div>
-                                        <span class="header-level-text" id="header-level-text">Lv1</span>
+                                    <!-- Stacked Timing Info (Time/Boss) -->
+                                    <div class="header-timing">
+                                        <div class="header-time" id="header-time-display">0:00</div>
+                                        <div class="header-bosses" id="header-boss-display" style="display: none;">Boss x0</div>
                                     </div>
-                                    
-                                    <div class="header-time" id="header-time-display">0:00</div>
-                                    <div class="header-bosses" id="header-boss-display" style="display: none;">Bosses: 0</div>
                                 </div>
                                 
                                 <div class="header-weapons" id="header-weapon-display"></div>
@@ -380,6 +386,19 @@ class VibeSurvivor {
                 gap: 20px;
                 flex-shrink: 0; /* Prevent primary stats from shrinking */
             }
+            
+            .header-vitals {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+            }
+            
+            .header-timing {
+                display: flex;
+                flex-direction: column;
+                gap: 2px;
+                align-items: center;
+            }
 
             .header-health, .header-xp {
                 display: flex;
@@ -388,7 +407,7 @@ class VibeSurvivor {
             }
             
             .header-health-bar, .header-xp-bar {
-                width: 80px;
+                width: 100px;
                 height: 8px;
                 background: rgba(255, 255, 255, 0.2);
                 border: 1px solid rgba(255, 255, 255, 0.3);
@@ -485,6 +504,15 @@ class VibeSurvivor {
                     width: 100%;
                 }
                 
+                .header-vitals {
+                    gap: 2px;
+                }
+                
+                .header-timing {
+                    gap: 1px;
+                    align-items: center;
+                }
+                
                 .header-health, .header-xp {
                     flex-direction: column;
                     gap: 2px;
@@ -539,6 +567,15 @@ class VibeSurvivor {
                     width: 100%;
                 }
                 
+                .header-vitals {
+                    gap: 3px;
+                }
+                
+                .header-timing {
+                    gap: 2px;
+                    align-items: center;
+                }
+                
                 .header-weapons {
                     display: flex; /* Show weapons below on narrow screens */
                     width: 100%;
@@ -547,7 +584,7 @@ class VibeSurvivor {
                 }
                 
                 .header-health-bar, .header-xp-bar {
-                    width: 45px;
+                    width: 60px;
                     height: 5px;
                 }
                 
@@ -584,8 +621,17 @@ class VibeSurvivor {
                     gap: 15px;
                 }
                 
+                .header-vitals {
+                    gap: 4px;
+                }
+                
+                .header-timing {
+                    gap: 2px;
+                    align-items: center;
+                }
+                
                 .header-health-bar, .header-xp-bar {
-                    width: 60px;
+                    width: 80px;
                     height: 6px;
                 }
                 
@@ -3717,8 +3763,10 @@ class VibeSurvivor {
         
         this.weapons.push(mergedWeapon);
         
-        // Show merge notification
-        this.showUpgradeNotification(`${this.getWeaponName(mergeWeaponType)} - WEAPONS MERGED!`);
+        // Show merge notification with slight delay to prevent overlap
+        setTimeout(() => {
+            this.showUpgradeNotification(`${this.getWeaponName(mergeWeaponType)} - WEAPONS MERGED!`);
+        }, 200); // 200ms delay
     }
     
     getWeaponConfig(weaponType) {
@@ -4070,14 +4118,10 @@ class VibeSurvivor {
     }
     
     showUpgradeNotification(title) {
-        // Calculate stacked position for upgrade notifications
-        const upgradeNotifications = this.notifications.filter(n => n.type === 'upgrade');
-        const stackOffset = upgradeNotifications.length * 40; // Stack with 40px spacing
-        
         this.notifications.push({
             message: `${title} ACQUIRED!`,
             x: this.player.x,
-            y: this.player.y - 50 - stackOffset, // Base -50, then stack above
+            y: this.calculateNotificationPosition('upgrade'),
             life: 120,
             maxLife: 120,
             alpha: 1,
@@ -4089,7 +4133,7 @@ class VibeSurvivor {
         this.notifications.push({
             message: "⚠️ BOSS APPEARED! ⚠️",
             x: this.player.x,
-            y: this.player.y - 120, // Much higher above player for boss warning
+            y: this.calculateNotificationPosition('boss'),
             life: 180, // Show longer than regular notifications
             maxLife: 180,
             alpha: 1,
@@ -4101,12 +4145,42 @@ class VibeSurvivor {
         this.notifications.push({
             message: "🎉 BOSS DEFEATED! DIFFICULTY INCREASED! 🎉",
             x: this.player.x,
-            y: this.player.y - 180, // Even higher than boss notification
+            y: this.calculateNotificationPosition('victory'),
             life: 200, // Show longer for this important message
             maxLife: 200,
             alpha: 1,
             type: 'victory'
         });
+    }
+    
+    calculateNotificationPosition(type) {
+        // Base heights for different notification types (priority order: victory > boss > upgrade)
+        const baseHeights = {
+            'victory': -200,   // Highest priority (moved higher)
+            'boss': -140,      // Medium priority  
+            'upgrade': -80     // Lowest priority
+        };
+        
+        let baseY = this.player.y + baseHeights[type];
+        
+        // Count all existing notifications for proper stacking
+        const existingNotifications = this.notifications.length;
+        
+        // More aggressive stacking with larger spacing for better visibility
+        if (existingNotifications > 0) {
+            baseY -= existingNotifications * 50; // Increased from 45px to 50px spacing
+        }
+        
+        // Additional spacing for upgrade notifications to prevent merge overlaps
+        if (type === 'upgrade') {
+            const upgradeCount = this.notifications.filter(n => n.type === 'upgrade').length;
+            if (upgradeCount > 0) {
+                // Extra spacing for multiple upgrades (like during merges)
+                baseY -= upgradeCount * 15;
+            }
+        }
+        
+        return baseY;
     }
     
     updateCamera() {
@@ -5440,7 +5514,7 @@ class VibeSurvivor {
         if (headerBossDisplay) {
             if (this.bossesKilled > 0) {
                 headerBossDisplay.style.display = 'block';
-                headerBossDisplay.textContent = `Bosses: ${this.bossesKilled}`;
+                headerBossDisplay.textContent = `Boss x${this.bossesKilled}`;
             } else {
                 headerBossDisplay.style.display = 'none';
             }
