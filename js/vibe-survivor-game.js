@@ -5,6 +5,7 @@ class VibeSurvivor {
         this.ctx = null;
         this.gameTime = 0;
         this.gameRunning = false;
+        this.playerDead = false;
         this.keys = {};
         
         // Player properties - start at world center
@@ -12,7 +13,7 @@ class VibeSurvivor {
             x: 0,
             y: 0,
             radius: 15,
-            speed: 2.0,
+            speed: 2.5,
             health: 100,
             maxHealth: 100,
             xp: 0,
@@ -116,6 +117,7 @@ class VibeSurvivor {
         };
         
         
+        
         this.initGame();
     }
     
@@ -199,13 +201,14 @@ class VibeSurvivor {
                             <button id="close-survivor" class="close-btn">×</button>
                         </div>
                         
-                        <div id="survivor-start-screen" class="vibe-survivor-screen active">
+                        <!-- Separate Start Screen Overlay -->
+                        <div id="survivor-start-overlay" class="survivor-start-overlay active">
                             <div class="survivor-title">
                                 <h1>VIBE SURVIVOR</h1>
                                 <p>Survive the endless waves!</p>
                                 <p class="controls-info">Use WASD to move, SPACEBAR to dash</p>
+                                <button id="start-survivor" class="survivor-btn primary">START GAME</button>
                             </div>
-                            <button id="start-survivor" class="survivor-btn primary">START GAME</button>
                         </div>
                         
                         <div id="game-screen" class="vibe-survivor-screen" style="position: relative;">
@@ -339,21 +342,6 @@ class VibeSurvivor {
                 overscroll-behavior: none;
             }
 
-            /* Mobile Responsive Height Fixes */
-            @media screen and (max-width: 768px) {
-                .vibe-survivor-content {
-                    width: 95%;
-                    border-radius: 15px;
-                }
-            }
-
-            @media screen and (max-width: 480px) {
-                .vibe-survivor-content {
-                    width: 98%;
-                    border-radius: 10px;
-                }
-            }
-
             .vibe-survivor-header {
                 padding: 15px 20px;
                 border-bottom: 2px solid rgba(0, 255, 255, 0.3);
@@ -366,7 +354,7 @@ class VibeSurvivor {
                 visibility: visible !important;
                 opacity: 1 !important;
                 background: rgba(0, 20, 40, 0.8);
-                min-height: 70px;
+                height: 90px;
                 flex-wrap: nowrap;
             }
             
@@ -660,7 +648,6 @@ class VibeSurvivor {
                 top: 0;
                 left: 0;
                 width: 100% !important;
-                height: 100% !important;
                 display: none !important;
                 align-items: center !important;
                 justify-content: center !important;
@@ -668,6 +655,29 @@ class VibeSurvivor {
                 z-index: 100 !important;
                 background: transparent !important;
                 overflow: hidden !important;
+            }
+            
+            /* Separate Start Screen Overlay - Contained within modal */
+            .survivor-start-overlay {
+                position: relative;
+                top: 50%;
+                max-height: 100%;
+                max-width: 900px;
+                display: none !important;
+                align-items: center !important;
+                justify-content: center !important;
+                flex-direction: column !important;
+                z-index: 150 !important;
+                background: linear-gradient(135deg, #0a0a1a 0%, #1a0a2a 100%);
+                backdrop-filter: blur(5px) !important;
+                overflow: hidden !important;
+                border-radius: inherit;
+            }
+            
+            .survivor-start-overlay.active {
+                display: flex !important;
+                visibility: visible !important;
+                opacity: 1 !important;
             }
 
             .vibe-survivor-screen.active {
@@ -686,8 +696,6 @@ class VibeSurvivor {
                 color: #00ffff;
                 font-size: 32px;
                 margin-bottom: 20px;
-                text-shadow: 0 0 20px rgba(0, 255, 255, 0.8),
-                            0 0 40px rgba(0, 255, 255, 0.5);
                 font-family: 'Arial Black', sans-serif;
                 animation: neonPulse 2s ease-in-out infinite;
             }
@@ -1003,8 +1011,8 @@ class VibeSurvivor {
 
             .mobile-dash-btn {
                 position: absolute;
-                bottom: 80px;
-                right: 50px;
+                bottom: 60px;
+                right: 60px;
                 width: 80px;
                 height: 80px;
                 background: rgba(0, 255, 255, 0.3);
@@ -1444,26 +1452,9 @@ class VibeSurvivor {
         }
         
         document.querySelectorAll('.vibe-survivor-screen').forEach(screen => screen.classList.remove('active'));
-        const startScreen = document.getElementById('survivor-start-screen');
-        if (startScreen) {
-            startScreen.classList.add('active');
-            
-            // Force visibility and override any CSS issues
-            startScreen.style.cssText = `
-                display: flex !important;
-                visibility: visible !important;
-                opacity: 1 !important;
-                height: 100% !important;
-                width: 100% !important;
-                position: absolute !important;
-                top: 0 !important;
-                left: 0 !important;
-                z-index: 1000 !important;
-                background: transparent !important;
-                align-items: center !important;
-                justify-content: center !important;
-                flex-direction: column !important;
-            `;
+        const startOverlay = document.getElementById('survivor-start-overlay');
+        if (startOverlay) {
+            startOverlay.classList.add('active');
             
             // Render canvas background now that game screen is visible
             if (this.canvas && this.ctx) {
@@ -1473,8 +1464,6 @@ class VibeSurvivor {
             }
             
             console.log('showStartScreen: Start screen activated and forced visible');
-            console.log('showStartScreen: Start screen HTML length:', startScreen.innerHTML.length);
-            console.log('showStartScreen: First 200 chars:', startScreen.innerHTML.substring(0, 200));
         } else {
             console.error('showStartScreen: Start screen element not found');
         }
@@ -1482,6 +1471,9 @@ class VibeSurvivor {
     
     startGame() {
         // Starting game with complete reinitialization
+        
+        // Reset death flag
+        this.playerDead = false;
         
         // Add body class to prevent terminal height changes during gameplay
         document.body.classList.add('game-modal-open');
@@ -1497,7 +1489,7 @@ class VibeSurvivor {
         this.hideModalHeader();
         
         // CRITICAL FIX: Explicitly hide start screen by clearing inline styles
-        const startScreen = document.getElementById('survivor-start-screen');
+        const startScreen = document.getElementById('survivor-start-overlay');
         if (startScreen) {
             startScreen.style.cssText = 'display: none !important;';
             startScreen.classList.remove('active');
@@ -1716,6 +1708,16 @@ class VibeSurvivor {
     }
     
     update() {
+        // Always update effects even if player is dead
+        this.updateScreenShake();
+        this.updateRedFlash();
+        this.updateExplosions();
+        this.updateParticles();
+        this.updateNotifications();
+        
+        // Skip game logic if player is dead
+        if (this.playerDead) return;
+        
         this.frameCount++;
         this.gameTime = this.frameCount / 60;
         
@@ -1725,16 +1727,11 @@ class VibeSurvivor {
         this.spawnEnemies();
         this.updateEnemies();
         this.updateProjectiles();
-        this.updateParticles();
         this.updateXPOrbs();
-        this.updateNotifications();
         
         this.checkCollisions();
         this.checkLevelUp();
         this.updateCamera();
-        this.updateScreenShake();
-        this.updateRedFlash();
-        this.updateExplosions();
     }
     
     updatePlayer() {
@@ -2015,8 +2012,8 @@ class VibeSurvivor {
         if (!dashBtn) return;
         
         // Always force consistent positioning - same as original CSS
-        dashBtn.style.right = '50px';
-        dashBtn.style.bottom = '80px';
+        dashBtn.style.right = '60px';
+        dashBtn.style.bottom = '60px';
     }
     
     updateTouchControlsPositioning() {
@@ -2615,7 +2612,7 @@ class VibeSurvivor {
     
     spawnEnemy() {
         const side = Math.floor(Math.random() * 4);
-        const spawnDistance = 300; // Distance from player to spawn enemies
+        const spawnDistance = 500; // Distance from player to spawn enemies
         let x, y;
         
         // Spawn enemies around the player's position instead of canvas bounds
@@ -2757,10 +2754,10 @@ class VibeSurvivor {
                 behavior: 'chase'
             },
             fast: {
-                radius: 8,
+                radius: 7,
                 health: 12,
-                speed: 1.875,
-                contactDamage: 8,
+                speed: 1.85,
+                contactDamage: 6,
                 color: '#ffff00', // Neon yellow
                 behavior: 'dodge'
             },
@@ -3639,7 +3636,13 @@ class VibeSurvivor {
                 this.createRedFlash(0.5);
                 
                 if (this.player.health <= 0) {
-                    this.gameOver();
+                    this.playerDead = true; // Mark player as dead to stop game logic
+                    // Delay stopping the game to let red flash complete
+                    setTimeout(() => {
+                        this.gameRunning = false;
+                        this.gameOver();
+                        this.showGameOverModal();
+                    }, 850);
                 }
             }
         });
@@ -3674,7 +3677,13 @@ class VibeSurvivor {
                     
                     // Check for game over
                     if (this.player.health <= 0) {
-                        this.gameOver();
+                        this.playerDead = true; // Mark player as dead to stop game logic
+                        // Delay stopping the game to let red flash complete
+                        setTimeout(() => {
+                            this.gameRunning = false;
+                            this.gameOver();
+                            this.showGameOverModal();
+                        }, 850);
                     }
                 }
             }
@@ -3777,6 +3786,7 @@ class VibeSurvivor {
             decay: 0.85
         };
     }
+    
     
     updateScreenShake() {
         if (this.screenShake && this.screenShake.duration > 0) {
@@ -4713,7 +4723,9 @@ class VibeSurvivor {
                         this.ctx.closePath();
                         this.ctx.stroke();
                         
-                        // Inner cross pattern
+                        // Inner cross pattern with reduced shadow for inner details
+                        const originalShadowBlur = this.ctx.shadowBlur;
+                        this.ctx.shadowBlur = 15; // Reduced shadow for inner pattern
                         this.ctx.strokeStyle = (enemy.color || '#ff00ff') + '80';
                         this.ctx.lineWidth = 2;
                         this.ctx.beginPath();
@@ -4723,8 +4735,10 @@ class VibeSurvivor {
                         this.ctx.lineTo(rb * 0.7, -rb * 0.7);
                         this.ctx.stroke();
                         
-                        // Reset alpha for boss after glow effect
+                        // Reset alpha and shadow after boss drawing is complete
                         this.ctx.globalAlpha = 1.0;
+                        this.ctx.shadowBlur = 0;
+                        this.ctx.shadowColor = 'transparent';
                         break;
                 }
                 
@@ -5147,7 +5161,9 @@ class VibeSurvivor {
         if (pauseBtn) {
             pauseBtn.style.display = 'none';
         }
-        
+    }
+    
+    showGameOverModal() {
         // Creating game over overlay
         
         // Calculate final stats
@@ -5651,66 +5667,9 @@ class VibeSurvivor {
         
         // Force show start screen and hide all others
         document.querySelectorAll('.vibe-survivor-screen').forEach(screen => screen.classList.remove('active'));
-        const startScreen = document.getElementById('survivor-start-screen');
+        const startScreen = document.getElementById('survivor-start-overlay');
         if (startScreen) {
             startScreen.classList.add('active');
-            
-            // Recreate start screen content to ensure visibility
-            startScreen.innerHTML = `
-                <div style="
-                    width: 100%;
-                    height: 100%;
-                    display: flex;
-                    flex-direction: column;
-                    justify-content: center;
-                    align-items: center;
-                    color: white;
-                    font-family: Arial, sans-serif;
-                    text-align: center;
-                    padding: 40px;
-                    box-sizing: border-box;
-                ">
-                    <div style="margin-bottom: 40px;">
-                        <h1 style="
-                            font-size: 4rem;
-                            margin: 0 0 20px 0;
-                            text-shadow: 0 0 20px rgba(155, 89, 182, 0.8);
-                            color: #9B59B6;
-                        ">VIBE SURVIVOR</h1>
-                        <p style="font-size: 1.4rem; margin: 15px 0; opacity: 0.9; color: white;">Survive the endless waves!</p>
-                        <p style="font-size: 1rem; color: #9B59B6; margin-top: 25px; font-weight: bold;">Use WASD to move, SPACEBAR to dash</p>
-                    </div>
-                    <button id="start-survivor" style="
-                        background: linear-gradient(135deg, #E74C3C, #C0392B);
-                        color: white;
-                        border: none;
-                        padding: 20px 40px;
-                        font-size: 1.3rem;
-                        border-radius: 25px;
-                                text-transform: uppercase;
-                        font-weight: bold;
-                        box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
-                        transition: transform 0.2s;
-                    " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">START GAME</button>
-                </div>
-            `;
-            
-            // Force visibility and override any CSS issues
-            startScreen.style.cssText = `
-                display: flex !important;
-                visibility: visible !important;
-                opacity: 1 !important;
-                height: 100% !important;
-                width: 100% !important;
-                position: absolute !important;
-                top: 0 !important;
-                left: 0 !important;
-                z-index: 1000 !important;
-                background: transparent !important;
-                align-items: center !important;
-                justify-content: center !important;
-                flex-direction: column !important;
-            `;
             
             // Re-attach start button event listener
             const startBtn = document.getElementById('start-survivor');
