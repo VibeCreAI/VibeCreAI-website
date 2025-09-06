@@ -2368,7 +2368,7 @@ class VibeSurvivor {
             life: 60,
             type: 'laser',
             color: '#E74C3C',
-            size: 2,
+            size: 3,
             piercing: true
         });
     }
@@ -2489,7 +2489,7 @@ class VibeSurvivor {
             life: 45,
             type: 'railgun',
             color: '#9B59B6',
-            size: 1,
+            size: 3,
             piercing: 999
         });
     }
