@@ -2581,7 +2581,7 @@ class VibeSurvivor {
         this.frameCount++;
         
         // Performance limit: maximum number of enemies on screen
-        const maxEnemies = 30; // Increased for performance testing
+        const maxEnemies = 20; // Increased for performance testing
         
         if (this.enemies.length >= maxEnemies) {
             return; // Don't spawn more if at limit
@@ -2639,8 +2639,8 @@ class VibeSurvivor {
         const type = this.selectEnemyType(enemyTypes);
         const config = this.getEnemyConfig(type);
         
-        // Calculate scaled speed for consistent gameplay across canvas sizes
-        const baseSpeed = config.speed * (1 + Math.floor(this.gameTime / 60) * 0.2);
+        // Calculate scaled speed - keep enemy speed constant to maintain gameplay feel
+        const baseSpeed = config.speed; // Removed time-based speed scaling
         const scaledSpeed = baseSpeed;
         
         const enemy = {
