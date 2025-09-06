@@ -111,6 +111,14 @@ class VibeSurvivor {
         this.bossesKilled = 0;
         this.bossLevel = 1;
         
+        // Menu navigation state for keyboard controls
+        this.menuNavigationState = {
+            active: false,
+            selectedIndex: 0,
+            menuType: null, // 'levelup', 'gameover', 'pause'
+            menuButtons: []
+        };
+        
         // Screen effects
         this.redFlash = {
             active: false,
@@ -360,7 +368,6 @@ class VibeSurvivor {
                 justify-content: space-between;
                 align-items: center;
                 position: relative !important;
-                z-index: 999999 !important;
                 pointer-events: auto !important;
                 visibility: visible !important;
                 opacity: 1 !important;
@@ -959,7 +966,7 @@ class VibeSurvivor {
                 border: 2px solid #00ffff;
                 border-radius: 15px;
                 padding: 30px;
-                z-index: 1000;
+                z-index: 2000;
                 box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
                 backdrop-filter: blur(10px);
             }
@@ -967,8 +974,8 @@ class VibeSurvivor {
             .levelup-title {
                 text-align: center;
                 color: #00ffff;
-                font-size: 1.8rem;
-                margin-bottom: 20px;
+                font-size: 1.5rem;
+                margin-bottom: 10px;
                 text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
             }
 
@@ -1251,14 +1258,17 @@ class VibeSurvivor {
         });
         
         document.getElementById('start-survivor').addEventListener('click', () => {
+            this.resetMenuNavigation();
             this.startGame();
         });
         
         document.getElementById('restart-survivor').addEventListener('click', () => {
+            this.resetMenuNavigation();
             this.restartGame();
         });
         
         document.getElementById('exit-survivor').addEventListener('click', () => {
+            this.resetMenuNavigation();
             this.closeGame();
         });
         
@@ -1278,6 +1288,51 @@ class VibeSurvivor {
         
         // Keyboard controls
         document.addEventListener('keydown', (e) => {
+            // Menu navigation takes priority
+            if (this.menuNavigationState.active) {
+                // Handle menu navigation keys
+                switch(e.key.toLowerCase()) {
+                    case 'arrowup':
+                    case 'w':
+                        e.preventDefault();
+                        this.navigateMenu('up');
+                        break;
+                    case 'arrowdown':
+                    case 's':
+                        e.preventDefault();
+                        this.navigateMenu('down');
+                        break;
+                    case 'arrowleft':
+                    case 'a':
+                        e.preventDefault();
+                        this.navigateMenu('left');
+                        break;
+                    case 'arrowright':
+                    case 'd':
+                        e.preventDefault();
+                        this.navigateMenu('right');
+                        break;
+                    case 'enter':
+                    case ' ':
+                        e.preventDefault();
+                        this.selectCurrentMenuItem();
+                        break;
+                    case 'escape':
+                        e.preventDefault();
+                        // Close menu or toggle pause based on menu type
+                        if (this.menuNavigationState.menuType === 'levelup') {
+                            // Can't escape level up menu
+                        } else if (this.menuNavigationState.menuType === 'gameover') {
+                            // Can't escape game over menu  
+                        } else if (this.menuNavigationState.menuType === 'pause') {
+                            this.togglePause();
+                        }
+                        break;
+                }
+                return;
+            }
+            
+            // Regular game controls
             if (this.gameRunning) {
                 // Store both lowercase and original case for arrow keys
                 this.keys[e.key.toLowerCase()] = true;
@@ -1525,6 +1580,19 @@ class VibeSurvivor {
                 requestAnimationFrame(() => {
                     this.renderStartScreenBackground();
                 });
+            }
+            
+            // Add menu navigation styles
+            this.addMenuNavigationStyles();
+            
+            // Initialize keyboard navigation for start screen buttons
+            const startBtn = document.getElementById('start-survivor');
+            const restartBtn = document.getElementById('restart-survivor');
+            const exitBtn = document.getElementById('exit-survivor');
+            const startButtons = [startBtn, restartBtn, exitBtn].filter(btn => btn); // Filter out null buttons
+            
+            if (startButtons.length > 0) {
+                this.initializeMenuNavigation('start', startButtons);
             }
             
             console.log('showStartScreen: Start screen activated and forced visible');
@@ -1954,6 +2022,65 @@ class VibeSurvivor {
                 });
             }
         }
+    }
+
+    // Menu Navigation Methods
+    initializeMenuNavigation(menuType, buttons) {
+        this.menuNavigationState.active = true;
+        this.menuNavigationState.selectedIndex = 0;
+        this.menuNavigationState.menuType = menuType;
+        this.menuNavigationState.menuButtons = buttons;
+        this.updateMenuSelection();
+    }
+    
+    updateMenuSelection() {
+        if (!this.menuNavigationState.active) return;
+        
+        // Remove previous selection styling
+        this.menuNavigationState.menuButtons.forEach((button, index) => {
+            button.classList.remove('menu-selected');
+            button.style.boxShadow = '';
+            button.style.borderColor = '';
+        });
+        
+        // Add current selection styling
+        const selectedButton = this.menuNavigationState.menuButtons[this.menuNavigationState.selectedIndex];
+        if (selectedButton) {
+            selectedButton.classList.add('menu-selected');
+            selectedButton.style.boxShadow = '0 0 15px rgba(0, 255, 255, 0.8)';
+            selectedButton.style.borderColor = '#00ffff';
+        }
+    }
+    
+    navigateMenu(direction) {
+        if (!this.menuNavigationState.active) return;
+        
+        const buttonCount = this.menuNavigationState.menuButtons.length;
+        if (buttonCount === 0) return;
+        
+        if (direction === 'up' || direction === 'left') {
+            this.menuNavigationState.selectedIndex = (this.menuNavigationState.selectedIndex - 1 + buttonCount) % buttonCount;
+        } else if (direction === 'down' || direction === 'right') {
+            this.menuNavigationState.selectedIndex = (this.menuNavigationState.selectedIndex + 1) % buttonCount;
+        }
+        
+        this.updateMenuSelection();
+    }
+    
+    selectCurrentMenuItem() {
+        if (!this.menuNavigationState.active) return;
+        
+        const selectedButton = this.menuNavigationState.menuButtons[this.menuNavigationState.selectedIndex];
+        if (selectedButton) {
+            selectedButton.click();
+        }
+    }
+    
+    resetMenuNavigation() {
+        this.menuNavigationState.active = false;
+        this.menuNavigationState.selectedIndex = 0;
+        this.menuNavigationState.menuType = null;
+        this.menuNavigationState.menuButtons = [];
     }
     
     exitToMenu() {
@@ -3559,9 +3686,23 @@ class VibeSurvivor {
             this.applyResponsiveModalStyles(modal, choices.length, isMobile);
         }
         
+        // Add menu navigation styles
+        this.addMenuNavigationStyles();
+        
+        // Collect upgrade choice buttons for keyboard navigation
+        const upgradeButtons = [];
+        choices.forEach((choice, index) => {
+            const button = document.querySelector(`[data-choice="${index}"]`);
+            upgradeButtons.push(button);
+        });
+        
+        // Initialize keyboard navigation
+        this.initializeMenuNavigation('levelup', upgradeButtons);
+        
         // Add event listeners to choices
         choices.forEach((choice, index) => {
             document.querySelector(`[data-choice="${index}"]`).addEventListener('click', () => {
+                this.resetMenuNavigation();
                 this.selectUpgrade(choice);
                 document.getElementById('levelup-modal').remove();
                 this.gameRunning = true;
@@ -3608,8 +3749,6 @@ class VibeSurvivor {
             // Let CSS handle responsive container sizing, only set scroll behavior
             container.style.cssText = `
                 max-height: calc(${modalMaxHeight}px - 8rem);
-                overflow-y: auto;
-                overflow-x: hidden;
                 padding: 0 10px;
                 margin: 10px -10px;
             `;
@@ -3637,7 +3776,7 @@ class VibeSurvivor {
                 choicesGrid.style.cssText = `
                     display: grid !important;
                     grid-template-columns: repeat(auto-fit, minmax(${choiceWidth}px, 1fr)) !important;
-                    gap: 20px !important;
+                    gap: 5px !important;
                     justify-content: center !important;
                 `;
             }
@@ -3668,6 +3807,66 @@ class VibeSurvivor {
         });
         
         console.log(`Level up modal sized: ${modalMaxWidth}x${modalMaxHeight}, choices: ${choiceCount}, mobile: ${isMobile}`);
+    }
+
+    
+    addMenuNavigationStyles() {
+        // Add CSS styles for keyboard navigation if not already added
+        if (document.getElementById('menu-navigation-styles')) return;
+        
+        const style = document.createElement('style');
+        style.id = 'menu-navigation-styles';
+        style.textContent = `
+            .menu-selected {
+                box-shadow: 0 0 15px rgba(0, 255, 255, 0.8) !important;
+                border: 2px solid #00ffff !important;
+                background: rgba(0, 255, 255, 0.1) !important;
+                transform: scale(1.05) !important;
+                transition: all 0.2s ease !important;
+            }
+            
+            .upgrade-choice.menu-selected {
+                box-shadow: 0 0 20px rgba(0, 255, 255, 0.9) !important;
+                border: 2px solid #00ffff !important;
+                background: rgba(0, 255, 255, 0.15) !important;
+            }
+            
+            #overlay-retry-btn.menu-selected,
+            #overlay-exit-btn.menu-selected {
+                background: rgba(0, 255, 255, 0.2) !important;
+                box-shadow: 0 0 15px rgba(0, 255, 255, 0.8) !important;
+                border-color: #00ffff !important;
+                color: #00ffff !important;
+                transform: scale(1.1) !important;
+            }
+            
+            #resume-btn.menu-selected,
+            #exit-to-menu-btn.menu-selected {
+                background: rgba(0, 255, 255, 0.2) !important;
+                box-shadow: 0 0 15px rgba(0, 255, 255, 0.8) !important;
+                border-color: #00ffff !important;
+                transform: scale(1.05) !important;
+            }
+            
+            #start-survivor.menu-selected,
+            #restart-survivor.menu-selected,
+            #exit-survivor.menu-selected {
+                background: rgba(0, 255, 255, 0.2) !important;
+                box-shadow: 0 0 15px rgba(0, 255, 255, 0.8) !important;
+                border-color: #00ffff !important;
+                transform: scale(1.05) !important;
+            }
+            
+            #victory-continue-btn.menu-selected,
+            #victory-retry-btn.menu-selected,
+            #victory-exit-btn.menu-selected {
+                background: rgba(0, 255, 255, 0.2) !important;
+                box-shadow: 0 0 15px rgba(0, 255, 255, 0.8) !important;
+                border-color: #00ffff !important;
+                transform: scale(1.05) !important;
+            }
+        `;
+        document.head.appendChild(style);
     }
     
     selectUpgrade(choice) {
@@ -3779,7 +3978,7 @@ class VibeSurvivor {
             'flamethrower': { damage: 6, fireRate: 15, range: 120, projectileSpeed: 4 },
             'railgun': { damage: 50, fireRate: 90, range: 500, projectileSpeed: 15, piercing: 999 },
             'missiles': { damage: 35, fireRate: 120, range: 400, projectileSpeed: 5, homing: true, explosionRadius: 60 },
-            'homing_laser': { damage: 30, fireRate: 100, range: 400, projectileSpeed: 8, homing: true, piercing: true, isMergeWeapon: true }
+            'homing_laser': { damage: 20, fireRate: 100, range: 400, projectileSpeed: 8, homing: true, piercing: true, isMergeWeapon: true }
         };
         return weaponConfigs[weaponType] || {};
     }
@@ -5695,6 +5894,8 @@ class VibeSurvivor {
         const retryHandler = (e) => {
             e.preventDefault();
             e.stopPropagation();
+            // Reset menu navigation
+            this.resetMenuNavigation();
             // Remove overlay
             gameOverOverlay.remove();
             style.remove();
@@ -5705,6 +5906,8 @@ class VibeSurvivor {
         const exitHandler = (e) => {
             e.preventDefault();
             e.stopPropagation();
+            // Reset menu navigation
+            this.resetMenuNavigation();
             // Remove overlay
             gameOverOverlay.remove();
             style.remove();
@@ -5717,6 +5920,13 @@ class VibeSurvivor {
         retryBtn.addEventListener('touchend', retryHandler);
         exitBtn.addEventListener('click', exitHandler);
         exitBtn.addEventListener('touchend', exitHandler);
+        
+        // Add menu navigation styles
+        this.addMenuNavigationStyles();
+        
+        // Initialize keyboard navigation for game over buttons
+        const gameOverButtons = [retryBtn, exitBtn];
+        this.initializeMenuNavigation('gameover', gameOverButtons);
         
         // Game over overlay ready
     }
@@ -5949,6 +6159,8 @@ class VibeSurvivor {
         const victoryContinueHandler = (e) => {
             e.preventDefault();
             e.stopPropagation();
+            // Reset menu navigation
+            this.resetMenuNavigation();
             // Remove overlay
             victoryOverlay.remove();
             style.remove();
@@ -5959,6 +6171,8 @@ class VibeSurvivor {
         const victoryRetryHandler = (e) => {
             e.preventDefault();
             e.stopPropagation();
+            // Reset menu navigation
+            this.resetMenuNavigation();
             // Remove overlay
             victoryOverlay.remove();
             style.remove();
@@ -5969,6 +6183,8 @@ class VibeSurvivor {
         const victoryExitHandler = (e) => {
             e.preventDefault();
             e.stopPropagation();
+            // Reset menu navigation
+            this.resetMenuNavigation();
             // Remove overlay
             victoryOverlay.remove();
             style.remove();
@@ -5983,6 +6199,13 @@ class VibeSurvivor {
         victoryRetryBtn.addEventListener('touchend', victoryRetryHandler);
         victoryExitBtn.addEventListener('click', victoryExitHandler);
         victoryExitBtn.addEventListener('touchend', victoryExitHandler);
+        
+        // Add menu navigation styles
+        this.addMenuNavigationStyles();
+        
+        // Initialize keyboard navigation for victory buttons
+        const victoryButtons = [victoryContinueBtn, victoryRetryBtn, victoryExitBtn];
+        this.initializeMenuNavigation('victory', victoryButtons);
         
         // Victory overlay ready
     }
