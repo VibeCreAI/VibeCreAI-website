@@ -2554,21 +2554,31 @@ class VibeSurvivor {
         // Create multiple projectiles based on projectileCount (starts at 4)
         const projectileCount = weapon.projectileCount || 4;
         
+        // Get multiple different targets for each laser
+        const availableTargets = this.enemies.slice().sort((a, b) => {
+            const distA = Math.sqrt((a.x - this.player.x) ** 2 + (a.y - this.player.y) ** 2);
+            const distB = Math.sqrt((b.x - this.player.x) ** 2 + (b.y - this.player.y) ** 2);
+            return distA - distB;
+        }).slice(0, Math.max(projectileCount, 8)); // Get up to 8 closest enemies
+        
         for (let i = 0; i < projectileCount; i++) {
             // Get projectile from pool
             const projectile = this.getPooledProjectile();
             
-            // Spread projectiles in a fan pattern
-            const spreadAngle = (projectileCount > 1) ? (i / (projectileCount - 1) - 0.5) * 0.6 : 0;
-            const baseAngle = Math.atan2(nearestEnemy.y - this.player.y, nearestEnemy.x - this.player.x);
+            // Assign different targets to each laser (cycle through available targets)
+            const targetEnemy = availableTargets[i % availableTargets.length] || nearestEnemy;
+            
+            // Start with spread pattern but will curve toward individual targets
+            const spreadAngle = (projectileCount > 1) ? (i / (projectileCount - 1) - 0.5) * 1.2 : 0;
+            const baseAngle = Math.atan2(targetEnemy.y - this.player.y, targetEnemy.x - this.player.x);
             const angle = baseAngle + spreadAngle;
             
             projectile.x = this.player.x;
             projectile.y = this.player.y;
-            projectile.vx = Math.cos(angle) * weapon.projectileSpeed;
-            projectile.vy = Math.sin(angle) * weapon.projectileSpeed;
+            projectile.vx = Math.cos(angle) * weapon.projectileSpeed * 0.7; // Start slower for better curves
+            projectile.vy = Math.sin(angle) * weapon.projectileSpeed * 0.7;
             projectile.damage = weapon.damage;
-            projectile.life = 140; // Limited lifetime: 2.3 seconds at 60fps
+            projectile.life = 160; // Slightly longer lifetime: 2.7 seconds for more chasing
             projectile.type = 'homing_laser';
             projectile.color = '#FFD700'; // Gold color for merge weapon
             projectile.size = 5;
@@ -2576,7 +2586,7 @@ class VibeSurvivor {
             projectile.piercing = true;
             projectile.hitCount = 0;
             projectile.maxHits = 10; // Limit to prevent infinite loops
-            projectile.targetEnemy = nearestEnemy;
+            projectile.targetEnemy = targetEnemy; // Each laser gets its own target
             projectile.speed = weapon.projectileSpeed;
             
             this.projectiles.push(projectile);
@@ -2589,7 +2599,7 @@ class VibeSurvivor {
         
         // Scale missile stats based on boss level
         const bossLevel = boss.bossLevel || 1;
-        const speedMultiplier = Math.pow(1.1, bossLevel - 1);
+        const speedMultiplier = Math.pow(1.05, bossLevel - 1);
         const damageMultiplier = Math.pow(1.15, bossLevel - 1);
         
         // Phase 1: Basic 3-missile spread (above 70% health)
@@ -2777,8 +2787,8 @@ class VibeSurvivor {
         const baseConfig = this.getEnemyConfig('boss');
         
         // Calculate scaled stats based on bosses killed
-        const healthMultiplier = Math.pow(1.2, this.bossesKilled);
-        const speedMultiplier = Math.pow(1.1, this.bossesKilled);
+        const healthMultiplier = Math.pow(1.4, this.bossesKilled);
+        const speedMultiplier = Math.pow(1.05, this.bossesKilled);
         const damageMultiplier = Math.pow(1.15, this.bossesKilled);
         const sizeMultiplier = Math.pow(1.05, this.bossesKilled);
         
@@ -3204,26 +3214,33 @@ class VibeSurvivor {
                         const targetStillExists = this.enemies.includes(projectile.targetEnemy);
                         
                         if (targetStillExists) {
-                            // Homing behavior - gradually turn toward target
+                            // Aggressive homing behavior with smooth curves
                             const dx = projectile.targetEnemy.x - projectile.x;
                             const dy = projectile.targetEnemy.y - projectile.y;
                             const distance = Math.sqrt(dx * dx + dy * dy);
                             
                             if (distance > 0) {
-                                const homingStrength = 0.08; // Stronger homing than regular missiles
-                                projectile.vx += (dx / distance) * homingStrength;
-                                projectile.vy += (dy / distance) * homingStrength;
+                                // Much stronger homing for dramatic curves
+                                const homingStrength = 0.25; // Much higher than 0.08
                                 
-                                // Maintain speed limit
+                                // Calculate desired direction
+                                const targetVx = (dx / distance) * projectile.speed;
+                                const targetVy = (dy / distance) * projectile.speed;
+                                
+                                // Smoothly blend current velocity toward target
+                                projectile.vx += (targetVx - projectile.vx) * homingStrength;
+                                projectile.vy += (targetVy - projectile.vy) * homingStrength;
+                                
+                                // Normalize to maintain speed
                                 const currentSpeed = Math.sqrt(projectile.vx * projectile.vx + projectile.vy * projectile.vy);
-                                if (currentSpeed > projectile.speed) {
+                                if (currentSpeed > 0) {
                                     projectile.vx = (projectile.vx / currentSpeed) * projectile.speed;
                                     projectile.vy = (projectile.vy / currentSpeed) * projectile.speed;
                                 }
                             }
                         } else {
-                            // Target is dead, find a new target
-                            const nearestEnemy = this.findNearestEnemy(projectile.x, projectile.y, 300);
+                            // Target is dead, find a new target within larger range
+                            const nearestEnemy = this.findNearestEnemy(projectile.x, projectile.y, 400);
                             if (nearestEnemy) {
                                 projectile.targetEnemy = nearestEnemy;
                             }
@@ -3658,7 +3675,7 @@ class VibeSurvivor {
             'flamethrower': { damage: 6, fireRate: 15, range: 120, projectileSpeed: 4 },
             'railgun': { damage: 50, fireRate: 90, range: 500, projectileSpeed: 15, piercing: 999 },
             'missiles': { damage: 35, fireRate: 120, range: 400, projectileSpeed: 5, homing: true, explosionRadius: 60 },
-            'homing_laser': { damage: 60, fireRate: 100, range: 400, projectileSpeed: 8, homing: true, piercing: true, isMergeWeapon: true }
+            'homing_laser': { damage: 30, fireRate: 100, range: 400, projectileSpeed: 8, homing: true, piercing: true, isMergeWeapon: true }
         };
         
         const config = weaponConfigs[weaponType];
@@ -3714,7 +3731,7 @@ class VibeSurvivor {
             'flamethrower': { damage: 6, fireRate: 15, range: 120, projectileSpeed: 4 },
             'railgun': { damage: 50, fireRate: 90, range: 500, projectileSpeed: 15, piercing: 999 },
             'missiles': { damage: 35, fireRate: 120, range: 400, projectileSpeed: 5, homing: true, explosionRadius: 60 },
-            'homing_laser': { damage: 60, fireRate: 100, range: 400, projectileSpeed: 8, homing: true, piercing: true, isMergeWeapon: true }
+            'homing_laser': { damage: 30, fireRate: 100, range: 400, projectileSpeed: 8, homing: true, piercing: true, isMergeWeapon: true }
         };
         return weaponConfigs[weaponType] || {};
     }
