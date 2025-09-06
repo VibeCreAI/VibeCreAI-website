@@ -107,6 +107,10 @@ class VibeSurvivor {
         this.spawnRate = 120; // frames between spawns
         this.waveMultiplier = 1;
         
+        // Boss progression system (starts after first boss defeat)
+        this.bossesKilled = 0;
+        this.bossLevel = 1;
+        
         // Screen effects
         this.redFlash = {
             active: false,
@@ -190,6 +194,7 @@ class VibeSurvivor {
                                     </div>
                                     
                                     <div class="header-time" id="header-time-display">0:00</div>
+                                    <div class="header-bosses" id="header-boss-display" style="display: none;">Bosses: 0</div>
                                 </div>
                                 
                                 <div class="header-weapons" id="header-weapon-display"></div>
@@ -406,12 +411,17 @@ class VibeSurvivor {
                 box-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
             }
             
-            .header-health-text, .header-level-text, .header-time {
+            .header-health-text, .header-level-text, .header-time, .header-bosses {
                 color: #00ffff;
                 font-size: 14px;
                 font-weight: bold;
                 text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
                 min-width: 30px;
+            }
+            
+            .header-bosses {
+                color: #ff00ff;
+                text-shadow: 0 0 5px rgba(255, 0, 255, 0.5);
             }
             
             .header-time {
@@ -2531,27 +2541,32 @@ class VibeSurvivor {
         const angleToPlayer = Math.atan2(this.player.y - boss.y, this.player.x - boss.x);
         let spreadAngles, damage, speed, homingStrength, color;
         
+        // Scale missile stats based on boss level
+        const bossLevel = boss.bossLevel || 1;
+        const speedMultiplier = Math.pow(1.1, bossLevel - 1);
+        const damageMultiplier = Math.pow(1.15, bossLevel - 1);
+        
         // Phase 1: Basic 3-missile spread (above 70% health)
         if (healthPercent > 0.7) {
             spreadAngles = [-0.3, 0, 0.3]; // 3 missiles with spread
-            damage = 25;
-            speed = 2.5;
+            damage = Math.floor(25 * damageMultiplier);
+            speed = 2.5 * speedMultiplier;
             homingStrength = 0.05;
             color = '#FF0066'; // Pink
         }
         // Phase 2: 5-missile spread with faster speed (30-70% health)
         else if (healthPercent > 0.3) {
             spreadAngles = [-0.6, -0.3, 0, 0.3, 0.6]; // 5 missiles with wider spread
-            damage = 30;
-            speed = 2.75;
+            damage = Math.floor(30 * damageMultiplier);
+            speed = 2.75 * speedMultiplier;
             homingStrength = 0.07;
             color = '#FF3366'; // Brighter pink
         }
         // Phase 3: 7-missile burst with high speed and homing (below 30% health)
         else {
             spreadAngles = [-0.9, -0.6, -0.3, 0, 0.3, 0.6, 0.9]; // 7 missiles, wide spread
-            damage = 35;
-            speed = 3;
+            damage = Math.floor(35 * damageMultiplier);
+            speed = 3 * speedMultiplier;
             homingStrength = 0.10;
             color = '#FF0033'; // Deep red
         }
@@ -2703,6 +2718,54 @@ class VibeSurvivor {
         });
         
         // Show boss notification
+        this.showBossNotification();
+    }
+    
+    spawnScaledBoss() {
+        // Spawn progressively stronger boss after first boss defeat
+        const spawnDistance = 250;
+        const angle = Math.random() * Math.PI * 2;
+        const x = this.player.x + Math.cos(angle) * spawnDistance;
+        const y = this.player.y + Math.sin(angle) * spawnDistance;
+        
+        const baseConfig = this.getEnemyConfig('boss');
+        
+        // Calculate scaled stats based on bosses killed
+        const healthMultiplier = Math.pow(1.2, this.bossesKilled);
+        const speedMultiplier = Math.pow(1.1, this.bossesKilled);
+        const damageMultiplier = Math.pow(1.15, this.bossesKilled);
+        const sizeMultiplier = Math.pow(1.05, this.bossesKilled);
+        
+        const scaledHealth = Math.floor(baseConfig.health * healthMultiplier);
+        const scaledSpeed = baseConfig.speed * speedMultiplier;
+        const scaledDamage = Math.floor(baseConfig.contactDamage * damageMultiplier);
+        const scaledRadius = Math.floor(baseConfig.radius * sizeMultiplier);
+        
+        this.enemies.push({
+            x: x,
+            y: y,
+            radius: scaledRadius,
+            speed: scaledSpeed,
+            baseSpeed: scaledSpeed,
+            health: scaledHealth,
+            maxHealth: scaledHealth,
+            contactDamage: scaledDamage,
+            color: baseConfig.color,
+            behavior: baseConfig.behavior,
+            specialCooldown: 0,
+            burning: null,
+            angle: 0,
+            rotSpeed: 0.02,
+            lastMissileFrame: 0,
+            spawnedMinions: false,
+            // Store boss level for rendering effects
+            bossLevel: this.bossLevel
+        });
+        
+        console.log(`Spawned Boss Level ${this.bossLevel}: HP=${scaledHealth}, Speed=${scaledSpeed.toFixed(2)}, Damage=${scaledDamage}, Size=${scaledRadius}`);
+        this.bossSpawned = true;
+        
+        // Show boss notification for scaled boss
         this.showBossNotification();
     }
     
@@ -2950,17 +3013,21 @@ class VibeSurvivor {
                     // Boss missile attack with different patterns based on health phase
                     let missileInterval;
                     
+                    // Scale missile firing rate based on boss level (faster for higher levels)
+                    const bossLevel = enemy.bossLevel || 1;
+                    const fireRateMultiplier = Math.pow(0.95, bossLevel - 1); // 5% faster per level
+                    
                     // Phase 1: Slow missiles (above 70% health) - every 4 seconds
                     if (bossHealthPercent > 0.7) {
-                        missileInterval = 240; // 4 seconds at 60fps
+                        missileInterval = Math.floor(240 * fireRateMultiplier); // 4 seconds at 60fps
                     }
                     // Phase 2: Moderate missiles (30-70% health) - every 2.5 seconds  
                     else if (bossHealthPercent > 0.3) {
-                        missileInterval = 150; // 2.5 seconds at 60fps
+                        missileInterval = Math.floor(150 * fireRateMultiplier); // 2.5 seconds at 60fps
                     }
                     // Phase 3: Rapid missiles (below 30% health) - every 1.5 seconds
                     else {
-                        missileInterval = 90; // 1.5 seconds at 60fps
+                        missileInterval = Math.floor(90 * fireRateMultiplier); // 1.5 seconds at 60fps
                     }
                     
                     if (!enemy.lastMissileFrame || this.frameCount - enemy.lastMissileFrame > missileInterval) {
@@ -4670,10 +4737,17 @@ class VibeSurvivor {
                 
                 // Add glow effect for boss like player has
                 if (type === 'boss') {
-                    // Create pulsing radial gradient glow for boss
-                    const glowSize = 60 + Math.sin(Date.now() * 0.008) * 20;
+                    // Scale glow based on boss level for higher level bosses
+                    const bossLevel = enemy.bossLevel || 1;
+                    const glowMultiplier = Math.pow(1.1, bossLevel - 1); // Scale glow with boss level
+                    const baseGlowSize = 60 * glowMultiplier;
+                    const glowSize = baseGlowSize + Math.sin(Date.now() * 0.008) * (20 * glowMultiplier);
+                    
+                    // Increase glow intensity for higher level bosses
+                    const glowIntensity = Math.min(0.6, 0.4 + (bossLevel - 1) * 0.02);
+                    
                     const gradient = this.ctx.createRadialGradient(0, 0, 0, 0, 0, glowSize);
-                    gradient.addColorStop(0, 'rgba(255, 0, 255, 0.4)'); // Magenta glow
+                    gradient.addColorStop(0, `rgba(255, 0, 255, ${glowIntensity})`); // Magenta glow
                     gradient.addColorStop(1, 'rgba(255, 0, 255, 0)');
                     
                     this.ctx.fillStyle = gradient;
@@ -5141,6 +5215,17 @@ class VibeSurvivor {
                 </div>
             `).join('');
         }
+        
+        // Header Boss counter (only show after first boss defeat)
+        const headerBossDisplay = document.getElementById('header-boss-display');
+        if (headerBossDisplay) {
+            if (this.bossesKilled > 0) {
+                headerBossDisplay.style.display = 'block';
+                headerBossDisplay.textContent = `Bosses: ${this.bossesKilled}`;
+            } else {
+                headerBossDisplay.style.display = 'none';
+            }
+        }
     }
     
     gameOver() {
@@ -5236,6 +5321,18 @@ class VibeSurvivor {
                         <span>Enemies:</span>
                         <span style="color: #ff00ff; font-weight: bold;">${finalStats.enemiesKilled}</span>
                     </div>
+                    ${this.bossesKilled > 0 ? `
+                    <div style="
+                        display: flex;
+                        justify-content: space-between;
+                        margin: 8px 0;
+                        font-size: 18px;
+                        color: #00ffff;
+                    ">
+                        <span>Bosses Defeated:</span>
+                        <span style="color: #ff00ff; font-weight: bold;">${this.bossesKilled}</span>
+                    </div>
+                    ` : ''}
                 </div>
                 
                 <div style="display: flex; gap: 15px; justify-content: center;">
@@ -5399,7 +5496,7 @@ class VibeSurvivor {
                     font-weight: bold !important;
                     margin-bottom: 25px !important;
                     text-shadow: 0 0 10px rgba(255, 255, 0, 0.6) !important;
-                ">BOSS DEFEATED</div>
+                ">${this.bossesKilled === 0 ? 'BOSS DEFEATED' : `BOSS LEVEL ${this.bossLevel - 1} DEFEATED`}</div>
                 
                 <div style="margin-bottom: 25px !important;">
                     <div style="
@@ -5432,6 +5529,28 @@ class VibeSurvivor {
                         <span>Enemies Defeated:</span>
                         <span style="color: #00ff00; font-weight: bold;">${finalStats.enemiesKilled}</span>
                     </div>
+                    ${this.bossesKilled >= 1 ? `
+                    <div style="
+                        display: flex;
+                        justify-content: space-between;
+                        margin: 8px 0;
+                        font-size: 18px;
+                        color: #00ffff;
+                    ">
+                        <span>Total Bosses Defeated:</span>
+                        <span style="color: #ff00ff; font-weight: bold;">${this.bossesKilled}</span>
+                    </div>
+                    <div style="
+                        margin: 15px 0;
+                        font-size: 16px;
+                        color: #ffff00;
+                        text-align: center;
+                        font-weight: bold;
+                        text-shadow: 0 0 8px rgba(255, 255, 0, 0.8);
+                    ">
+                        Next: Boss Level ${this.bossLevel}
+                    </div>
+                    ` : ''}
                 </div>
                 
                 <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
@@ -5583,10 +5702,16 @@ class VibeSurvivor {
         this.enemies = [];
         this.projectiles = [];
         
-        // Increase game difficulty
+        // Increment boss progression counters
+        this.bossesKilled++;
+        this.bossLevel++;
+        
+        // Spawn the next scaled boss immediately
+        this.spawnScaledBoss();
+        
+        // Increase general game difficulty
         this.waveNumber = Math.max(1, this.waveNumber + 1);
         this.spawnRate = Math.max(0.3, this.spawnRate * 0.9); // Spawn enemies faster
-        this.maxEnemies = Math.min(150, this.maxEnemies + 10); // More max enemies
         
         // Restore player to full health as a reward
         this.player.health = this.player.maxHealth;
