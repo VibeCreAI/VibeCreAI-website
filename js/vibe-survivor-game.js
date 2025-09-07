@@ -385,7 +385,7 @@ class VibeSurvivor {
             .header-stats {
                 display: flex !important;
                 align-items: center;
-                gap: 20px;
+                gap: 5px;
                 flex: 1;
                 justify-content: center;
                 margin: 0 60px; /* Reserve 60px each side for buttons */
@@ -459,6 +459,7 @@ class VibeSurvivor {
             .header-time {
                 font-size: 16px;
                 color: #ffff00;
+                margin-right: 10px;
                 text-shadow: 0 0 8px rgba(255, 255, 0, 0.6);
             }
             
@@ -568,7 +569,7 @@ class VibeSurvivor {
                 }
                 
                 .header-stats {
-                    gap: 8px;
+                    gap: 5px;
                     margin: 0 50px; /* 35px buttons + 15px clearance each side */
                     overflow: visible; /* Allow overflow for wrapped content */
                     flex-direction: column; /* Stack rows vertically */
@@ -624,7 +625,7 @@ class VibeSurvivor {
                 }
                 
                 .header-stats {
-                    gap: 15px;
+                    gap: 5px;
                     margin: 0 55px; /* 40px buttons + 15px clearance each side */
                     overflow: hidden;
                     flex-direction: row; /* Keep single row for standard mobile */
@@ -685,7 +686,7 @@ class VibeSurvivor {
                 font-weight: bold;
                 transition: all 0.3s ease;
                 position: absolute !important;
-                top: 15px !important;
+                top: 23px !important;
                 right: 15px !important;
                 z-index: 999999 !important;
                 pointer-events: auto !important;
@@ -706,7 +707,7 @@ class VibeSurvivor {
             /* Position pause button on left */
             #pause-btn {
                 position: absolute !important;
-                top: 15px !important;
+                top: 23px !important;
                 left: 15px !important;
                 z-index: 999999 !important;
                 pointer-events: auto !important;
@@ -1154,7 +1155,7 @@ class VibeSurvivor {
                 
                 .close-btn { 
                     position: absolute !important;
-                    top: 15px !important; 
+                    top: 23px !important; 
                     right: 15px !important; 
                     width: 32px; 
                     height: 32px; 
@@ -2949,7 +2950,16 @@ class VibeSurvivor {
             specialCooldown: 0,
             burning: null,
             spawnedMinions: false,
-            lastMissileFrame: 0 // Initialize missile timing for boss attacks
+            lastMissileFrame: 0, // Initialize missile timing for boss attacks
+            // Dash state for Phase 3 movement
+            dashState: {
+                active: false,
+                targetX: 0,
+                targetY: 0,
+                duration: 0,
+                maxDuration: 30, // 0.5 seconds at 60fps
+                originalSpeed: 0
+            }
         });
         
         // Show boss notification
@@ -2971,7 +2981,10 @@ class VibeSurvivor {
         const damageMultiplier = Math.pow(1.15, this.bossesKilled);
         const sizeMultiplier = Math.pow(1.05, this.bossesKilled);
         
-        const scaledHealth = Math.floor(baseConfig.health * healthMultiplier);
+        // Use effective first boss HP (4000) as base instead of config HP (1000)
+        // First boss HP = 1000 * (1 + Math.floor(300 / 30) * 0.3) = 1000 * (1 + 10 * 0.3) = 4000
+        const effectiveBaseHP = 4000; // Match first boss effective HP after time scaling
+        const scaledHealth = Math.floor(effectiveBaseHP * healthMultiplier);
         const scaledSpeed = baseConfig.speed * speedMultiplier;
         const scaledDamage = Math.floor(baseConfig.contactDamage * damageMultiplier);
         const scaledRadius = Math.floor(baseConfig.radius * sizeMultiplier);
@@ -2994,7 +3007,16 @@ class VibeSurvivor {
             lastMissileFrame: 0,
             spawnedMinions: false,
             // Store boss level for rendering effects
-            bossLevel: this.bossLevel
+            bossLevel: this.bossLevel,
+            // Dash state for Phase 3 movement
+            dashState: {
+                active: false,
+                targetX: 0,
+                targetY: 0,
+                duration: 0,
+                maxDuration: 30, // 0.5 seconds at 60fps
+                originalSpeed: 0
+            }
         });
         
         console.log(`Spawned Boss Level ${this.bossLevel}: HP=${scaledHealth}, Speed=${scaledSpeed.toFixed(2)}, Damage=${scaledDamage}, Size=${scaledRadius}`);
@@ -3221,27 +3243,46 @@ class VibeSurvivor {
                         }
                         // Boss can move freely in infinite world (no canvas bounds constraint)
                     }
-                    // Phase 3: Aggressive and teleport (below 30% health)
+                    // Phase 3: Aggressive and dash (below 30% health)
                     else {
                         const dx = this.player.x - enemy.x;
                         const dy = this.player.y - enemy.y;
                         const distance = Math.sqrt(dx * dx + dy * dy);
                         
-                        // Random chance to teleport closer to player
-                        if (Math.random() < 0.02) { // 2% chance per frame
-                            const teleportDistance = 100 + Math.random() * 100;
-                            const angle = Math.atan2(dy, dx);
-                            enemy.x = this.player.x - Math.cos(angle) * teleportDistance;
-                            enemy.y = this.player.y - Math.sin(angle) * teleportDistance;
+                        // Handle dash state
+                        if (enemy.dashState.active) {
+                            // Continue dash movement
+                            const dashDx = enemy.dashState.targetX - enemy.x;
+                            const dashDy = enemy.dashState.targetY - enemy.y;
+                            const dashDistance = Math.sqrt(dashDx * dashDx + dashDy * dashDy);
                             
-                            // Boss can move freely in infinite world (no canvas bounds constraint)
-                        } else {
-                            // Aggressive chase
-                            if (distance > 0) {
-                                enemy.x += (dx / distance) * enemy.speed * 2;
-                                enemy.y += (dy / distance) * enemy.speed * 2;
+                            if (dashDistance > 5 && enemy.dashState.duration > 0) {
+                                // Move toward dash target at high speed
+                                const dashSpeed = enemy.speed * 6; // 6x normal speed for dash
+                                enemy.x += (dashDx / dashDistance) * dashSpeed;
+                                enemy.y += (dashDy / dashDistance) * dashSpeed;
+                                enemy.dashState.duration--;
+                            } else {
+                                // End dash
+                                enemy.dashState.active = false;
+                                enemy.speed = enemy.dashState.originalSpeed; // Restore original speed
                             }
-                            // Boss can move freely in infinite world (no canvas bounds constraint)
+                        } else {
+                            // Random chance to start dash toward player
+                            if (Math.random() < 0.02 && distance > 100) { // 2% chance per frame, only if far enough
+                                // Start dash
+                                enemy.dashState.active = true;
+                                enemy.dashState.targetX = this.player.x + (Math.random() - 0.5) * 60; // Slight randomness
+                                enemy.dashState.targetY = this.player.y + (Math.random() - 0.5) * 60;
+                                enemy.dashState.duration = enemy.dashState.maxDuration;
+                                enemy.dashState.originalSpeed = enemy.speed;
+                            } else {
+                                // Aggressive chase
+                                if (distance > 0) {
+                                    enemy.x += (dx / distance) * enemy.speed * 2;
+                                    enemy.y += (dy / distance) * enemy.speed * 2;
+                                }
+                            }
                         }
                     }
                     
@@ -6316,8 +6357,10 @@ class VibeSurvivor {
         this.bossesKilled++;
         this.bossLevel++;
         
-        // Spawn the next scaled boss immediately
-        this.spawnScaledBoss();
+        // Spawn the next scaled boss after 10-second delay
+        setTimeout(() => {
+            this.spawnScaledBoss();
+        }, 10000); // 10 seconds
         
         // Increase general game difficulty
         this.waveNumber = Math.max(1, this.waveNumber + 1);
