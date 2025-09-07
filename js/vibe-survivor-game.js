@@ -2497,6 +2497,12 @@ class VibeSurvivor {
                     case 'homing_laser':
                         this.createHomingLaserBeam(weapon, nearestEnemy);
                         break;
+                    case 'shockburst':
+                        // Shockburst handles its own target distribution, only call once
+                        if (i === 0) { // Only create shockburst on first iteration
+                            this.createShockburst(weapon, nearestEnemy);
+                        }
+                        break;
                 }
             }
         }
@@ -2685,6 +2691,99 @@ class VibeSurvivor {
                 type: 'lightning',
                 color: '#F1C40F',
                 chainCount: chainCount
+            });
+        }
+    }
+
+    createShockburst(weapon, targetEnemy) {
+        // Create multiple shockburst bolts based on projectileCount
+        const projectileCount = weapon.projectileCount || 4;
+        
+        // Get multiple different targets for each shockburst bolt (similar to lightning)
+        const availableTargets = this.enemies.slice().sort((a, b) => {
+            const distA = Math.sqrt((a.x - this.player.x) ** 2 + (a.y - this.player.y) ** 2);
+            const distB = Math.sqrt((b.x - this.player.x) ** 2 + (b.y - this.player.y) ** 2);
+            return distA - distB;
+        }).slice(0, Math.max(projectileCount, 8)); // Get up to 8 closest enemies
+        
+        for (let i = 0; i < projectileCount; i++) {
+            // Assign different targets to each shockburst bolt (cycle through available targets)
+            const assignedTarget = availableTargets[i % availableTargets.length] || targetEnemy;
+            
+            const hitEnemies = new Set();
+            let currentTarget = assignedTarget;
+            let chainCount = 0;
+            const maxChains = 2 + Math.floor(weapon.level / 2);
+            const chainTargets = []; // Store all chain targets for rendering
+            const explosionPoints = []; // Store explosion locations
+            
+            while (currentTarget && chainCount < maxChains) {
+                hitEnemies.add(currentTarget);
+                
+                // Deal chain lightning damage
+                currentTarget.health -= weapon.damage;
+                
+                // Store target position for rendering
+                chainTargets.push({
+                    x: currentTarget.x,
+                    y: currentTarget.y
+                });
+                
+                // Create explosion at this enemy location
+                explosionPoints.push({
+                    x: currentTarget.x,
+                    y: currentTarget.y
+                });
+                
+                // Apply explosion damage to nearby enemies
+                this.enemies.forEach(enemy => {
+                    if (enemy !== currentTarget) {
+                        const dx = enemy.x - currentTarget.x;
+                        const dy = enemy.y - currentTarget.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        if (distance <= weapon.explosionRadius) {
+                            enemy.health -= weapon.damage * 0.7; // Explosion does 70% damage
+                            this.createHitParticles(enemy.x, enemy.y, '#00FFFF');
+                        }
+                    }
+                });
+                
+                // Create explosion particles
+                this.createExplosionParticles(currentTarget.x, currentTarget.y, '#00FFFF', weapon.explosionRadius);
+                
+                // Find next target for chain
+                let nextTarget = null;
+                let nearestDistance = Infinity;
+                
+                this.enemies.forEach(enemy => {
+                    if (!hitEnemies.has(enemy)) {
+                        const dx = enemy.x - currentTarget.x;
+                        const dy = enemy.y - currentTarget.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        if (distance < nearestDistance && distance <= 150) {
+                            nearestDistance = distance;
+                            nextTarget = enemy;
+                        }
+                    }
+                });
+                
+                currentTarget = nextTarget;
+                chainCount++;
+            }
+            
+            this.projectiles.push({
+                x: this.player.x,
+                y: this.player.y,
+                targetX: assignedTarget.x,
+                targetY: assignedTarget.y,
+                chainTargets: chainTargets, // Store all chain positions
+                explosionPoints: explosionPoints, // Store explosion locations
+                damage: weapon.damage,
+                life: 30,
+                type: 'shockburst',
+                color: '#00FFFF', // Cyan color
+                chainCount: chainCount,
+                explosionRadius: weapon.explosionRadius
             });
         }
     }
@@ -3532,6 +3631,10 @@ class VibeSurvivor {
                     // Lightning bolts don't move, they just display and fade
                     break;
                     
+                case 'shockburst':
+                    // Shockburst bolts don't move, they just display and fade like lightning
+                    break;
+                    
                 default:
                     projectile.x += projectile.vx;
                     projectile.y += projectile.vy;
@@ -3735,7 +3838,8 @@ class VibeSurvivor {
             'flamethrower': 'Flamethrower',
             'railgun': 'Railgun',
             'missiles': 'Homing Missiles',
-            'homing_laser': 'Homing Laser'
+            'homing_laser': 'Homing Laser',
+            'shockburst': 'Shockburst'
         };
         return names[type] || 'Unknown Weapon';
     }
@@ -3750,7 +3854,8 @@ class VibeSurvivor {
             'flamethrower': 'Continuous flame stream with burning damage',
             'railgun': 'Ultra high damage piercing shot',
             'missiles': 'Homing missiles with explosive damage',
-            'homing_laser': 'Homing piercing laser beams with limited duration'
+            'homing_laser': 'Homing piercing laser beams with limited duration',
+            'shockburst': 'Explosive chain lightning that creates plasma bursts at each enemy'
         };
         return descriptions[type] || 'Unknown weapon type';
     }
@@ -4173,7 +4278,8 @@ class VibeSurvivor {
             'flamethrower': { damage: 6, fireRate: 15, range: 120, projectileSpeed: 4 },
             'railgun': { damage: 50, fireRate: 90, range: 500, projectileSpeed: 15, piercing: 999 },
             'missiles': { damage: 35, fireRate: 120, range: 400, projectileSpeed: 5, homing: true, explosionRadius: 60 },
-            'homing_laser': { damage: 30, fireRate: 100, range: 400, projectileSpeed: 8, homing: true, piercing: true, isMergeWeapon: true }
+            'homing_laser': { damage: 30, fireRate: 100, range: 400, projectileSpeed: 8, homing: true, piercing: true, isMergeWeapon: true },
+            'shockburst': { damage: 25, fireRate: 90, range: 275, projectileSpeed: 0, explosionRadius: 60, isMergeWeapon: true }
         };
         
         const config = weaponConfigs[weaponType];
@@ -4192,6 +4298,14 @@ class VibeSurvivor {
         
         if (laserWeapon && missilesWeapon) {
             this.performWeaponMerge('homing_laser', [laserWeapon, missilesWeapon]);
+        }
+        
+        // Check for lightning + plasma both at level 3
+        const lightningWeapon = this.weapons.find(w => w.type === 'lightning' && w.level >= 3);
+        const plasmaWeapon = this.weapons.find(w => w.type === 'plasma' && w.level >= 3);
+        
+        if (lightningWeapon && plasmaWeapon) {
+            this.performWeaponMerge('shockburst', [lightningWeapon, plasmaWeapon]);
         }
     }
     
@@ -4231,7 +4345,8 @@ class VibeSurvivor {
             'flamethrower': { damage: 6, fireRate: 15, range: 120, projectileSpeed: 4 },
             'railgun': { damage: 50, fireRate: 90, range: 500, projectileSpeed: 15, piercing: 999 },
             'missiles': { damage: 35, fireRate: 120, range: 400, projectileSpeed: 5, homing: true, explosionRadius: 60 },
-            'homing_laser': { damage: 20, fireRate: 100, range: 400, projectileSpeed: 8, homing: true, piercing: true, isMergeWeapon: true }
+            'homing_laser': { damage: 20, fireRate: 100, range: 400, projectileSpeed: 8, homing: true, piercing: true, isMergeWeapon: true },
+            'shockburst': { damage: 25, fireRate: 90, range: 275, projectileSpeed: 0, explosionRadius: 60, isMergeWeapon: true }
         };
         return weaponConfigs[weaponType] || {};
     }
@@ -5646,6 +5761,68 @@ class VibeSurvivor {
                                     this.ctx.lineTo(x, y);
                                 }
                                 this.ctx.stroke();
+                                
+                                // Update previous position for next chain segment
+                                prevX = target.x;
+                                prevY = target.y;
+                            });
+                        } else {
+                            // Fallback to original single-target rendering
+                            this.ctx.beginPath();
+                            this.ctx.moveTo(projectile.x, projectile.y);
+                            const steps = 3;
+                            for (let i = 1; i <= steps; i++) {
+                                const progress = i / steps;
+                                const x = projectile.x + (projectile.targetX - projectile.x) * progress + (Math.random() - 0.5) * 10;
+                                const y = projectile.y + (projectile.targetY - projectile.y) * progress + (Math.random() - 0.5) * 10;
+                                this.ctx.lineTo(x, y);
+                            }
+                            this.ctx.stroke();
+                        }
+                        break;
+                        
+                    case 'shockburst':
+                        this.ctx.strokeStyle = projectile.color; // Cyan color
+                        this.ctx.lineWidth = 3; // Slightly thicker than lightning
+                        this.ctx.globalAlpha = Math.max(0.1, projectile.life / 30);
+                        
+                        // Render shockburst chains to all targets (like lightning but cyan)
+                        if (projectile.chainTargets && projectile.chainTargets.length > 0) {
+                            let prevX = projectile.x;
+                            let prevY = projectile.y;
+                            
+                            // Draw line to each chained enemy
+                            projectile.chainTargets.forEach((target, index) => {
+                                this.ctx.beginPath();
+                                this.ctx.moveTo(prevX, prevY);
+                                
+                                // Simplified lightning with fewer steps for performance
+                                const steps = 3;
+                                for (let i = 1; i <= steps; i++) {
+                                    const progress = i / steps;
+                                    const x = prevX + (target.x - prevX) * progress + (Math.random() - 0.5) * 10;
+                                    const y = prevY + (target.y - prevY) * progress + (Math.random() - 0.5) * 10;
+                                    this.ctx.lineTo(x, y);
+                                }
+                                this.ctx.stroke();
+                                
+                                // Draw explosion effect at target location
+                                if (projectile.explosionPoints && projectile.explosionPoints[index]) {
+                                    const explosion = projectile.explosionPoints[index];
+                                    this.ctx.strokeStyle = '#00FFFF';
+                                    this.ctx.lineWidth = 2;
+                                    this.ctx.globalAlpha = Math.max(0.05, projectile.life / 40);
+                                    
+                                    // Draw explosion circle
+                                    this.ctx.beginPath();
+                                    this.ctx.arc(explosion.x, explosion.y, (projectile.explosionRadius || 60) * (1 - projectile.life / 30), 0, Math.PI * 2);
+                                    this.ctx.stroke();
+                                    
+                                    // Reset for next chain
+                                    this.ctx.strokeStyle = projectile.color;
+                                    this.ctx.lineWidth = 3;
+                                    this.ctx.globalAlpha = Math.max(0.1, projectile.life / 30);
+                                }
                                 
                                 // Update previous position for next chain segment
                                 prevX = target.x;
