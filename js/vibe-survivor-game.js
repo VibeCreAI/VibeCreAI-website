@@ -3879,7 +3879,7 @@ class VibeSurvivor {
         style.textContent = `
             .toast-container {
                 position: absolute !important;
-                top: 50% !important;
+                top: 35% !important;
                 left: 50% !important;
                 transform: translateX(-50%) translateY(-50%) !important;
                 z-index: 99999999 !important;
@@ -3900,13 +3900,13 @@ class VibeSurvivor {
                 pointer-events: auto !important;
                 cursor: pointer !important;
                 position: relative !important;
-                opacity: 1 !important;
+                opacity: 0 !important;
                 transform: translateY(30px) scale(0.8) !important;
                 transition: all 0.6s ease-out !important;
             }
             
             .toast.toast-show {
-                opacity: 1 !important;
+                opacity: 0.8 !important;
                 transform: translateY(0) scale(1) !important;
             }
             
@@ -3919,7 +3919,7 @@ class VibeSurvivor {
                            0 0 40px rgba(255, 255, 255, 1.0),
                            0 3px 6px rgba(0, 0, 0, 1.0) !important;
                 filter: drop-shadow(0 0 10px rgba(255, 255, 255, 1.0)) !important;
-                opacity: 1 !important;
+                opacity: 0.8 !important;
             }
             
             .toast-message {
@@ -3993,10 +3993,10 @@ class VibeSurvivor {
     removeToast(toast) {
         if (!toast || !toast.parentNode) return;
         
-        // Remove the show class to trigger slide out
+        // Remove the show class and trigger fade out
         toast.classList.remove('toast-show');
-        toast.style.transform = 'translateY(-30px) scale(0.7)';
         toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-30px) scale(0.7)';
         
         // Remove after animation completes
         setTimeout(() => {
