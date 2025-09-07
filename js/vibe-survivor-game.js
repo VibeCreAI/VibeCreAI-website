@@ -1320,7 +1320,6 @@ class VibeSurvivor {
                         this.navigateMenu('right');
                         break;
                     case 'enter':
-                    case ' ':
                         e.preventDefault();
                         this.selectCurrentMenuItem();
                         break;
@@ -2014,6 +2013,20 @@ class VibeSurvivor {
             // Update pause button to show play symbol
             if (pauseBtn) pauseBtn.textContent = '▶';
             pauseMenu.style.display = 'flex';
+            
+            // Initialize keyboard navigation for pause menu
+            const resumeBtn = document.getElementById('resume-btn');
+            const exitBtn = document.getElementById('exit-to-menu-btn');
+            const pauseButtons = [resumeBtn, exitBtn].filter(btn => btn); // Filter out null buttons
+            
+            if (pauseButtons.length > 0) {
+                this.menuNavigationState.active = true;
+                this.menuNavigationState.menuType = 'pause';
+                this.menuNavigationState.selectedIndex = 0;
+                this.menuNavigationState.menuButtons = pauseButtons;
+                this.updateMenuButtonStyles();
+            }
+            
             // Pause background music
             if (this.backgroundMusic && !this.backgroundMusic.paused) {
                 this.backgroundMusic.pause();
@@ -2022,6 +2035,10 @@ class VibeSurvivor {
             // Update pause button to show pause symbol
             if (pauseBtn) pauseBtn.textContent = '||';
             pauseMenu.style.display = 'none';
+            
+            // Deactivate keyboard navigation
+            this.resetMenuNavigation();
+            
             // Resume background music
             if (this.backgroundMusic && this.backgroundMusic.paused) {
                 this.backgroundMusic.play().catch(e => {
@@ -2608,10 +2625,17 @@ class VibeSurvivor {
         let currentTarget = targetEnemy;
         let chainCount = 0;
         const maxChains = 2 + Math.floor(weapon.level / 2);
+        const chainTargets = []; // Store all chain targets for rendering
         
         while (currentTarget && chainCount < maxChains) {
             hitEnemies.add(currentTarget);
             currentTarget.health -= weapon.damage;
+            
+            // Store target position for rendering
+            chainTargets.push({
+                x: currentTarget.x,
+                y: currentTarget.y
+            });
             
             // Find next target for chain
             let nextTarget = null;
@@ -2638,6 +2662,7 @@ class VibeSurvivor {
             y: this.player.y,
             targetX: targetEnemy.x,
             targetY: targetEnemy.y,
+            chainTargets: chainTargets, // Store all chain positions
             damage: weapon.damage,
             life: 30,
             type: 'lightning',
@@ -2705,27 +2730,42 @@ class VibeSurvivor {
     }
     
     createHomingMissile(weapon, targetEnemy) {
-        const projectile = this.getPooledProjectile();
+        // Create multiple projectiles based on projectileCount
+        const projectileCount = weapon.projectileCount || 1;
         
-        // Set projectile properties
-        projectile.x = this.player.x;
-        projectile.y = this.player.y;
-        projectile.vx = 0;
-        projectile.vy = 0;
-        projectile.targetEnemy = targetEnemy; // Store reference to enemy, not just position
-        projectile.targetX = targetEnemy.x;
-        projectile.targetY = targetEnemy.y;
-        projectile.damage = weapon.damage;
-        projectile.life = 180;
-        projectile.type = 'missile';
-        projectile.color = '#E67E22';
-        projectile.size = 3;
-        projectile.homing = true;
-        projectile.explosionRadius = 60;
-        projectile.speed = (weapon.projectileSpeed || 6);
-        projectile.baseSpeed = weapon.projectileSpeed || 3;
+        // Get multiple different targets for each missile (similar to homing lasers)
+        const availableTargets = this.enemies.slice().sort((a, b) => {
+            const distA = Math.sqrt((a.x - this.player.x) ** 2 + (a.y - this.player.y) ** 2);
+            const distB = Math.sqrt((b.x - this.player.x) ** 2 + (b.y - this.player.y) ** 2);
+            return distA - distB;
+        }).slice(0, Math.max(projectileCount, 8)); // Get up to 8 closest enemies
         
-        this.projectiles.push(projectile);
+        for (let i = 0; i < projectileCount; i++) {
+            const projectile = this.getPooledProjectile();
+            
+            // Assign different targets to each missile (cycle through available targets)
+            const assignedTarget = availableTargets[i % availableTargets.length] || targetEnemy;
+            
+            // Set projectile properties
+            projectile.x = this.player.x;
+            projectile.y = this.player.y;
+            projectile.vx = 0;
+            projectile.vy = 0;
+            projectile.targetEnemy = assignedTarget; // Store reference to enemy, not just position
+            projectile.targetX = assignedTarget.x;
+            projectile.targetY = assignedTarget.y;
+            projectile.damage = weapon.damage;
+            projectile.life = 180;
+            projectile.type = 'missile';
+            projectile.color = '#E67E22';
+            projectile.size = 3;
+            projectile.homing = true;
+            projectile.explosionRadius = 60;
+            projectile.speed = (weapon.projectileSpeed || 6);
+            projectile.baseSpeed = weapon.projectileSpeed || 3;
+            
+            this.projectiles.push(projectile);
+        }
     }
     
     createHomingLaserBeam(weapon, nearestEnemy) {
@@ -5568,18 +5608,44 @@ class VibeSurvivor {
                         this.ctx.strokeStyle = projectile.color;
                         this.ctx.lineWidth = 2;
                         this.ctx.globalAlpha = Math.max(0.1, projectile.life / 30);
-                        this.ctx.beginPath();
-                        this.ctx.moveTo(projectile.x, projectile.y);
                         
-                        // Simplified lightning - fewer steps for performance
-                        const steps = 3;
-                        for (let i = 1; i <= steps; i++) {
-                            const progress = i / steps;
-                            const x = projectile.x + (projectile.targetX - projectile.x) * progress + (Math.random() - 0.5) * 10;
-                            const y = projectile.y + (projectile.targetY - projectile.y) * progress + (Math.random() - 0.5) * 10;
-                            this.ctx.lineTo(x, y);
+                        // Render lightning chains to all targets
+                        if (projectile.chainTargets && projectile.chainTargets.length > 0) {
+                            let prevX = projectile.x;
+                            let prevY = projectile.y;
+                            
+                            // Draw line to each chained enemy
+                            projectile.chainTargets.forEach(target => {
+                                this.ctx.beginPath();
+                                this.ctx.moveTo(prevX, prevY);
+                                
+                                // Simplified lightning with fewer steps for performance
+                                const steps = 3;
+                                for (let i = 1; i <= steps; i++) {
+                                    const progress = i / steps;
+                                    const x = prevX + (target.x - prevX) * progress + (Math.random() - 0.5) * 10;
+                                    const y = prevY + (target.y - prevY) * progress + (Math.random() - 0.5) * 10;
+                                    this.ctx.lineTo(x, y);
+                                }
+                                this.ctx.stroke();
+                                
+                                // Update previous position for next chain segment
+                                prevX = target.x;
+                                prevY = target.y;
+                            });
+                        } else {
+                            // Fallback to original single-target rendering
+                            this.ctx.beginPath();
+                            this.ctx.moveTo(projectile.x, projectile.y);
+                            const steps = 3;
+                            for (let i = 1; i <= steps; i++) {
+                                const progress = i / steps;
+                                const x = projectile.x + (projectile.targetX - projectile.x) * progress + (Math.random() - 0.5) * 10;
+                                const y = projectile.y + (projectile.targetY - projectile.y) * progress + (Math.random() - 0.5) * 10;
+                                this.ctx.lineTo(x, y);
+                            }
+                            this.ctx.stroke();
                         }
-                        this.ctx.stroke();
                         break;
                         
                     case 'missile':
