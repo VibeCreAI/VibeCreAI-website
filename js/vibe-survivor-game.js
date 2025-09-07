@@ -6360,7 +6360,7 @@ class VibeSurvivor {
         // Spawn the next scaled boss after 10-second delay
         setTimeout(() => {
             this.spawnScaledBoss();
-        }, 10000); // 10 seconds
+        }, 30000); // 10 seconds
         
         // Increase general game difficulty
         this.waveNumber = Math.max(1, this.waveNumber + 1);
