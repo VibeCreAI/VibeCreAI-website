@@ -2480,7 +2480,10 @@ class VibeSurvivor {
                         this.createShotgunBlast(weapon, adjustedDx, adjustedDy, distance);
                         break;
                     case 'lightning':
-                        this.createLightningBolt(weapon, nearestEnemy);
+                        // Lightning handles its own target distribution, only call once
+                        if (i === 0) { // Only create lightning on first iteration
+                            this.createLightningBolt(weapon, nearestEnemy);
+                        }
                         break;
                     case 'flamethrower':
                         this.createFlameStream(weapon, adjustedDx, adjustedDy, distance);
@@ -2621,54 +2624,69 @@ class VibeSurvivor {
     }
     
     createLightningBolt(weapon, targetEnemy) {
-        const hitEnemies = new Set();
-        let currentTarget = targetEnemy;
-        let chainCount = 0;
-        const maxChains = 2 + Math.floor(weapon.level / 2);
-        const chainTargets = []; // Store all chain targets for rendering
+        // Create multiple lightning bolts based on projectileCount
+        const projectileCount = weapon.projectileCount || 1;
         
-        while (currentTarget && chainCount < maxChains) {
-            hitEnemies.add(currentTarget);
-            currentTarget.health -= weapon.damage;
+        // Get multiple different targets for each lightning bolt (similar to homing lasers/missiles)
+        const availableTargets = this.enemies.slice().sort((a, b) => {
+            const distA = Math.sqrt((a.x - this.player.x) ** 2 + (a.y - this.player.y) ** 2);
+            const distB = Math.sqrt((b.x - this.player.x) ** 2 + (b.y - this.player.y) ** 2);
+            return distA - distB;
+        }).slice(0, Math.max(projectileCount, 8)); // Get up to 8 closest enemies
+        
+        for (let i = 0; i < projectileCount; i++) {
+            // Assign different targets to each lightning bolt (cycle through available targets)
+            const assignedTarget = availableTargets[i % availableTargets.length] || targetEnemy;
             
-            // Store target position for rendering
-            chainTargets.push({
-                x: currentTarget.x,
-                y: currentTarget.y
-            });
+            const hitEnemies = new Set();
+            let currentTarget = assignedTarget;
+            let chainCount = 0;
+            const maxChains = 2 + Math.floor(weapon.level / 2);
+            const chainTargets = []; // Store all chain targets for rendering
             
-            // Find next target for chain
-            let nextTarget = null;
-            let nearestDistance = Infinity;
-            
-            this.enemies.forEach(enemy => {
-                if (!hitEnemies.has(enemy)) {
-                    const dx = enemy.x - currentTarget.x;
-                    const dy = enemy.y - currentTarget.y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    if (distance < nearestDistance && distance <= 150) {
-                        nearestDistance = distance;
-                        nextTarget = enemy;
+            while (currentTarget && chainCount < maxChains) {
+                hitEnemies.add(currentTarget);
+                currentTarget.health -= weapon.damage;
+                
+                // Store target position for rendering
+                chainTargets.push({
+                    x: currentTarget.x,
+                    y: currentTarget.y
+                });
+                
+                // Find next target for chain
+                let nextTarget = null;
+                let nearestDistance = Infinity;
+                
+                this.enemies.forEach(enemy => {
+                    if (!hitEnemies.has(enemy)) {
+                        const dx = enemy.x - currentTarget.x;
+                        const dy = enemy.y - currentTarget.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        if (distance < nearestDistance && distance <= 150) {
+                            nearestDistance = distance;
+                            nextTarget = enemy;
+                        }
                     }
-                }
-            });
+                });
+                
+                currentTarget = nextTarget;
+                chainCount++;
+            }
             
-            currentTarget = nextTarget;
-            chainCount++;
+            this.projectiles.push({
+                x: this.player.x,
+                y: this.player.y,
+                targetX: assignedTarget.x,
+                targetY: assignedTarget.y,
+                chainTargets: chainTargets, // Store all chain positions
+                damage: weapon.damage,
+                life: 30,
+                type: 'lightning',
+                color: '#F1C40F',
+                chainCount: chainCount
+            });
         }
-        
-        this.projectiles.push({
-            x: this.player.x,
-            y: this.player.y,
-            targetX: targetEnemy.x,
-            targetY: targetEnemy.y,
-            chainTargets: chainTargets, // Store all chain positions
-            damage: weapon.damage,
-            life: 30,
-            type: 'lightning',
-            color: '#F1C40F',
-            chainCount: chainCount
-        });
     }
     
     createFlameStream(weapon, dx, dy, distance) {
@@ -3573,8 +3591,8 @@ class VibeSurvivor {
             // Magnet effect
             const magnetRange = this.player.passives.magnet ? 80 : 40;
             if (distance < magnetRange) {
-                orb.x += (dx / distance) * 2;
-                orb.y += (dy / distance) * 2;
+                orb.x += (dx / distance) * 4;
+                orb.y += (dy / distance) * 4;
             }
             
             orb.glow = (orb.glow + 0.2) % (Math.PI * 2);
