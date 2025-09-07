@@ -3993,10 +3993,10 @@ class VibeSurvivor {
     removeToast(toast) {
         if (!toast || !toast.parentNode) return;
         
-        // Remove the show class and trigger fade out
+        // Remove the show class and trigger fade out - scale down in place to avoid collision
         toast.classList.remove('toast-show');
         toast.style.opacity = '0';
-        toast.style.transform = 'translateY(-30px) scale(0.7)';
+        toast.style.transform = 'translateY(0) scale(0.5)'; // Scale down in place, no sliding
         
         // Remove after animation completes
         setTimeout(() => {
