@@ -249,7 +249,7 @@ class VibeSurvivor {
                                     <p class="pause-hint">Press ESC to resume</p>
                                 </div>
                             </div>
-                            
+
                             <!-- Mobile Touch Controls -->
                             <div id="mobile-controls" class="mobile-controls" style="display: none;">
                                 <!-- Virtual Joystick -->
@@ -270,11 +270,17 @@ class VibeSurvivor {
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- Toast Notification Container (at modal level) -->
+                    <div id="toast-container" class="toast-container"></div>
                 </div>
             </div>
         `;
 
         document.body.insertAdjacentHTML('beforeend', modalHTML);
+        
+        // Add toast notification styles
+        this.addToastStyles();
         
         // Add touch event listeners to prevent background page scrolling
         this.preventBackgroundScrolling();
@@ -3519,15 +3525,9 @@ class VibeSurvivor {
     }
     
     updateNotifications() {
-        this.notifications.forEach((notification, index) => {
-            notification.y -= 1;
-            notification.alpha = notification.life / notification.maxLife;
-            notification.life--;
-            
-            if (notification.life <= 0) {
-                this.notifications.splice(index, 1);
-            }
-        });
+        // Legacy notification system has been replaced with DOM-based toast notifications
+        // This method is kept for compatibility but notifications array is no longer used
+        this.notifications = [];
     }
     
     checkLevelUp() {
@@ -3868,6 +3868,160 @@ class VibeSurvivor {
         `;
         document.head.appendChild(style);
     }
+
+    
+    addToastStyles() {
+        // Add CSS styles for toast notifications if not already added
+        if (document.getElementById('toast-notification-styles')) return;
+        
+        const style = document.createElement('style');
+        style.id = 'toast-notification-styles';
+        style.textContent = `
+            .toast-container {
+                position: absolute !important;
+                top: 50% !important;
+                left: 50% !important;
+                transform: translateX(-50%) translateY(-50%) !important;
+                z-index: 99999999 !important;
+                display: block !important;
+                width: 100% !important;
+                height: auto !important;
+                pointer-events: none !important;
+            }
+            
+            .toast {
+                background: transparent !important;
+                border: none !important;
+                padding: 15px !important;
+                color: #ffffff !important;
+                font-family: Arial, sans-serif !important;
+                text-align: center !important;
+                display: block !important;
+                pointer-events: auto !important;
+                cursor: pointer !important;
+                position: relative !important;
+                opacity: 1 !important;
+                transform: translateY(30px) scale(0.8) !important;
+                transition: all 0.6s ease-out !important;
+            }
+            
+            .toast.toast-show {
+                opacity: 1 !important;
+                transform: translateY(0) scale(1) !important;
+            }
+            
+
+            
+            .toast-icon {
+                font-size: 30px !important;
+                flex-shrink: 0 !important;
+                text-shadow: 0 0 20px rgba(255, 255, 255, 1.0),
+                           0 0 40px rgba(255, 255, 255, 1.0),
+                           0 3px 6px rgba(0, 0, 0, 1.0) !important;
+                filter: drop-shadow(0 0 10px rgba(255, 255, 255, 1.0)) !important;
+                opacity: 1 !important;
+            }
+            
+            .toast-message {
+                line-height: 1.2 !important;
+                text-shadow: 0 0 20px rgba(0, 255, 255, 1.0),
+                           0 0 40px rgba(0, 255, 255, 1.0),
+                           0 0 60px rgba(0, 255, 255, 0.8),
+                           0 3px 6px rgba(0, 0, 0, 1.0) !important;
+                color: #ffffff !important;
+                font-weight: 900 !important;
+                text-align: center !important;
+                opacity: 0.8 !important;
+            }
+            
+
+            
+
+        `;
+        document.head.appendChild(style);
+    }
+
+    
+    createToast(message, type = 'upgrade', duration = 2500) {
+        const toastContainer = document.getElementById('toast-container');
+        if (!toastContainer) {
+            console.error('Toast container not found');
+            return;
+        }
+        
+        // Create toast element
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        
+        // Get icon based on type
+        const icons = {
+            'boss': '⚠️',
+            'upgrade': '🔫',
+            'victory': '🎉'
+        };
+        
+        toast.innerHTML = `
+            <div style="text-align: center;">
+                <div style="font-size: 32px; margin-bottom: 8px;">${icons[type] || '📢'}</div>
+                <div style="font-size: 22px; font-weight: bold; color: white; text-shadow: 0 0 20px rgba(0,255,255,1), 0 0 40px rgba(0,255,255,0.8), 0 2px 4px rgba(0,0,0,0.9);">${message}</div>
+            </div>
+        `;
+        
+        // Click entire toast to dismiss (optional)
+        toast.addEventListener('click', () => {
+            this.removeToast(toast);
+        });
+        
+        // Add to container
+        toastContainer.appendChild(toast);
+        
+        // Trigger slide-in animation after a small delay
+        setTimeout(() => {
+            toast.classList.add('toast-show');
+        }, 50);
+        
+        // Auto-dismiss after duration
+        if (duration > 0) {
+            setTimeout(() => {
+                this.removeToast(toast);
+            }, duration);
+        }
+        
+        return toast;
+    }
+    
+    removeToast(toast) {
+        if (!toast || !toast.parentNode) return;
+        
+        // Remove the show class to trigger slide out
+        toast.classList.remove('toast-show');
+        toast.style.transform = 'translateY(-30px) scale(0.7)';
+        toast.style.opacity = '0';
+        
+        // Remove after animation completes
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 600);
+    }
+    
+    showToastNotification(message, type = 'upgrade') {
+        // Shorter duration based on type and message importance
+        const durations = {
+            'boss': 3000,      // 3 seconds for boss notifications
+            'victory': 3500,   // 3.5 seconds for victory
+            'upgrade': 2500    // 2.5 seconds for upgrades
+        };
+        
+        this.createToast(message, type, durations[type]);
+    }
+
+    
+    testToast() {
+        console.log('Testing toast notification...');
+        this.showToastNotification('TEST NOTIFICATION!', 'upgrade');
+    }
     
     selectUpgrade(choice) {
         switch (choice.type) {
@@ -3962,10 +4116,10 @@ class VibeSurvivor {
         
         this.weapons.push(mergedWeapon);
         
-        // Show merge notification with slight delay to prevent overlap
+        // Show merge notification with reduced delay since we have better stacking
         setTimeout(() => {
             this.showUpgradeNotification(`${this.getWeaponName(mergeWeaponType)} - WEAPONS MERGED!`);
-        }, 200); // 200ms delay
+        }, 100); // Reduced from 200ms to 100ms delay
     }
     
     getWeaponConfig(weaponType) {
@@ -4317,69 +4471,33 @@ class VibeSurvivor {
     }
     
     showUpgradeNotification(title) {
-        this.notifications.push({
-            message: `${title} ACQUIRED!`,
-            x: this.player.x,
-            y: this.calculateNotificationPosition('upgrade'),
-            life: 120,
-            maxLife: 120,
-            alpha: 1,
-            type: 'upgrade'
-        });
+        this.showToastNotification(`${title} ACQUIRED!`, 'upgrade');
     }
     
     showBossNotification() {
-        this.notifications.push({
-            message: "⚠️ BOSS APPEARED! ⚠️",
-            x: this.player.x,
-            y: this.calculateNotificationPosition('boss'),
-            life: 180, // Show longer than regular notifications
-            maxLife: 180,
-            alpha: 1,
-            type: 'boss'
-        });
+        this.showToastNotification("BOSS APPEARED!", 'boss');
     }
     
     showContinueNotification() {
-        this.notifications.push({
-            message: "🎉 BOSS DEFEATED! DIFFICULTY INCREASED! 🎉",
-            x: this.player.x,
-            y: this.calculateNotificationPosition('victory'),
-            life: 200, // Show longer for this important message
-            maxLife: 200,
-            alpha: 1,
-            type: 'victory'
-        });
+        this.showToastNotification("BOSS DEFEATED! DIFFICULTY INCREASED!", 'victory');
     }
     
     calculateNotificationPosition(type) {
-        // Base heights for different notification types (priority order: victory > boss > upgrade)
-        const baseHeights = {
-            'victory': -200,   // Highest priority (moved higher)
-            'boss': -140,      // Medium priority  
-            'upgrade': -80     // Lowest priority
-        };
-        
-        let baseY = this.player.y + baseHeights[type];
-        
-        // Count all existing notifications for proper stacking
-        const existingNotifications = this.notifications.length;
-        
-        // More aggressive stacking with larger spacing for better visibility
-        if (existingNotifications > 0) {
-            baseY -= existingNotifications * 50; // Increased from 45px to 50px spacing
-        }
-        
-        // Additional spacing for upgrade notifications to prevent merge overlaps
-        if (type === 'upgrade') {
-            const upgradeCount = this.notifications.filter(n => n.type === 'upgrade').length;
-            if (upgradeCount > 0) {
-                // Extra spacing for multiple upgrades (like during merges)
-                baseY -= upgradeCount * 15;
-            }
-        }
-        
-        return baseY;
+        // This method has been replaced by the toast notification system
+        // Kept for compatibility but no longer used
+        return 0;
+    }
+
+    
+    addNotificationSafely(notificationData) {
+        // This method has been replaced by the toast notification system
+        // Kept for compatibility but no longer used
+    }
+
+    
+    repositionOverlappingNotifications() {
+        // This method has been replaced by the toast notification system
+        // Kept for compatibility but no longer used
     }
     
     updateCamera() {
@@ -5633,32 +5751,8 @@ class VibeSurvivor {
     }
     
     drawNotifications() {
-        this.notifications.forEach(notification => {
-            // Enhanced frustum culling for notifications
-            if (!this.isInViewport(notification.x, notification.y, 50)) {
-                return; // Skip rendering off-screen notifications
-            }
-            this.ctx.save();
-            
-            // Reset transform to draw in screen coordinates
-            this.ctx.resetTransform();
-            
-            this.ctx.globalAlpha = notification.alpha;
-            this.ctx.fillStyle = '#FFD700';
-            this.ctx.strokeStyle = '#000000';
-            this.ctx.lineWidth = 2;
-            this.ctx.font = 'bold 24px Arial';
-            this.ctx.textAlign = 'center';
-            
-            // Draw notification in the center of the screen
-            const screenX = this.canvas.width / 2;
-            const screenY = this.canvas.height / 2 - 100; // Above center
-            
-            this.ctx.strokeText(notification.message, screenX, screenY);
-            this.ctx.fillText(notification.message, screenX, screenY);
-            
-            this.ctx.restore();
-        });
+        // Notifications are now handled by DOM-based toast system
+        // This method is kept for compatibility but does nothing
     }
     
     updateUI() {
