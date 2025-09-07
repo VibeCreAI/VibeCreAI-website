@@ -3051,15 +3051,31 @@ class VibeSurvivor {
         const baseSpeed = config.speed; // Removed time-based speed scaling
         const scaledSpeed = baseSpeed;
         
+        // Calculate enemy scaling: time-based until first boss, then boss-only scaling
+        let timeScaling, bossScaling;
+        
+        if (this.bossesKilled === 0) {
+            // Before first boss: use time-based scaling only
+            timeScaling = 1 + Math.floor(this.gameTime / 30) * 0.3; // 30% per 30 seconds
+            bossScaling = 1.0; // No boss scaling yet
+        } else {
+            // After first boss defeated: freeze time scaling, use boss scaling only
+            timeScaling = 1 + Math.floor(300 / 30) * 0.3; // Freeze at first boss time (300 seconds = 10 intervals = 4.0x)
+            bossScaling = 1 + this.bossesKilled * 0.15; // 15% per boss defeated
+        }
+        
+        const totalHealthMultiplier = config.health * timeScaling * bossScaling;
+        const totalDamageMultiplier = config.contactDamage * (1 + (this.bossesKilled || 0) * 0.1); // 10% damage per boss
+        
         const enemy = {
             x: x,
             y: y,
             radius: config.radius,
             speed: scaledSpeed,
             baseSpeed: baseSpeed, // Store base speed for future scaling updates
-            maxHealth: config.health * (1 + Math.floor(this.gameTime / 30) * 0.3),
-            health: config.health * (1 + Math.floor(this.gameTime / 30) * 0.3),
-            contactDamage: config.contactDamage,
+            maxHealth: Math.floor(totalHealthMultiplier),
+            health: Math.floor(totalHealthMultiplier),
+            contactDamage: Math.floor(totalDamageMultiplier),
             color: config.color,
             behavior: config.behavior,
             specialCooldown: 0,
