@@ -4758,10 +4758,28 @@ class VibeSurvivor {
 
     
     // Performance optimization: Check if object is visible on screen
-    isInViewport(x, y, radius = 0) {
+    isInViewport(x, y, radius = 0, cullingLevel = 'normal') {
         if (!this.canvas) return true; // Fallback to render everything if no canvas
         
-        const buffer = 100; // Increased buffer for boss visibility on mobile
+        // Different buffer sizes based on culling aggressiveness
+        let buffer;
+        switch (cullingLevel) {
+            case 'aggressive':
+                buffer = 50; // Very tight culling for particles/effects
+                break;
+            case 'tight':
+                buffer = 75; // Tighter culling for small entities
+                break;
+            case 'normal':
+                buffer = 100; // Standard buffer
+                break;
+            case 'loose':
+                buffer = 150; // Loose culling for important entities
+                break;
+            default:
+                buffer = 100;
+        }
+        
         const left = this.camera.x - buffer;
         const right = this.camera.x + this.canvas.width + buffer;
         const top = this.camera.y - buffer;
@@ -4771,6 +4789,50 @@ class VibeSurvivor {
                 x - radius < right && 
                 y + radius > top && 
                 y - radius < bottom);
+    }
+
+    
+    // Enhanced frustum culling with distance-based LOD
+    shouldRender(entity, entityType) {
+        // Always render critical entities
+        if (entityType === 'player' || entity.type === 'boss') {
+            return true;
+        }
+        
+        // Calculate distance from player for LOD decisions
+        const dx = entity.x - this.player.x;
+        const dy = entity.y - this.player.y;
+        const distanceFromPlayer = Math.sqrt(dx * dx + dy * dy);
+        
+        // Different culling strategies based on entity type and distance
+        switch (entityType) {
+            case 'particle':
+                // Very aggressive culling for particles
+                if (distanceFromPlayer > 400) return false;
+                return this.isInViewport(entity.x, entity.y, entity.size || 2, 'aggressive');
+                
+            case 'projectile':
+                // Tight culling for projectiles
+                if (distanceFromPlayer > 600) return false;
+                return this.isInViewport(entity.x, entity.y, entity.size || 3, 'tight');
+                
+            case 'enemy':
+                // Standard culling for enemies, but skip very distant ones
+                if (distanceFromPlayer > 800) return false;
+                return this.isInViewport(entity.x, entity.y, entity.radius || 15, 'normal');
+                
+            case 'effect':
+                // Aggressive culling for explosions and effects
+                if (distanceFromPlayer > 500) return false;
+                return this.isInViewport(entity.x, entity.y, entity.radius || 20, 'aggressive');
+                
+            case 'xp':
+                // Standard culling for XP orbs
+                return this.isInViewport(entity.x, entity.y, 15, 'normal');
+                
+            default:
+                return this.isInViewport(entity.x, entity.y, entity.radius || 10, 'normal');
+        }
     }
 
 
@@ -5514,8 +5576,8 @@ class VibeSurvivor {
         const enemiesByType = {};
         
         for (const enemy of this.enemies) {
-            // Frustum culling: Only render enemies visible on screen
-            if (!this.isInViewport(enemy.x, enemy.y, enemy.radius)) {
+            // Enhanced frustum culling: Skip enemies that shouldn't be rendered
+            if (!this.shouldRender(enemy, 'enemy')) {
                 continue;
             }
             
@@ -5689,8 +5751,8 @@ class VibeSurvivor {
         const projectilesByType = {};
         
         for (const projectile of this.projectiles) {
-            // Frustum culling: Only render projectiles visible on screen
-            if (!this.isInViewport(projectile.x, projectile.y, projectile.size || 3)) {
+            // Enhanced frustum culling: Skip projectiles that shouldn't be rendered
+            if (!this.shouldRender(projectile, 'projectile')) {
                 continue;
             }
             
@@ -5985,8 +6047,8 @@ class VibeSurvivor {
     
     drawXPOrbs() {
         this.xpOrbs.forEach(orb => {
-            // Frustum culling: Only render XP orbs visible on screen
-            if (!this.isInViewport(orb.x, orb.y, 15)) {
+            // Enhanced frustum culling: Skip XP orbs that shouldn't be rendered
+            if (!this.shouldRender(orb, 'xp')) {
                 return; // Skip rendering this orb
             }
             this.ctx.save();
@@ -6018,7 +6080,8 @@ class VibeSurvivor {
         if (!this.explosions) return;
         
         this.explosions.forEach(explosion => {
-            // Only render explosions visible on screen
+            // Enhanced frustum culling: Skip explosions that shouldn't be rendered
+            if (!this.shouldRender(explosion, 'effect')) return;
             if (!this.isInViewport(explosion.x, explosion.y, explosion.maxRadius)) {
                 return;
             }
@@ -6064,15 +6127,24 @@ class VibeSurvivor {
         
         const quality = this.frameRateMonitor.adaptiveQuality;
         
+        // Enhanced frustum culling: Pre-filter particles aggressively
+        const visibleParticles = [];
+        for (const particle of this.particles) {
+            if (this.shouldRender(particle, 'particle')) {
+                visibleParticles.push(particle);
+            }
+        }
+        
+        // Early exit if no visible particles
+        if (visibleParticles.length === 0) return;
+        
         // Use simpler rendering for better performance
         if (quality.effectQuality < 0.6) {
             // Ultra-fast particle rendering - single color, no alpha blending
             this.ctx.save();
             this.ctx.fillStyle = '#00ffff';
             
-            for (const particle of this.particles) {
-                if (!this.isInViewport(particle.x, particle.y, particle.size)) continue;
-                
+            for (const particle of visibleParticles) {
                 // Simple rectangle instead of circle for speed
                 const size = particle.size * (particle.life / particle.maxLife);
                 this.ctx.fillRect(particle.x - size/2, particle.y - size/2, size, size);
@@ -6084,9 +6156,7 @@ class VibeSurvivor {
         // Batch particles by color to reduce state changes (medium quality)
         const particlesByColor = {};
         
-        for (const particle of this.particles) {
-            if (!this.isInViewport(particle.x, particle.y, particle.size)) continue;
-            
+        for (const particle of visibleParticles) {
             // Quantize colors to reduce the number of batches
             let batchColor = particle.color;
             if (quality.effectQuality < 0.8) {
