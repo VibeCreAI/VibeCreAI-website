@@ -2511,23 +2511,7 @@ class VibeSurvivor {
     
     // Object pooling methods for performance - removed duplicate method
     
-    returnProjectileToPool(projectile) {
-        // Reset all properties to default values
-        projectile.x = 0;
-        projectile.y = 0;
-        projectile.vx = 0;
-        projectile.vy = 0;
-        projectile.life = 0;
-        projectile.damage = 0;
-        projectile.type = null;
-        projectile.color = null;
-        projectile.size = 0;
-        projectile.homing = false;
-        projectile.owner = null;
-        
-        // Return to pool for reuse
-        this.projectilePool.push(projectile);
-    }
+    // Removed duplicate returnProjectileToPool method - using the correct one below
 
     createBasicProjectile(weapon, dx, dy, distance) {
         const angle = Math.atan2(dy, dx);
@@ -2560,51 +2544,57 @@ class VibeSurvivor {
         
         for (let i = 0; i < spreadCount; i++) {
             const offsetAngle = angle + (i - Math.floor(spreadCount / 2)) * (spreadAngle / spreadCount);
-            this.projectiles.push({
-                x: this.player.x,
-                y: this.player.y,
-                vx: Math.cos(offsetAngle) * scaledSpeed,
-                vy: Math.sin(offsetAngle) * scaledSpeed,
-                baseSpeed: weapon.projectileSpeed,
-                damage: weapon.damage * 0.8,
-                life: 100,
-                type: 'spread',
-                color: '#E67E22',
-                size: 2.5
-            });
+            const projectile = this.getPooledProjectile();
+            
+            projectile.x = this.player.x;
+            projectile.y = this.player.y;
+            projectile.vx = Math.cos(offsetAngle) * scaledSpeed;
+            projectile.vy = Math.sin(offsetAngle) * scaledSpeed;
+            projectile.baseSpeed = weapon.projectileSpeed;
+            projectile.damage = weapon.damage * 0.8;
+            projectile.life = 100;
+            projectile.type = 'spread';
+            projectile.color = '#E67E22';
+            projectile.size = 2.5;
+            
+            this.projectiles.push(projectile);
         }
     }
     
     createLaserBeam(weapon, dx, dy, distance) {
         const angle = Math.atan2(dy, dx);
-        this.projectiles.push({
-            x: this.player.x,
-            y: this.player.y,
-            vx: Math.cos(angle) * weapon.projectileSpeed * 2,
-            vy: Math.sin(angle) * weapon.projectileSpeed * 2,
-            damage: weapon.damage,
-            life: 60,
-            type: 'laser',
-            color: '#E74C3C',
-            size: 3,
-            piercing: true
-        });
+        const projectile = this.getPooledProjectile();
+        
+        projectile.x = this.player.x;
+        projectile.y = this.player.y;
+        projectile.vx = Math.cos(angle) * weapon.projectileSpeed * 2;
+        projectile.vy = Math.sin(angle) * weapon.projectileSpeed * 2;
+        projectile.damage = weapon.damage;
+        projectile.life = 60;
+        projectile.type = 'laser';
+        projectile.color = '#E74C3C';
+        projectile.size = 3;
+        projectile.piercing = true;
+        
+        this.projectiles.push(projectile);
     }
     
     createPlasmaProjectile(weapon, dx, dy, distance) {
         const angle = Math.atan2(dy, dx);
-        this.projectiles.push({
-            x: this.player.x,
-            y: this.player.y,
-            vx: Math.cos(angle) * weapon.projectileSpeed,
-            vy: Math.sin(angle) * weapon.projectileSpeed,
-            damage: weapon.damage,
-            life: 150,
-            type: 'plasma',
-            color: '#3498DB',
-            size: 4,
-            explosionRadius: 50
-        });
+        const projectile = this.getPooledProjectile();
+        
+        projectile.x = this.player.x;
+        projectile.y = this.player.y;
+        projectile.vx = Math.cos(angle) * weapon.projectileSpeed;
+        projectile.vy = Math.sin(angle) * weapon.projectileSpeed;
+        projectile.damage = weapon.damage;
+        projectile.life = 150;
+        projectile.type = 'plasma';
+        projectile.color = '#3498DB';
+        projectile.size = 4;
+        projectile.explosionRadius = 50;
+        
+        this.projectiles.push(projectile);
     }
     
     createShotgunBlast(weapon, dx, dy, distance) {
@@ -2616,17 +2606,19 @@ class VibeSurvivor {
             const shotAngle = angle + spreadAngle;
             const speed = weapon.projectileSpeed * (0.8 + Math.random() * 0.4);
             
-            this.projectiles.push({
-                x: this.player.x,
-                y: this.player.y,
-                vx: Math.cos(shotAngle) * speed,
-                vy: Math.sin(shotAngle) * speed,
-                damage: weapon.damage * 0.6,
-                life: 80,
-                type: 'shotgun',
-                color: '#F39C12',
-                size: 2
-            });
+            const projectile = this.getPooledProjectile();
+            
+            projectile.x = this.player.x;
+            projectile.y = this.player.y;
+            projectile.vx = Math.cos(shotAngle) * speed;
+            projectile.vy = Math.sin(shotAngle) * speed;
+            projectile.damage = weapon.damage * 0.6;
+            projectile.life = 80;
+            projectile.type = 'shotgun';
+            projectile.color = '#F39C12';
+            projectile.size = 2;
+            
+            this.projectiles.push(projectile);
         }
     }
     
@@ -2681,18 +2673,20 @@ class VibeSurvivor {
                 chainCount++;
             }
             
-            this.projectiles.push({
-                x: this.player.x,
-                y: this.player.y,
-                targetX: assignedTarget.x,
-                targetY: assignedTarget.y,
-                chainTargets: chainTargets, // Store all chain positions
-                damage: weapon.damage,
-                life: 30,
-                type: 'lightning',
-                color: '#F1C40F',
-                chainCount: chainCount
-            });
+            const projectile = this.getPooledProjectile();
+            
+            projectile.x = this.player.x;
+            projectile.y = this.player.y;
+            projectile.targetX = assignedTarget.x;
+            projectile.targetY = assignedTarget.y;
+            projectile.chainTargets = chainTargets;
+            projectile.damage = weapon.damage;
+            projectile.life = 30;
+            projectile.type = 'lightning';
+            projectile.color = '#F1C40F';
+            projectile.chainCount = chainCount;
+            
+            this.projectiles.push(projectile);
         }
     }
 
@@ -2790,35 +2784,39 @@ class VibeSurvivor {
             const offsetAngle = angle + (Math.random() - 0.5) * 0.3;
             const speed = weapon.projectileSpeed * (0.7 + Math.random() * 0.6);
             
-            this.projectiles.push({
-                x: this.player.x,
-                y: this.player.y,
-                vx: Math.cos(offsetAngle) * speed,
-                vy: Math.sin(offsetAngle) * speed,
-                damage: weapon.damage * 0.4,
-                life: 90,
-                type: 'flame',
-                color: '#E74C3C',
-                size: 3 + Math.random() * 2,
-                dotDamage: weapon.damage * 0.1
-            });
+            const projectile = this.getPooledProjectile();
+            
+            projectile.x = this.player.x;
+            projectile.y = this.player.y;
+            projectile.vx = Math.cos(offsetAngle) * speed;
+            projectile.vy = Math.sin(offsetAngle) * speed;
+            projectile.damage = weapon.damage * 0.4;
+            projectile.life = 90;
+            projectile.type = 'flame';
+            projectile.color = '#E74C3C';
+            projectile.size = 3 + Math.random() * 2;
+            projectile.dotDamage = weapon.damage * 0.1;
+            
+            this.projectiles.push(projectile);
         }
     }
     
     createRailgunBeam(weapon, dx, dy, distance) {
         const angle = Math.atan2(dy, dx);
-        this.projectiles.push({
-            x: this.player.x,
-            y: this.player.y,
-            vx: Math.cos(angle) * weapon.projectileSpeed * 3,
-            vy: Math.sin(angle) * weapon.projectileSpeed * 3,
-            damage: weapon.damage,
-            life: 45,
-            type: 'railgun',
-            color: '#9B59B6',
-            size: 3,
-            piercing: 999
-        });
+        const projectile = this.getPooledProjectile();
+        
+        projectile.x = this.player.x;
+        projectile.y = this.player.y;
+        projectile.vx = Math.cos(angle) * weapon.projectileSpeed * 3;
+        projectile.vy = Math.sin(angle) * weapon.projectileSpeed * 3;
+        projectile.damage = weapon.damage;
+        projectile.life = 45;
+        projectile.type = 'railgun';
+        projectile.color = '#9B59B6';
+        projectile.size = 3;
+        projectile.piercing = 999;
+        
+        this.projectiles.push(projectile);
     }
     
     // Helper function to find nearest enemy to a given position
@@ -3286,7 +3284,9 @@ class VibeSurvivor {
     }
     
     updateEnemies() {
-        this.enemies.forEach((enemy, index) => {
+        // Use reverse iteration for safe and efficient removal
+        for (let i = this.enemies.length - 1; i >= 0; i--) {
+            const enemy = this.enemies[i];
             // Handle burning damage over time
             if (enemy.burning) {
                 if (enemy.burning.duration-- <= 0) {
@@ -3494,14 +3494,14 @@ class VibeSurvivor {
                 // Check if this was a boss enemy
                 if (enemy.behavior === 'boss') {
                     // Remove boss from enemies array first
-                    this.enemies.splice(index, 1);
+                    this.enemies.splice(i, 1);
                     this.bossDefeated();
                     return; // Exit early, bossDefeated handles the rest
                 }
                 
                 this.createXPOrb(enemy.x, enemy.y);
                 this.createDeathParticles(enemy.x, enemy.y, enemy.color);
-                this.enemies.splice(index, 1);
+                this.enemies.splice(i, 1);
             } else {
                 // Remove enemies that are too far from player (performance optimization)
                 const dx = enemy.x - this.player.x;
@@ -3509,10 +3509,11 @@ class VibeSurvivor {
                 const distanceFromPlayer = Math.sqrt(dx * dx + dy * dy);
                 
                 if (distanceFromPlayer > 1200) { // Remove enemies beyond this distance
-                    this.enemies.splice(index, 1);
+                    this.enemies.splice(i, 1);
                 }
             }
-        });
+        }
+        
     }
     
     spawnMinions(x, y, count) {
@@ -3538,7 +3539,9 @@ class VibeSurvivor {
     
     updateProjectiles() {
         
-        this.projectiles.forEach((projectile, index) => {
+        // Use reverse iteration for safe and efficient removal
+        for (let i = this.projectiles.length - 1; i >= 0; i--) {
+            const projectile = this.projectiles[i];
             // Update position based on type
             switch (projectile.type) {
                 case 'missile':
@@ -3666,9 +3669,9 @@ class VibeSurvivor {
                 
                 // Return projectile to pool instead of just removing it
                 this.returnProjectileToPool(projectile);
-                this.projectiles.splice(index, 1);
+                this.projectiles.splice(i, 1);
             }
-        });
+        }
         
     }
     
@@ -3696,7 +3699,9 @@ class VibeSurvivor {
     }
     
     updateXPOrbs() {
-        this.xpOrbs.forEach((orb, index) => {
+        // Use reverse iteration for safe and efficient removal
+        for (let i = this.xpOrbs.length - 1; i >= 0; i--) {
+            const orb = this.xpOrbs[i];
             const dx = this.player.x - orb.x;
             const dy = this.player.y - orb.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
@@ -3719,11 +3724,11 @@ class VibeSurvivor {
                 const xpProgress = this.player.xp / xpRequired;
                 this.player.trailMultiplier = 1.0 + (xpProgress * 3.0);
                 
-                this.xpOrbs.splice(index, 1);
+                this.xpOrbs.splice(i, 1);
             } else if (orb.life-- <= 0) {
-                this.xpOrbs.splice(index, 1);
+                this.xpOrbs.splice(i, 1);
             }
-        });
+        }
     }
     
     createXPOrb(x, y) {
@@ -4558,15 +4563,16 @@ class VibeSurvivor {
         // Create visual explosion effect
         if (!this.explosions) this.explosions = [];
         
-        this.explosions.push({
-            x: x,
-            y: y,
-            radius: 0,
-            maxRadius: radius,
-            life: 30,
-            maxLife: 30,
-            color: '#FF6600'
-        });
+        const explosion = this.getPooledExplosion();
+        explosion.x = x;
+        explosion.y = y;
+        explosion.radius = 0;
+        explosion.maxRadius = radius;
+        explosion.life = 30;
+        explosion.maxLife = 30;
+        explosion.color = '#FF6600';
+        
+        this.explosions.push(explosion);
         
         // Create explosion particles with adaptive quality
         const quality = this.frameRateMonitor.adaptiveQuality;
@@ -4677,7 +4683,10 @@ class VibeSurvivor {
     updateExplosions() {
         if (!this.explosions) return;
         
-        this.explosions.forEach((explosion, index) => {
+        // Use reverse iteration for safe removal during loop
+        for (let i = this.explosions.length - 1; i >= 0; i--) {
+            const explosion = this.explosions[i];
+            
             // Expand the explosion radius over time
             const progress = 1 - (explosion.life / explosion.maxLife);
             explosion.radius = explosion.maxRadius * progress;
@@ -4685,9 +4694,11 @@ class VibeSurvivor {
             explosion.life--;
             
             if (explosion.life <= 0) {
-                this.explosions.splice(index, 1);
+                // Return to pool and remove from active array
+                this.returnExplosionToPool(explosion);
+                this.explosions.splice(i, 1);
             }
-        });
+        }
     }
     
     createDeathParticles(x, y, color) {
@@ -4805,6 +4816,18 @@ class VibeSurvivor {
                 lastHit: 0, flashTime: 0
             });
         }
+        
+        // Explosion pool for effects
+        this.explosionPool = [];
+        this.explosionPoolSize = 50;
+        
+        for (let i = 0; i < this.explosionPoolSize; i++) {
+            this.explosionPool.push({
+                x: 0, y: 0, radius: 0, maxRadius: 0,
+                life: 0, maxLife: 0, color: '#FF6600',
+                active: false
+            });
+        }
     }
     
     // Get projectile from pool
@@ -4892,6 +4915,35 @@ class VibeSurvivor {
         enemy.flashTime = 0;
         enemy.vx = 0;
         enemy.vy = 0;
+    }
+
+    getPooledExplosion() {
+        for (let i = 0; i < this.explosionPool.length; i++) {
+            if (!this.explosionPool[i].active) {
+                const explosion = this.explosionPool[i];
+                explosion.active = true;
+                return explosion;
+            }
+        }
+        
+        // If no available explosion in pool, expand pool dynamically
+        const newExplosion = {
+            x: 0, y: 0, radius: 0, maxRadius: 0,
+            life: 0, maxLife: 0, color: '#FF6600',
+            active: true
+        };
+        this.explosionPool.push(newExplosion);
+        return newExplosion;
+    }
+    
+    returnExplosionToPool(explosion) {
+        explosion.active = false;
+        explosion.x = 0;
+        explosion.y = 0;
+        explosion.radius = 0;
+        explosion.maxRadius = 0;
+        explosion.life = 0;
+        explosion.maxLife = 0;
     }
 
     
@@ -5114,13 +5166,26 @@ class VibeSurvivor {
     
     // Return projectile to pool
     returnProjectileToPool(projectile) {
+        // Mark as inactive for reuse
         projectile.active = false;
-        // Reset properties
+        // Reset properties for reuse
         projectile.x = 0;
         projectile.y = 0;
         projectile.vx = 0;
         projectile.vy = 0;
         projectile.life = 0;
+        projectile.damage = 0;
+        projectile.type = 'basic';
+        projectile.color = '#ffffff';
+        projectile.size = 3;
+        projectile.homing = false;
+        projectile.target = null;
+        projectile.targetEnemy = null;
+        projectile.trail = [];
+        projectile.rotation = 0;
+        projectile.owner = null;
+        projectile.explosionRadius = 0;
+        projectile.homingStrength = 0;
     }
 
     
