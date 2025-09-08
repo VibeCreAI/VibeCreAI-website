@@ -79,6 +79,15 @@ class VibeSurvivor {
         
         // Initialize object pools
         this.initializeProjectilePool();
+        
+        // Initialize batch rendering system
+        this.initializeBatchRenderer();
+        
+        // Initialize canvas layers (will be called after canvas is ready)
+        this.canvasLayersInitialized = false;
+        
+        // Initialize adaptive quality scaling
+        this.initializeAdaptiveQuality();
         this.touchControls = {
             joystick: {
                 active: false,
@@ -1501,6 +1510,15 @@ class VibeSurvivor {
             // Don't override CSS - let responsive breakpoints handle sizing
             // CSS already handles display: block, margins, and positioning
             
+            // Initialize canvas layers (only once)
+            if (!this.canvasLayersInitialized) {
+                this.initializeCanvasLayers();
+                this.canvasLayersInitialized = true;
+            } else if (this.canvasLayers) {
+                // Resize existing layers
+                this.resizeCanvasLayers();
+            }
+            
             // Reinitialize offscreen canvases after resize
             if (this.hasOffscreenCanvases) {
                 this.initializeOffscreenCanvases();
@@ -1870,6 +1888,9 @@ class VibeSurvivor {
         this.checkCollisions();
         this.checkLevelUp();
         this.updateCamera();
+        
+        // Update adaptive quality scaling
+        this.updateAdaptiveQuality();
     }
     
     updatePlayer() {
@@ -1965,7 +1986,8 @@ class VibeSurvivor {
         
         // Update trail
         this.player.trail.push({ x: this.player.x, y: this.player.y });
-        const maxTrailLength = Math.floor(8 * (this.player.trailMultiplier || 1.0));
+        const baseTrailLength = this.qualitySettings?.trailLength || 8;
+        const maxTrailLength = Math.floor(baseTrailLength * (this.player.trailMultiplier || 1.0));
         if (this.player.trail.length > maxTrailLength) {
             this.player.trail.shift();
         }
@@ -4578,9 +4600,10 @@ class VibeSurvivor {
         this.explosions.push(explosion);
         
         // Create explosion particles with adaptive quality
-        const quality = this.frameRateMonitor.adaptiveQuality;
         const baseParticleCount = 15;
-        const particleCount = Math.floor(baseParticleCount * quality.particleCount);
+        const particleCount = this.shouldCreateExplosion() ? 
+            Math.floor(baseParticleCount * (this.qualitySettings?.explosionMultiplier || 1)) : 
+            Math.max(1, Math.floor(baseParticleCount * 0.3)); // Minimum particles for visual feedback
         
         for (let i = 0; i < particleCount; i++) {
             const particle = this.getPooledParticle();
@@ -5011,6 +5034,506 @@ class VibeSurvivor {
         explosion.maxLife = 0;
     }
 
+    // =====================
+    // BATCH RENDERING SYSTEM
+    // =====================
+    
+    initializeBatchRenderer() {
+        this.batchRenderer = {
+            entityBatches: {
+                enemies: {},
+                projectiles: {},
+                particles: {},
+                explosions: {}
+            },
+            maxBatchSize: 50, // Maximum entities per batch before forcing a draw
+            enabled: true
+        };
+        console.log('Batch rendering system initialized');
+    }
+
+    // =====================
+    // CANVAS LAYERS SYSTEM
+    // =====================
+    
+    initializeCanvasLayers() {
+        if (!this.canvas || !this.canvas.parentNode) {
+            console.warn('Cannot initialize canvas layers - main canvas not ready');
+            return;
+        }
+        
+        this.canvasLayers = {
+            background: null,
+            grid: null,
+            entities: null,
+            effects: null,
+            ui: null,
+            enabled: true,
+            needsGridRedraw: true
+        };
+        
+        // Create layer canvases
+        this.createCanvasLayer('background', 0); // Bottom layer
+        this.createCanvasLayer('grid', 1);       // Grid layer
+        this.createCanvasLayer('entities', 2);   // Entities (enemies, projectiles, player)
+        this.createCanvasLayer('effects', 3);    // Particles, explosions
+        this.createCanvasLayer('ui', 4);         // UI elements, notifications
+        
+        console.log('Canvas layers system initialized');
+    }
+    
+    createCanvasLayer(name, zIndex) {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Copy dimensions from main canvas
+        canvas.width = this.canvas.width;
+        canvas.height = this.canvas.height;
+        
+        // Style the canvas
+        canvas.style.position = 'absolute';
+        canvas.style.left = '0px';
+        canvas.style.top = '0px';
+        canvas.style.zIndex = zIndex.toString();
+        canvas.style.pointerEvents = 'none'; // Allow events to pass through
+        
+        // Insert into DOM right after main canvas
+        this.canvas.parentNode.insertBefore(canvas, this.canvas.nextSibling);
+        
+        // Store layer info
+        this.canvasLayers[name] = {
+            canvas: canvas,
+            ctx: ctx,
+            zIndex: zIndex,
+            needsRedraw: true
+        };
+        
+        console.log(`Canvas layer '${name}' created with z-index ${zIndex}`);
+    }
+    
+    resizeCanvasLayers() {
+        if (!this.canvasLayers || !this.canvasLayers.enabled) return;
+        
+        for (const layerName in this.canvasLayers) {
+            const layer = this.canvasLayers[layerName];
+            if (layer && layer.canvas && this.canvas) {
+                layer.canvas.width = this.canvas.width;
+                layer.canvas.height = this.canvas.height;
+                layer.needsRedraw = true;
+            }
+        }
+        
+        // Mark grid for redraw since canvas was resized
+        if (this.canvasLayers.grid) {
+            this.canvasLayers.needsGridRedraw = true;
+        }
+    }
+    
+    clearCanvasLayer(layerName) {
+        const layer = this.canvasLayers[layerName];
+        if (!layer || !layer.canvas) return;
+        
+        layer.ctx.clearRect(0, 0, layer.canvas.width, layer.canvas.height);
+    }
+    
+    drawToLayer(layerName, drawFunction) {
+        if (!this.canvasLayers || !this.canvasLayers.enabled) {
+            // Fallback to main canvas
+            drawFunction(this.ctx);
+            return;
+        }
+        
+        const layer = this.canvasLayers[layerName];
+        if (!layer || !layer.canvas) {
+            // Fallback to main canvas
+            drawFunction(this.ctx);
+            return;
+        }
+        
+        // Draw to the layer
+        drawFunction(layer.ctx);
+    }
+    
+    invalidateLayer(layerName) {
+        if (this.canvasLayers && this.canvasLayers[layerName]) {
+            this.canvasLayers[layerName].needsRedraw = true;
+        }
+    }
+    
+    cleanupCanvasLayers() {
+        if (!this.canvasLayers) return;
+        
+        // Remove layer canvases from DOM
+        for (const layerName in this.canvasLayers) {
+            const layer = this.canvasLayers[layerName];
+            if (layer && layer.canvas && layer.canvas.parentNode) {
+                layer.canvas.parentNode.removeChild(layer.canvas);
+            }
+        }
+        
+        this.canvasLayers = null;
+        console.log('Canvas layers cleaned up');
+    }
+
+    // =====================
+    // ADAPTIVE QUALITY SCALING SYSTEM
+    // =====================
+    
+    initializeAdaptiveQuality() {
+        this.adaptiveQuality = {
+            enabled: true,
+            currentLevel: 3, // 1=lowest, 5=highest
+            targetFPS: 55,   // Target FPS to maintain
+            lowFPSThreshold: 45,
+            highFPSThreshold: 58,
+            checkInterval: 60, // Check every 60 frames
+            frameCount: 0,
+            adjustmentCooldown: 180, // Wait 3 seconds between adjustments
+            lastAdjustment: 0,
+            
+            levels: {
+                1: { // Ultra Low - Crisis mode
+                    particleCount: 0.1,
+                    explosionCount: 0.3,
+                    shadowBlur: 0,
+                    glowEffects: false,
+                    batchRendering: true,
+                    canvasLayers: false,
+                    trailLength: 3
+                },
+                2: { // Low
+                    particleCount: 0.3,
+                    explosionCount: 0.5,
+                    shadowBlur: 2,
+                    glowEffects: false,
+                    batchRendering: true,
+                    canvasLayers: false,
+                    trailLength: 5
+                },
+                3: { // Medium (default)
+                    particleCount: 0.6,
+                    explosionCount: 0.8,
+                    shadowBlur: 5,
+                    glowEffects: true,
+                    batchRendering: true,
+                    canvasLayers: true,
+                    trailLength: 8
+                },
+                4: { // High
+                    particleCount: 0.8,
+                    explosionCount: 1.0,
+                    shadowBlur: 8,
+                    glowEffects: true,
+                    batchRendering: true,
+                    canvasLayers: true,
+                    trailLength: 12
+                },
+                5: { // Ultra High
+                    particleCount: 1.0,
+                    explosionCount: 1.0,
+                    shadowBlur: 15,
+                    glowEffects: true,
+                    batchRendering: false, // Allow individual rendering for quality
+                    canvasLayers: true,
+                    trailLength: 15
+                }
+            }
+        };
+        
+        console.log('Adaptive quality scaling initialized at level', this.adaptiveQuality.currentLevel);
+    }
+    
+    updateAdaptiveQuality() {
+        if (!this.adaptiveQuality || !this.adaptiveQuality.enabled) return;
+        
+        this.adaptiveQuality.frameCount++;
+        
+        // Only check performance periodically
+        if (this.adaptiveQuality.frameCount % this.adaptiveQuality.checkInterval !== 0) return;
+        
+        // Don't adjust too frequently
+        const timeSinceLastAdjustment = Date.now() - this.adaptiveQuality.lastAdjustment;
+        if (timeSinceLastAdjustment < this.adaptiveQuality.adjustmentCooldown * 16.67) return; // Convert to ms
+        
+        const currentFPS = this.averageFPS || this.fps || 60;
+        const currentLevel = this.adaptiveQuality.currentLevel;
+        let newLevel = currentLevel;
+        
+        // Decide if we need to adjust quality
+        if (currentFPS < this.adaptiveQuality.lowFPSThreshold && currentLevel > 1) {
+            // Performance too low, decrease quality
+            newLevel = Math.max(1, currentLevel - 1);
+            console.log(`🔻 Adaptive quality: FPS ${currentFPS.toFixed(1)} < ${this.adaptiveQuality.lowFPSThreshold}, reducing quality ${currentLevel} → ${newLevel}`);
+        } else if (currentFPS > this.adaptiveQuality.highFPSThreshold && currentLevel < 5) {
+            // Performance good, try increasing quality
+            newLevel = Math.min(5, currentLevel + 1);
+            console.log(`🔺 Adaptive quality: FPS ${currentFPS.toFixed(1)} > ${this.adaptiveQuality.highFPSThreshold}, increasing quality ${currentLevel} → ${newLevel}`);
+        }
+        
+        // Apply quality change if needed
+        if (newLevel !== currentLevel) {
+            this.setQualityLevel(newLevel);
+            this.adaptiveQuality.lastAdjustment = Date.now();
+        }
+    }
+    
+    setQualityLevel(level) {
+        if (!this.adaptiveQuality || level < 1 || level > 5) return;
+        
+        const oldLevel = this.adaptiveQuality.currentLevel;
+        this.adaptiveQuality.currentLevel = level;
+        const config = this.adaptiveQuality.levels[level];
+        
+        // Apply quality settings
+        this.qualitySettings = {
+            particleMultiplier: config.particleCount,
+            explosionMultiplier: config.explosionCount,
+            shadowBlur: config.shadowBlur,
+            glowEffects: config.glowEffects,
+            batchRendering: config.batchRendering,
+            canvasLayers: config.canvasLayers,
+            trailLength: config.trailLength
+        };
+        
+        // Keep canvas layers enabled but note the quality preference
+        // (Canvas layers temporarily disabled for debugging)
+        this.canvasLayersPreferred = config.canvasLayers;
+        
+        // Toggle batch rendering based on quality level
+        if (this.batchRenderer) {
+            this.batchRenderer.enabled = config.batchRendering;
+        }
+        
+        // Adjust player trail length
+        if (this.player && this.player.trail) {
+            const maxTrailLength = Math.min(config.trailLength, this.player.trail.length);
+            if (this.player.trail.length > maxTrailLength) {
+                this.player.trail = this.player.trail.slice(-maxTrailLength);
+            }
+            this.player.maxTrailLength = maxTrailLength;
+        }
+        
+        console.log(`⚙️ Quality level set to ${level} (${this.getQualityLevelName(level)})`);
+    }
+    
+    getQualityLevelName(level) {
+        const names = ['', 'Ultra Low', 'Low', 'Medium', 'High', 'Ultra High'];
+        return names[level] || 'Unknown';
+    }
+    
+    shouldCreateParticle() {
+        if (!this.adaptiveQuality || !this.qualitySettings) return true;
+        return Math.random() < this.qualitySettings.particleMultiplier;
+    }
+    
+    shouldCreateExplosion() {
+        if (!this.adaptiveQuality || !this.qualitySettings) return true;
+        return Math.random() < this.qualitySettings.explosionMultiplier;
+    }
+    
+    getQualityShadowBlur() {
+        if (!this.adaptiveQuality || !this.qualitySettings) return 10;
+        return this.qualitySettings.shadowBlur;
+    }
+    
+    shouldUseGlowEffects() {
+        if (!this.adaptiveQuality || !this.qualitySettings) return true;
+        return this.qualitySettings.glowEffects;
+    }
+    
+    forceQualityLevel(level) {
+        // Allow manual quality override for testing
+        console.log(`🔧 Manual quality override: ${this.adaptiveQuality.currentLevel} → ${level}`);
+        this.setQualityLevel(level);
+        this.adaptiveQuality.lastAdjustment = Date.now();
+    }
+    
+    addToBatch(entityType, renderType, entity) {
+        if (!this.batchRenderer || !this.batchRenderer.enabled) {
+            return false;
+        }
+        
+        const batch = this.batchRenderer.entityBatches[entityType];
+        if (!batch) return false;
+        
+        if (!batch[renderType]) {
+            batch[renderType] = [];
+        }
+        
+        batch[renderType].push(entity);
+        
+        // Auto-flush if batch gets too large
+        if (batch[renderType].length >= this.batchRenderer.maxBatchSize) {
+            this.flushBatch(entityType, renderType);
+            return true;
+        }
+        
+        return true;
+    }
+    
+    flushBatch(entityType, renderType) {
+        if (!this.batchRenderer || !this.batchRenderer.enabled) return;
+        
+        const batch = this.batchRenderer.entityBatches[entityType];
+        if (!batch || !batch[renderType] || batch[renderType].length === 0) return;
+        
+        // Set up common rendering state for this batch
+        this.ctx.save();
+        
+        switch (renderType) {
+            case 'basic':
+                this.renderBasicEnemyBatch(batch[renderType]);
+                break;
+            case 'projectile':
+                this.renderProjectileBatch(batch[renderType]);
+                break;
+            case 'particle':
+                this.renderParticleBatch(batch[renderType]);
+                break;
+            case 'explosion':
+                this.renderExplosionBatch(batch[renderType]);
+                break;
+        }
+        
+        this.ctx.restore();
+        
+        // Clear the batch
+        batch[renderType] = [];
+    }
+    
+    flushAllBatches() {
+        if (!this.batchRenderer || !this.batchRenderer.enabled) return;
+        
+        for (const entityType in this.batchRenderer.entityBatches) {
+            const batches = this.batchRenderer.entityBatches[entityType];
+            for (const renderType in batches) {
+                this.flushBatch(entityType, renderType);
+            }
+        }
+    }
+    
+    renderBasicEnemyBatch(enemies) {
+        if (!enemies || enemies.length === 0) return;
+        
+        // Set common properties for basic enemies
+        this.ctx.fillStyle = '#ff4444';
+        this.ctx.strokeStyle = '#ff0000';
+        this.ctx.lineWidth = 2;
+        
+        // Draw all enemies in one pass
+        this.ctx.beginPath();
+        for (const enemy of enemies) {
+            if (this.shouldRender(enemy, 'enemy')) {
+                this.ctx.moveTo(enemy.x + enemy.size, enemy.y);
+                this.ctx.arc(enemy.x, enemy.y, enemy.size, 0, Math.PI * 2);
+            }
+        }
+        this.ctx.fill();
+        this.ctx.stroke();
+    }
+    
+    renderProjectileBatch(projectiles) {
+        if (!projectiles || projectiles.length === 0) return;
+        
+        // Group projectiles by type for efficient rendering
+        const typeGroups = {};
+        for (const projectile of projectiles) {
+            if (!this.shouldRender(projectile, 'projectile')) continue;
+            
+            const type = projectile.type || 'basic';
+            if (!typeGroups[type]) {
+                typeGroups[type] = [];
+            }
+            typeGroups[type].push(projectile);
+        }
+        
+        // Render each type group
+        for (const type in typeGroups) {
+            this.renderProjectileTypeGroup(type, typeGroups[type]);
+        }
+    }
+    
+    renderProjectileTypeGroup(type, projectiles) {
+        switch (type) {
+            case 'basic':
+                this.ctx.fillStyle = '#00ffff';
+                this.ctx.beginPath();
+                for (const p of projectiles) {
+                    this.ctx.moveTo(p.x + 3, p.y);
+                    this.ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+                }
+                this.ctx.fill();
+                break;
+                
+            case 'plasma':
+                this.ctx.fillStyle = '#ff00ff';
+                this.ctx.beginPath();
+                for (const p of projectiles) {
+                    this.ctx.moveTo(p.x + 4, p.y);
+                    this.ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+                }
+                this.ctx.fill();
+                break;
+                
+            // Add more projectile types as needed
+            default:
+                this.ctx.fillStyle = '#ffffff';
+                this.ctx.beginPath();
+                for (const p of projectiles) {
+                    this.ctx.moveTo(p.x + 2, p.y);
+                    this.ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+                }
+                this.ctx.fill();
+        }
+    }
+    
+    renderParticleBatch(particles) {
+        if (!particles || particles.length === 0) return;
+        
+        // Sort particles by alpha for better blending
+        particles.sort((a, b) => (b.alpha || 1) - (a.alpha || 1));
+        
+        this.ctx.globalCompositeOperation = 'lighter';
+        
+        for (const particle of particles) {
+            if (!this.shouldRender(particle, 'particle')) continue;
+            
+            this.ctx.globalAlpha = particle.alpha || 1;
+            this.ctx.fillStyle = particle.color || '#ffffff';
+            this.ctx.fillRect(particle.x - 1, particle.y - 1, 2, 2);
+        }
+        
+        this.ctx.globalCompositeOperation = 'source-over';
+        this.ctx.globalAlpha = 1;
+    }
+    
+    renderExplosionBatch(explosions) {
+        if (!explosions || explosions.length === 0) return;
+        
+        for (const explosion of explosions) {
+            if (!this.shouldRender(explosion, 'explosion')) continue;
+            
+            const progress = 1 - (explosion.life / explosion.maxLife);
+            this.ctx.globalAlpha = 1 - progress;
+            
+            // Create radial gradient for explosion effect
+            const gradient = this.ctx.createRadialGradient(
+                explosion.x, explosion.y, 0,
+                explosion.x, explosion.y, explosion.radius
+            );
+            gradient.addColorStop(0, '#ffffff');
+            gradient.addColorStop(0.3, explosion.color || '#ff4400');
+            gradient.addColorStop(1, 'transparent');
+            
+            this.ctx.fillStyle = gradient;
+            this.ctx.beginPath();
+            this.ctx.arc(explosion.x, explosion.y, explosion.radius, 0, Math.PI * 2);
+            this.ctx.fill();
+        }
+        
+        this.ctx.globalAlpha = 1;
+    }
+
     
     updateFrameRate() {
         const currentTime = performance.now();
@@ -5276,11 +5799,112 @@ class VibeSurvivor {
     draw() {
         if (!this.canvas || !this.ctx) return;
         
-        // Always use full screen rendering for now
+        // Temporarily disable canvas layers to fix rendering issues
+        this.drawTraditional();
+    }
+    
+    drawWithLayers() {
+        // Clear main canvas (background layer)
+        this.drawToLayer('background', (ctx) => {
+            ctx.fillStyle = '#0a0a0a';
+            ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        });
+        
+        // Draw grid on grid layer (only when needed)
+        if (this.canvasLayers.needsGridRedraw) {
+            this.clearCanvasLayer('grid');
+            this.drawToLayer('grid', (ctx) => {
+                ctx.save();
+                let shakeX = 0, shakeY = 0;
+                if (this.screenShake) {
+                    shakeX = this.screenShake.x;
+                    shakeY = this.screenShake.y;
+                }
+                ctx.translate(-this.camera.x + shakeX, -this.camera.y + shakeY);
+                this.drawGridToContext(ctx);
+                ctx.restore();
+            });
+            this.canvasLayers.needsGridRedraw = false;
+        }
+        
+        // Clear and draw entities layer
+        this.clearCanvasLayer('entities');
+        this.drawToLayer('entities', (ctx) => {
+            ctx.save();
+            let shakeX = 0, shakeY = 0;
+            if (this.screenShake) {
+                shakeX = this.screenShake.x;
+                shakeY = this.screenShake.y;
+            }
+            ctx.translate(-this.camera.x + shakeX, -this.camera.y + shakeY);
+            
+            // Switch context temporarily for drawing functions
+            const originalCtx = this.ctx;
+            this.ctx = ctx;
+            
+            this.drawPlayerWithBatching();
+            this.drawEnemiesWithBatching();
+            this.drawProjectilesWithBatching();
+            this.drawXPOrbs();
+            
+            // Restore original context
+            this.ctx = originalCtx;
+            ctx.restore();
+        });
+        
+        // Clear and draw effects layer
+        this.clearCanvasLayer('effects');
+        this.drawToLayer('effects', (ctx) => {
+            ctx.save();
+            let shakeX = 0, shakeY = 0;
+            if (this.screenShake) {
+                shakeX = this.screenShake.x;
+                shakeY = this.screenShake.y;
+            }
+            ctx.translate(-this.camera.x + shakeX, -this.camera.y + shakeY);
+            
+            // Switch context temporarily for drawing functions
+            const originalCtx = this.ctx;
+            this.ctx = ctx;
+            
+            this.drawExplosionsWithBatching();
+            this.drawParticlesWithBatching();
+            
+            // Restore original context
+            this.ctx = originalCtx;
+            ctx.restore();
+        });
+        
+        // Clear and draw UI layer
+        this.clearCanvasLayer('ui');
+        this.drawToLayer('ui', (ctx) => {
+            // Switch context temporarily for drawing functions
+            const originalCtx = this.ctx;
+            this.ctx = ctx;
+            
+            this.drawNotifications();
+            this.drawRedFlash();
+            
+            // Restore original context
+            this.ctx = originalCtx;
+        });
+        
+        // Flush any remaining batches
+        this.flushAllBatches();
+        
+        // Mark grid for redraw on camera movement
+        if (this.camera && this.camera.lastX !== this.camera.x || this.camera.lastY !== this.camera.y) {
+            this.canvasLayers.needsGridRedraw = true;
+            this.camera.lastX = this.camera.x;
+            this.camera.lastY = this.camera.y;
+        }
+    }
+    
+    drawTraditional() {
+        // Fallback to original rendering method
         this.ctx.fillStyle = '#0a0a0a';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         
-        // Apply camera transformation with screen shake
         this.ctx.save();
         let shakeX = 0, shakeY = 0;
         if (this.screenShake) {
@@ -5289,23 +5913,21 @@ class VibeSurvivor {
         }
         this.ctx.translate(-this.camera.x + shakeX, -this.camera.y + shakeY);
         
-        // Always draw grid directly (bypass caching issues)
         this.drawGrid();
-        
-        this.drawPlayer();
-        this.drawEnemies();
-        this.drawProjectiles();
+        this.drawPlayerWithBatching();
+        this.drawEnemiesWithBatching();
+        this.drawProjectilesWithBatching();
         this.drawXPOrbs();
-        this.drawExplosions();
-        this.drawParticles();
+        this.drawExplosionsWithBatching();
+        this.drawParticlesWithBatching();
         this.drawNotifications();
+        
+        this.flushAllBatches();
         
         this.ctx.restore();
         
-        // Draw red flash effect (always full screen, after camera transformation)
         this.drawRedFlash();
         
-        // Clear dirty rectangles for next frame (keeping the system but not using it)
         this.dirtyRectangles = [];
     }
 
@@ -5315,9 +5937,11 @@ class VibeSurvivor {
             this.ctx.fillStyle = `rgba(255, 0, 50, ${this.redFlash.intensity})`;
             this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
             
-            // Add neon glow effect
-            this.ctx.shadowColor = '#ff0032';
-            this.ctx.shadowBlur = 20;
+            // Add neon glow effect with adaptive quality
+            if (this.shouldUseGlowEffects()) {
+                this.ctx.shadowColor = '#ff0032';
+                this.ctx.shadowBlur = this.getQualityShadowBlur();
+            }
             this.ctx.fillStyle = `rgba(255, 0, 50, ${this.redFlash.intensity * 0.3})`;
             this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
             
@@ -5379,6 +6003,41 @@ class VibeSurvivor {
             this.ctx.moveTo(startX, y);
             this.ctx.lineTo(endX, y);
             this.ctx.stroke();
+        }
+    }
+
+    drawGridToContext(ctx) {
+        // Set grid styling with cyan neon color (more visible)
+        ctx.strokeStyle = 'rgba(0, 255, 255, 0.15)';
+        ctx.lineWidth = 1;
+        
+        const gridSize = 60;
+        
+        // Calculate visible world area based on camera position - FIXED BOUNDS
+        const canvasWidth = this.canvas.width;
+        const canvasHeight = this.canvas.height;
+        
+        // Calculate grid bounds to FULLY COVER the visible canvas area
+        const margin = gridSize * 3; // Extra margin to ensure full coverage
+        const startX = Math.floor((this.camera.x - margin) / gridSize) * gridSize;
+        const endX = Math.ceil((this.camera.x + canvasWidth + margin) / gridSize) * gridSize;
+        const startY = Math.floor((this.camera.y - margin) / gridSize) * gridSize;
+        const endY = Math.ceil((this.camera.y + canvasHeight + margin) / gridSize) * gridSize;
+        
+        // Draw vertical lines in world coordinates
+        for (let x = startX; x <= endX; x += gridSize) {
+            ctx.beginPath();
+            ctx.moveTo(x, startY);
+            ctx.lineTo(x, endY);
+            ctx.stroke();
+        }
+        
+        // Draw horizontal lines in world coordinates
+        for (let y = startY; y <= endY; y += gridSize) {
+            ctx.beginPath();
+            ctx.moveTo(startX, y);
+            ctx.lineTo(endX, y);
+            ctx.stroke();
         }
     }
     
@@ -6212,6 +6871,139 @@ class VibeSurvivor {
         // Notifications are now handled by DOM-based toast system
         // This method is kept for compatibility but does nothing
     }
+
+    // =====================
+    // BATCHED DRAWING FUNCTIONS
+    // =====================
+    
+    drawPlayerWithBatching() {
+        // Player is unique, so just draw normally
+        this.drawPlayer();
+    }
+    
+    drawEnemiesWithBatching() {
+        if (!this.enemies || this.enemies.length === 0) return;
+        
+        // Fallback to traditional enemy drawing for now
+        this.drawEnemies();
+    }
+    
+    drawProjectilesWithBatching() {
+        if (!this.projectiles || this.projectiles.length === 0) return;
+        
+        // Fallback to traditional projectile drawing for now
+        this.drawProjectiles();
+    }
+    
+    drawExplosionsWithBatching() {
+        if (!this.explosions || this.explosions.length === 0) return;
+        
+        // Fallback to traditional explosion drawing for now
+        this.drawExplosions();
+    }
+    
+    drawParticlesWithBatching() {
+        if (!this.particles || this.particles.length === 0) return;
+        
+        // Fallback to traditional particle drawing for now
+        this.drawParticles();
+    }
+    
+    // Fallback individual rendering functions
+    drawIndividualEnemy(enemy) {
+        this.ctx.save();
+        
+        // Basic enemy rendering (simplified from original drawEnemies)
+        if (enemy.type === 'boss') {
+            // Boss rendering
+            this.ctx.fillStyle = '#ff0000';
+            this.ctx.strokeStyle = '#ffaa00';
+            this.ctx.lineWidth = 4;
+        } else {
+            // Normal enemy rendering
+            this.ctx.fillStyle = '#ff4444';
+            this.ctx.strokeStyle = '#ff0000';
+            this.ctx.lineWidth = 2;
+        }
+        
+        this.ctx.beginPath();
+        this.ctx.arc(enemy.x, enemy.y, enemy.size, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.stroke();
+        
+        this.ctx.restore();
+    }
+    
+    drawIndividualProjectile(projectile) {
+        this.ctx.save();
+        
+        // Basic projectile rendering
+        switch (projectile.type) {
+            case 'plasma':
+                this.ctx.fillStyle = '#ff00ff';
+                this.ctx.shadowColor = '#ff00ff';
+                this.ctx.shadowBlur = 10;
+                break;
+            case 'laser':
+                this.ctx.strokeStyle = '#00ff00';
+                this.ctx.lineWidth = 2;
+                this.ctx.shadowColor = '#00ff00';
+                this.ctx.shadowBlur = 5;
+                break;
+            default:
+                this.ctx.fillStyle = '#00ffff';
+                this.ctx.shadowColor = '#00ffff';
+                this.ctx.shadowBlur = 5;
+        }
+        
+        if (projectile.type === 'laser') {
+            this.ctx.beginPath();
+            this.ctx.moveTo(projectile.x - 10, projectile.y);
+            this.ctx.lineTo(projectile.x + 10, projectile.y);
+            this.ctx.stroke();
+        } else {
+            this.ctx.beginPath();
+            this.ctx.arc(projectile.x, projectile.y, projectile.size || 3, 0, Math.PI * 2);
+            this.ctx.fill();
+        }
+        
+        this.ctx.restore();
+    }
+    
+    drawIndividualExplosion(explosion) {
+        this.ctx.save();
+        
+        const progress = 1 - (explosion.life / explosion.maxLife);
+        this.ctx.globalAlpha = 1 - progress;
+        
+        const gradient = this.ctx.createRadialGradient(
+            explosion.x, explosion.y, 0,
+            explosion.x, explosion.y, explosion.radius
+        );
+        gradient.addColorStop(0, '#ffffff');
+        gradient.addColorStop(0.3, explosion.color || '#ff4400');
+        gradient.addColorStop(1, 'transparent');
+        
+        this.ctx.fillStyle = gradient;
+        this.ctx.beginPath();
+        this.ctx.arc(explosion.x, explosion.y, explosion.radius, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        this.ctx.restore();
+    }
+    
+    drawIndividualParticle(particle) {
+        this.ctx.save();
+        
+        this.ctx.globalAlpha = particle.alpha || 1;
+        this.ctx.fillStyle = particle.color || '#ffffff';
+        this.ctx.shadowColor = particle.color || '#ffffff';
+        this.ctx.shadowBlur = 3;
+        
+        this.ctx.fillRect(particle.x - 1, particle.y - 1, 2, 2);
+        
+        this.ctx.restore();
+    }
     
     updateUI() {
         // Header Health bar
@@ -6903,6 +7695,9 @@ class VibeSurvivor {
         
         // Reset all game state completely
         this.resetGame();
+        
+        // Clean up canvas layers
+        this.cleanupCanvasLayers();
         
         // Remove all vibe-survivor specific elements only
         const existingModals = document.querySelectorAll('#vibe-survivor-modal, [id*="fresh-game-over"], .vibe-survivor-modal, .vibe-survivor-container, [class*="vibe-survivor-"]');
