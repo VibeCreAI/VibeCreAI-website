@@ -2163,7 +2163,10 @@ class VibeSurvivor {
                                 target.closest('.survivor-btn') ||
                                 target.closest('.upgrade-choice') ||
                                 target.closest('.levelup-modal') ||
-                                target.closest('.pause-menu');
+                                target.closest('.pause-menu') ||
+                                target.closest('#overlay-retry-btn') ||
+                                target.closest('#overlay-exit-btn') ||
+                                target.closest('#survivor-game-over-overlay');
                                 
             if (!isGameControl) {
                 e.preventDefault();
