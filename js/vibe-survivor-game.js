@@ -80,6 +80,9 @@ class VibeSurvivor {
         // Initialize object pools
         this.initializeProjectilePool();
         
+        // Initialize smart garbage collection system
+        this.initializeSmartGarbageCollection();
+        
         // Initialize batch rendering system
         this.initializeBatchRenderer();
         
@@ -5099,6 +5102,146 @@ class VibeSurvivor {
         };
         this.xpOrbPool.push(newOrb);
         return newOrb;
+    }
+
+    // Smart garbage collection system
+    initializeSmartGarbageCollection() {
+        this.garbageCollectionSystem = {
+            enabled: true,
+            cleanupScheduled: false,
+            lastCleanup: Date.now(),
+            cleanupInterval: 5000, // Cleanup every 5 seconds
+            
+            // Cleanup tasks to perform during idle periods
+            cleanupTasks: [
+                () => this.compactProjectilePool(),
+                () => this.compactParticlePool(),
+                () => this.compactXPOrbPool(),
+                () => this.cleanupTrails()
+            ]
+        };
+        
+        console.log('Smart garbage collection system initialized');
+        this.scheduleIdleCleanup();
+    }
+    
+    scheduleIdleCleanup() {
+        if (!this.garbageCollectionSystem.enabled || this.garbageCollectionSystem.cleanupScheduled) {
+            return;
+        }
+        
+        this.garbageCollectionSystem.cleanupScheduled = true;
+        
+        // Use requestIdleCallback if available, otherwise fallback to setTimeout
+        if (typeof requestIdleCallback !== 'undefined') {
+            requestIdleCallback((deadline) => {
+                this.performIdleCleanup(deadline);
+            }, { timeout: 1000 });
+        } else {
+            setTimeout(() => {
+                this.performIdleCleanup({ timeRemaining: () => 16 }); // Simulate 16ms budget
+            }, 100);
+        }
+    }
+    
+    performIdleCleanup(deadline) {
+        this.garbageCollectionSystem.cleanupScheduled = false;
+        
+        const now = Date.now();
+        const timeSinceLastCleanup = now - this.garbageCollectionSystem.lastCleanup;
+        
+        // Only perform cleanup if enough time has passed
+        if (timeSinceLastCleanup < this.garbageCollectionSystem.cleanupInterval) {
+            this.scheduleIdleCleanup();
+            return;
+        }
+        
+        // Perform cleanup tasks while we have idle time
+        const tasks = this.garbageCollectionSystem.cleanupTasks;
+        let taskIndex = 0;
+        
+        while (deadline.timeRemaining() > 1 && taskIndex < tasks.length) {
+            try {
+                tasks[taskIndex]();
+                taskIndex++;
+            } catch (e) {
+                console.warn('Cleanup task failed:', e);
+                taskIndex++;
+            }
+        }
+        
+        this.garbageCollectionSystem.lastCleanup = now;
+        
+        // Schedule next cleanup
+        this.scheduleIdleCleanup();
+    }
+    
+    // Pool compaction methods - remove excess inactive objects
+    compactProjectilePool() {
+        if (this.projectilePool.length > this.poolSize * 1.5) {
+            const activeCount = this.projectilePool.filter(p => p.active).length;
+            const keepCount = Math.max(this.poolSize, activeCount + 20);
+            
+            if (this.projectilePool.length > keepCount) {
+                // Keep active objects and some inactive ones
+                const newPool = this.projectilePool.filter(p => p.active);
+                const inactivePool = this.projectilePool.filter(p => !p.active);
+                newPool.push(...inactivePool.slice(0, keepCount - newPool.length));
+                this.projectilePool = newPool;
+                console.log(`Compacted projectile pool: ${this.projectilePool.length} objects`);
+            }
+        }
+    }
+    
+    compactParticlePool() {
+        if (this.particlePool.length > this.particlePoolSize * 1.5) {
+            const activeCount = this.particlePool.filter(p => p.active).length;
+            const keepCount = Math.max(this.particlePoolSize, activeCount + 50);
+            
+            if (this.particlePool.length > keepCount) {
+                const newPool = this.particlePool.filter(p => p.active);
+                const inactivePool = this.particlePool.filter(p => !p.active);
+                newPool.push(...inactivePool.slice(0, keepCount - newPool.length));
+                this.particlePool = newPool;
+                console.log(`Compacted particle pool: ${this.particlePool.length} objects`);
+            }
+        }
+    }
+    
+    compactXPOrbPool() {
+        if (this.xpOrbPool && this.xpOrbPool.length > this.xpOrbPoolSize * 1.5) {
+            const activeCount = this.xpOrbPool.filter(o => o.active).length;
+            const keepCount = Math.max(this.xpOrbPoolSize, activeCount + 20);
+            
+            if (this.xpOrbPool.length > keepCount) {
+                const newPool = this.xpOrbPool.filter(o => o.active);
+                const inactivePool = this.xpOrbPool.filter(o => !o.active);
+                newPool.push(...inactivePool.slice(0, keepCount - newPool.length));
+                this.xpOrbPool = newPool;
+                console.log(`Compacted XP orb pool: ${this.xpOrbPool.length} objects`);
+            }
+        }
+    }
+    
+    cleanupTrails() {
+        // Clean up excessive trail points from player and projectiles
+        if (this.player && this.player.trail && this.player.trail.length > 20) {
+            this.player.trail = this.player.trail.slice(-15);
+            console.log('Cleaned up player trail');
+        }
+        
+        // Clean up projectile trails
+        let cleanedProjectiles = 0;
+        this.projectiles.forEach(projectile => {
+            if (projectile.trail && projectile.trail.length > 10) {
+                projectile.trail = projectile.trail.slice(-8);
+                cleanedProjectiles++;
+            }
+        });
+        
+        if (cleanedProjectiles > 0) {
+            console.log(`Cleaned up trails from ${cleanedProjectiles} projectiles`);
+        }
     }
 
     getPooledParticle() {
