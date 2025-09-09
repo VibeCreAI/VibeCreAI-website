@@ -119,6 +119,7 @@ class VibeSurvivor {
         // Boss progression system (starts after first boss defeat)
         this.bossesKilled = 0;
         this.bossLevel = 1;
+        this.bossDefeating = false; // Animation state for boss defeat
         
         // Menu navigation state for keyboard controls
         this.menuNavigationState = {
@@ -3518,10 +3519,33 @@ class VibeSurvivor {
             if (enemy.health <= 0) {
                 // Check if this was a boss enemy
                 if (enemy.behavior === 'boss') {
-                    // Remove boss from enemies array first
+                    // Prevent multiple boss defeat triggers
+                    if (this.bossDefeating) {
+                        return;
+                    }
+                    
+                    // Start boss defeat animation sequence
+                    this.bossDefeating = true;
+                    console.log('Boss defeated! Starting animation sequence...');
+                    
+                    // Create spectacular defeat animation
+                    this.createBossDefeatAnimation(enemy.x, enemy.y, enemy.radius);
+                    
+                    // Remove boss from enemies array
                     this.enemies.splice(i, 1);
-                    this.bossDefeated();
-                    return; // Exit early, bossDefeated handles the rest
+                    
+                    // Clear all remaining enemies for clean victory
+                    this.enemies.length = 0;
+                    
+                    // Clear all projectiles (including boss missiles)
+                    this.projectiles.length = 0;
+                    
+                    // Delay the victory screen to allow animation to play
+                    setTimeout(() => {
+                        this.bossDefeated();
+                    }, 2000); // 2.0 second delay for animation
+                    
+                    return; // Exit early, animation will handle the rest
                 }
                 
                 this.createXPOrb(enemy.x, enemy.y);
@@ -4635,6 +4659,86 @@ class VibeSurvivor {
                 enemy.health -= damage * (1 - distance / radius);
             }
         });
+    }
+
+    createBossDefeatAnimation(bossX, bossY, bossRadius) {
+        console.log('Creating boss defeat animation...');
+        
+        // Show boss defeat notification during animation
+        this.createToast("BOSS DEFEATED! DIFFICULTY INCREASED!", 'victory', 3000);
+        
+        // Create massive explosion at boss location
+        const mainExplosionRadius = bossRadius * 3;
+        this.createExplosion(bossX, bossY, mainExplosionRadius, 0);
+        
+        // Create screen shake for dramatic effect
+        this.createScreenShake(20, 30); // High intensity, longer duration
+        
+        // Create spectacular particle burst with boss-themed colors
+        const particleCount = this.shouldCreateExplosion() ? 50 : 25;
+        for (let i = 0; i < particleCount; i++) {
+            const particle = this.getPooledParticle();
+            if (particle) {
+                const angle = (Math.PI * 2 * i) / particleCount;
+                const speed = 4 + Math.random() * 6;
+                
+                particle.x = bossX;
+                particle.y = bossY;
+                particle.vx = Math.cos(angle) * speed;
+                particle.vy = Math.sin(angle) * speed;
+                particle.size = 3 + Math.random() * 5;
+                // Gold and orange colors for victory theme
+                particle.color = ['#FFD700', '#FF8C00', '#FFA500', '#FFFF00'][Math.floor(Math.random() * 4)];
+                particle.life = 1.5 + Math.random() * 1.0;
+                particle.maxLife = particle.life;
+                particle.type = 'boss_defeat';
+                
+                this.particles.push(particle);
+            }
+        }
+        
+        // Create secondary explosions radiating outward
+        const secondaryExplosions = 6;
+        for (let i = 0; i < secondaryExplosions; i++) {
+            setTimeout(() => {
+                const angle = (Math.PI * 2 * i) / secondaryExplosions;
+                const distance = bossRadius * 2;
+                const explX = bossX + Math.cos(angle) * distance;
+                const explY = bossY + Math.sin(angle) * distance;
+                
+                this.createExplosion(explX, explY, bossRadius * 1.5, 0);
+                
+                // Add sparkle particles for each secondary explosion
+                const sparkleCount = this.shouldCreateParticle() ? 10 : 5;
+                for (let j = 0; j < sparkleCount; j++) {
+                    const particle = this.getPooledParticle();
+                    if (particle) {
+                        const sparkleAngle = Math.random() * Math.PI * 2;
+                        const sparkleSpeed = 2 + Math.random() * 3;
+                        
+                        particle.x = explX;
+                        particle.y = explY;
+                        particle.vx = Math.cos(sparkleAngle) * sparkleSpeed;
+                        particle.vy = Math.sin(sparkleAngle) * sparkleSpeed;
+                        particle.size = 1 + Math.random() * 2;
+                        particle.color = ['#FFFFFF', '#FFFF00', '#FFD700'][Math.floor(Math.random() * 3)];
+                        particle.life = 0.8 + Math.random() * 0.5;
+                        particle.maxLife = particle.life;
+                        particle.type = 'sparkle';
+                        
+                        this.particles.push(particle);
+                    }
+                }
+            }, i * 200); // Stagger the secondary explosions
+        }
+        
+        // Create a bright flash effect
+        this.redFlash.active = true;
+        this.redFlash.intensity = 0.8;
+        this.redFlash.duration = 60;
+        this.redFlash.maxIntensity = 0.8;
+        
+        console.log('Boss defeat animation created successfully');
     }
     
     createHitParticles(x, y, color) {
@@ -7277,6 +7381,9 @@ class VibeSurvivor {
     
     bossDefeated() {
         console.log('Boss defeated! Starting victory sequence...');
+        
+        // Reset boss defeat animation state
+        this.bossDefeating = false;
         this.gameRunning = false;
         
         // Cancel any running game loop
@@ -7582,8 +7689,7 @@ class VibeSurvivor {
         this.player.xp += 50;
         this.checkLevelUp();
         
-        // Create notification for continued play
-        this.showContinueNotification();
+        // Boss defeat notification already shown during animation
         
         // Resume game loop
         this.gameLoop();
