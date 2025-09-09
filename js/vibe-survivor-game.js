@@ -3788,21 +3788,25 @@ class VibeSurvivor {
                 const xpProgress = this.player.xp / xpRequired;
                 this.player.trailMultiplier = 1.0 + (xpProgress * 3.0);
                 
+                // Return to pool instead of creating garbage
+                orb.active = false;
                 this.xpOrbs.splice(i, 1);
             } else if (orb.life-- <= 0) {
+                // Return to pool instead of creating garbage
+                orb.active = false;
                 this.xpOrbs.splice(i, 1);
             }
         }
     }
     
     createXPOrb(x, y) {
-        this.xpOrbs.push({
-            x: x,
-            y: y,
-            value: 1,
-            life: 1800, // 30 seconds
-            glow: 0
-        });
+        const orb = this.getPooledXPOrb();
+        if (orb) {
+            orb.x = x;
+            orb.y = y;
+            orb.value = 1;
+            this.xpOrbs.push(orb);
+        }
     }
     
     updateNotifications() {
@@ -5035,6 +5039,18 @@ class VibeSurvivor {
                 active: false
             });
         }
+        
+        // XP orb pool for performance
+        this.xpOrbPool = [];
+        this.xpOrbPoolSize = 100;
+        
+        for (let i = 0; i < this.xpOrbPoolSize; i++) {
+            this.xpOrbPool.push({
+                x: 0, y: 0, value: 1,
+                life: 1800, glow: 0,
+                active: false
+            });
+        }
     }
     
     // Get projectile from pool
@@ -5062,6 +5078,27 @@ class VibeSurvivor {
         };
         this.projectilePool.push(newProjectile);
         return newProjectile;
+    }
+
+    getPooledXPOrb() {
+        for (let i = 0; i < this.xpOrbPool.length; i++) {
+            if (!this.xpOrbPool[i].active) {
+                const orb = this.xpOrbPool[i];
+                orb.active = true;
+                orb.life = 1800; // Reset life
+                orb.glow = 0; // Reset glow
+                return orb;
+            }
+        }
+        
+        // If no available orb in pool, expand pool dynamically
+        const newOrb = {
+            x: 0, y: 0, value: 1,
+            life: 1800, glow: 0,
+            active: true
+        };
+        this.xpOrbPool.push(newOrb);
+        return newOrb;
     }
 
     getPooledParticle() {
