@@ -2976,8 +2976,8 @@ class VibeSurvivor {
         
         // Scale missile stats based on boss level
         const bossLevel = boss.bossLevel || 1;
-        const speedMultiplier = Math.pow(1.05, bossLevel - 1);
-        const damageMultiplier = Math.pow(1.15, bossLevel - 1);
+        const speedMultiplier = this.fastPow(1.05, bossLevel - 1);
+        const damageMultiplier = this.fastPow(1.15, bossLevel - 1);
         
         // Phase 1: Basic 3-missile spread (above 70% health)
         if (healthPercent > 0.7) {
@@ -3189,10 +3189,10 @@ class VibeSurvivor {
         const baseConfig = this.getEnemyConfig('boss');
         
         // Calculate scaled stats based on bosses killed
-        const healthMultiplier = Math.pow(1.4, this.bossesKilled);
-        const speedMultiplier = Math.pow(1.05, this.bossesKilled);
-        const damageMultiplier = Math.pow(1.15, this.bossesKilled);
-        const sizeMultiplier = Math.pow(1.05, this.bossesKilled);
+        const healthMultiplier = this.fastPow(1.4, this.bossesKilled);
+        const speedMultiplier = this.fastPow(1.05, this.bossesKilled);
+        const damageMultiplier = this.fastPow(1.15, this.bossesKilled);
+        const sizeMultiplier = this.fastPow(1.05, this.bossesKilled);
         
         // Use effective first boss HP (4000) as base instead of config HP (1000)
         // First boss HP = 1000 * (1 + Math.floor(300 / 30) * 0.3) = 1000 * (1 + 10 * 0.3) = 4000
@@ -3506,7 +3506,7 @@ class VibeSurvivor {
                     
                     // Scale missile firing rate based on boss level (faster for higher levels)
                     const bossLevel = enemy.bossLevel || 1;
-                    const fireRateMultiplier = Math.pow(0.95, bossLevel - 1); // 5% faster per level
+                    const fireRateMultiplier = this.fastPow(0.95, bossLevel - 1); // 5% faster per level
                     
                     // Phase 1: Slow missiles (above 70% health) - every 4 seconds
                     if (bossHealthPercent > 0.7) {
@@ -5278,6 +5278,39 @@ class VibeSurvivor {
         
         return result;
     }
+    
+    // Fast power approximation for small integer exponents
+    fastPow(base, exponent) {
+        // Handle special cases first
+        if (exponent === 0) return 1;
+        if (exponent === 1) return base;
+        if (base === 1) return 1;
+        if (base === 0) return 0;
+        
+        // Fast approximations for small integer exponents
+        if (Number.isInteger(exponent) && exponent > 0 && exponent <= 10) {
+            switch (exponent) {
+                case 2: return base * base;
+                case 3: return base * base * base;
+                case 4: { const sq = base * base; return sq * sq; }
+                case 5: { const sq = base * base; return sq * sq * base; }
+                case 6: { const sq = base * base; return sq * sq * sq; }
+                case 7: { const sq = base * base; return sq * sq * sq * base; }
+                case 8: { const sq = base * base; const quad = sq * sq; return quad * quad; }
+                default: {
+                    // For larger powers, use repeated multiplication
+                    let result = base;
+                    for (let i = 1; i < exponent; i++) {
+                        result *= base;
+                    }
+                    return result;
+                }
+            }
+        }
+        
+        // Fall back to Math.pow for complex cases (decimals, negatives, large numbers)
+        return Math.pow(base, exponent);
+    }
 
     getPooledParticle() {
         for (let i = 0; i < this.particlePool.length; i++) {
@@ -6654,7 +6687,7 @@ class VibeSurvivor {
                 if (type === 'boss') {
                     // Scale glow based on boss level for higher level bosses
                     const bossLevel = enemy.bossLevel || 1;
-                    const glowMultiplier = Math.pow(1.1, bossLevel - 1); // Scale glow with boss level
+                    const glowMultiplier = this.fastPow(1.1, bossLevel - 1); // Scale glow with boss level
                     const baseGlowSize = 60 * glowMultiplier;
                     const glowSize = baseGlowSize + Math.sin(Date.now() * 0.008) * (20 * glowMultiplier);
                     
