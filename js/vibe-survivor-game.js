@@ -83,6 +83,10 @@ class VibeSurvivor {
         // Initialize smart garbage collection system
         this.initializeSmartGarbageCollection();
         
+        // Initialize square root cache for performance
+        this.sqrtCache = new Map();
+        this.maxCacheSize = 1000; // Limit cache size to prevent memory bloat
+        
         // Initialize batch rendering system
         this.initializeBatchRenderer();
         
@@ -1950,7 +1954,7 @@ class VibeSurvivor {
             // Use current movement direction for dash
             if (moveX !== 0 || moveY !== 0) {
                 // Normalize the movement direction for consistent dash distance
-                const magnitude = Math.sqrt(moveX * moveX + moveY * moveY);
+                const magnitude = this.cachedSqrt(moveX * moveX + moveY * moveY);
                 dashX = (moveX / magnitude) * dashDistance;
                 dashY = (moveY / magnitude) * dashDistance;
             } else {
@@ -1972,7 +1976,7 @@ class VibeSurvivor {
                 }
                 
                 if (fallbackX !== 0 || fallbackY !== 0) {
-                    const magnitude = Math.sqrt(fallbackX * fallbackX + fallbackY * fallbackY);
+                    const magnitude = this.cachedSqrt(fallbackX * fallbackX + fallbackY * fallbackY);
                     dashX = (fallbackX / magnitude) * dashDistance;
                     dashY = (fallbackY / magnitude) * dashDistance;
                 } else {
@@ -2477,7 +2481,7 @@ class VibeSurvivor {
         this.enemies.forEach(enemy => {
             const dx = enemy.x - this.player.x;
             const dy = enemy.y - this.player.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
+            const distance = this.cachedSqrt(dx * dx + dy * dy);
             
             if (distance < nearestDistance && distance <= weapon.range) {
                 nearestDistance = distance;
@@ -2488,7 +2492,7 @@ class VibeSurvivor {
         if (nearestEnemy) {
             const dx = nearestEnemy.x - this.player.x;
             const dy = nearestEnemy.y - this.player.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
+            const distance = this.cachedSqrt(dx * dx + dy * dy);
             
             // Fire multiple projectiles if weapon has been upgraded
             const projectileCount = weapon.projectileCount || 1;
@@ -2672,8 +2676,8 @@ class VibeSurvivor {
         
         // Get multiple different targets for each lightning bolt (similar to homing lasers/missiles)
         const availableTargets = this.enemies.slice().sort((a, b) => {
-            const distA = Math.sqrt((a.x - this.player.x) ** 2 + (a.y - this.player.y) ** 2);
-            const distB = Math.sqrt((b.x - this.player.x) ** 2 + (b.y - this.player.y) ** 2);
+            const distA = this.cachedSqrt((a.x - this.player.x) ** 2 + (a.y - this.player.y) ** 2);
+            const distB = this.cachedSqrt((b.x - this.player.x) ** 2 + (b.y - this.player.y) ** 2);
             return distA - distB;
         }).slice(0, Math.max(projectileCount, 8)); // Get up to 8 closest enemies
         
@@ -2705,7 +2709,7 @@ class VibeSurvivor {
                     if (!hitEnemies.has(enemy)) {
                         const dx = enemy.x - currentTarget.x;
                         const dy = enemy.y - currentTarget.y;
-                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        const distance = this.cachedSqrt(dx * dx + dy * dy);
                         if (distance < nearestDistance && distance <= 150) {
                             nearestDistance = distance;
                             nextTarget = enemy;
@@ -2743,8 +2747,8 @@ class VibeSurvivor {
         
         // Get multiple different targets for each shockburst bolt (same as lightning)
         const availableTargets = this.enemies.slice().sort((a, b) => {
-            const distA = Math.sqrt((a.x - this.player.x) ** 2 + (a.y - this.player.y) ** 2);
-            const distB = Math.sqrt((b.x - this.player.x) ** 2 + (b.y - this.player.y) ** 2);
+            const distA = this.cachedSqrt((a.x - this.player.x) ** 2 + (a.y - this.player.y) ** 2);
+            const distB = this.cachedSqrt((b.x - this.player.x) ** 2 + (b.y - this.player.y) ** 2);
             return distA - distB;
         }).slice(0, Math.max(projectileCount, 8)); // Get up to 8 closest enemies
         
@@ -2775,7 +2779,7 @@ class VibeSurvivor {
                     if (enemy !== currentTarget) {
                         const dx = enemy.x - currentTarget.x;
                         const dy = enemy.y - currentTarget.y;
-                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        const distance = this.cachedSqrt(dx * dx + dy * dy);
                         if (distance <= (weapon.explosionRadius || 100)) {
                             enemy.health -= weapon.damage * 1.0; // Explosion at full damage
                             this.createHitParticles(enemy.x, enemy.y, '#00FFFF'); // Cyan particles
@@ -2791,7 +2795,7 @@ class VibeSurvivor {
                     if (!hitEnemies.has(enemy)) {
                         const dx = enemy.x - currentTarget.x;
                         const dy = enemy.y - currentTarget.y;
-                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        const distance = this.cachedSqrt(dx * dx + dy * dy);
                         if (distance < nearestDistance && distance <= 150) {
                             nearestDistance = distance;
                             nextTarget = enemy;
@@ -2871,7 +2875,7 @@ class VibeSurvivor {
         this.enemies.forEach(enemy => {
             const dx = enemy.x - x;
             const dy = enemy.y - y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
+            const distance = this.cachedSqrt(dx * dx + dy * dy);
             
             if (distance < nearestDistance) {
                 nearestDistance = distance;
@@ -2888,8 +2892,8 @@ class VibeSurvivor {
         
         // Get multiple different targets for each missile (similar to homing lasers)
         const availableTargets = this.enemies.slice().sort((a, b) => {
-            const distA = Math.sqrt((a.x - this.player.x) ** 2 + (a.y - this.player.y) ** 2);
-            const distB = Math.sqrt((b.x - this.player.x) ** 2 + (b.y - this.player.y) ** 2);
+            const distA = this.cachedSqrt((a.x - this.player.x) ** 2 + (a.y - this.player.y) ** 2);
+            const distB = this.cachedSqrt((b.x - this.player.x) ** 2 + (b.y - this.player.y) ** 2);
             return distA - distB;
         }).slice(0, Math.max(projectileCount, 8)); // Get up to 8 closest enemies
         
@@ -2929,8 +2933,8 @@ class VibeSurvivor {
         
         // Get multiple different targets for each laser
         const availableTargets = this.enemies.slice().sort((a, b) => {
-            const distA = Math.sqrt((a.x - this.player.x) ** 2 + (a.y - this.player.y) ** 2);
-            const distB = Math.sqrt((b.x - this.player.x) ** 2 + (b.y - this.player.y) ** 2);
+            const distA = this.cachedSqrt((a.x - this.player.x) ** 2 + (a.y - this.player.y) ** 2);
+            const distB = this.cachedSqrt((b.x - this.player.x) ** 2 + (b.y - this.player.y) ** 2);
             return distA - distB;
         }).slice(0, Math.max(projectileCount, 8)); // Get up to 8 closest enemies
         
@@ -3343,7 +3347,7 @@ class VibeSurvivor {
             
             const dx = this.player.x - enemy.x;
             const dy = this.player.y - enemy.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
+            const distance = this.cachedSqrt(dx * dx + dy * dy);
             
             // Enemy behavior
             switch (enemy.behavior) {
@@ -3421,7 +3425,7 @@ class VibeSurvivor {
                     if (bossHealthPercent > 0.7) {
                         const dx = this.player.x - enemy.x;
                         const dy = this.player.y - enemy.y;
-                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        const distance = this.cachedSqrt(dx * dx + dy * dy);
                         
                         if (distance > 0) {
                             enemy.x += (dx / distance) * enemy.speed * 1.2;
@@ -3433,7 +3437,7 @@ class VibeSurvivor {
                     else if (bossHealthPercent > 0.3) {
                         const dx = this.player.x - enemy.x;
                         const dy = this.player.y - enemy.y;
-                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        const distance = this.cachedSqrt(dx * dx + dy * dy);
                         
                         // Maintain distance around 150-200 pixels
                         const idealDistance = 175;
@@ -3458,7 +3462,7 @@ class VibeSurvivor {
                     else {
                         const dx = this.player.x - enemy.x;
                         const dy = this.player.y - enemy.y;
-                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        const distance = this.cachedSqrt(dx * dx + dy * dy);
                         
                         // Handle dash state
                         if (enemy.dashState.active) {
@@ -3573,7 +3577,7 @@ class VibeSurvivor {
                 // Remove enemies that are too far from player (performance optimization)
                 const dx = enemy.x - this.player.x;
                 const dy = enemy.y - this.player.y;
-                const distanceFromPlayer = Math.sqrt(dx * dx + dy * dy);
+                const distanceFromPlayer = this.cachedSqrt(dx * dx + dy * dy);
                 
                 if (distanceFromPlayer > 1200) { // Remove enemies beyond this distance
                     this.enemies.splice(i, 1);
@@ -3623,7 +3627,7 @@ class VibeSurvivor {
                             
                             const dx = projectile.targetX - projectile.x;
                             const dy = projectile.targetY - projectile.y;
-                            const distance = Math.sqrt(dx * dx + dy * dy);
+                            const distance = this.cachedSqrt(dx * dx + dy * dy);
                             
                             if (distance > 0) {
                                 projectile.vx = (dx / distance) * projectile.speed;
@@ -3646,7 +3650,7 @@ class VibeSurvivor {
                     if (projectile.homing) {
                         const dx = this.player.x - projectile.x;
                         const dy = this.player.y - projectile.y;
-                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        const distance = this.cachedSqrt(dx * dx + dy * dy);
                         
                         if (distance > 0) {
                             const homingStrength = projectile.homingStrength || 0.05;
@@ -3654,7 +3658,7 @@ class VibeSurvivor {
                             projectile.vy += (dy / distance) * homingStrength;
                             
                             // Limit max speed
-                            const currentSpeed = Math.sqrt(projectile.vx * projectile.vx + projectile.vy * projectile.vy);
+                            const currentSpeed = this.cachedSqrt(projectile.vx * projectile.vx + projectile.vy * projectile.vy);
                             if (currentSpeed > projectile.speed) {
                                 projectile.vx = (projectile.vx / currentSpeed) * projectile.speed;
                                 projectile.vy = (projectile.vy / currentSpeed) * projectile.speed;
@@ -3674,7 +3678,7 @@ class VibeSurvivor {
                             // Aggressive homing behavior with smooth curves
                             const dx = projectile.targetEnemy.x - projectile.x;
                             const dy = projectile.targetEnemy.y - projectile.y;
-                            const distance = Math.sqrt(dx * dx + dy * dy);
+                            const distance = this.cachedSqrt(dx * dx + dy * dy);
                             
                             if (distance > 0) {
                                 // Much stronger homing for dramatic curves
@@ -3689,7 +3693,7 @@ class VibeSurvivor {
                                 projectile.vy += (targetVy - projectile.vy) * homingStrength;
                                 
                                 // Normalize to maintain speed
-                                const currentSpeed = Math.sqrt(projectile.vx * projectile.vx + projectile.vy * projectile.vy);
+                                const currentSpeed = this.cachedSqrt(projectile.vx * projectile.vx + projectile.vy * projectile.vy);
                                 if (currentSpeed > 0) {
                                     projectile.vx = (projectile.vx / currentSpeed) * projectile.speed;
                                     projectile.vy = (projectile.vy / currentSpeed) * projectile.speed;
@@ -4594,7 +4598,7 @@ class VibeSurvivor {
             if (projectile.owner === 'enemy') {
                 const dx = projectile.x - this.player.x;
                 const dy = projectile.y - this.player.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
+                const distance = this.cachedSqrt(dx * dx + dy * dy);
                 
                 if (distance < this.player.radius + (projectile.size || 3)) {
                     // Player hit by enemy projectile
@@ -4681,7 +4685,7 @@ class VibeSurvivor {
         this.enemies.forEach(enemy => {
             const dx = enemy.x - x;
             const dy = enemy.y - y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
+            const distance = this.cachedSqrt(dx * dx + dy * dy);
             
             if (distance <= radius) {
                 enemy.health -= damage * (1 - distance / radius);
@@ -5248,6 +5252,31 @@ class VibeSurvivor {
         if (cleanedProjectiles > 0) {
             console.log(`Cleaned up trails from ${cleanedProjectiles} projectiles`);
         }
+    }
+    
+    // Cached square root for performance
+    cachedSqrt(value) {
+        if (value < 0) return 0;
+        if (value === 0) return 0;
+        if (value === 1) return 1;
+        
+        // Round to 2 decimal places for cache key
+        const rounded = Math.round(value * 100) / 100;
+        
+        // Check cache first
+        if (this.sqrtCache.has(rounded)) {
+            return this.sqrtCache.get(rounded);
+        }
+        
+        // Calculate and cache result
+        const result = Math.sqrt(value);
+        
+        // Only cache if we haven't exceeded max size
+        if (this.sqrtCache.size < this.maxCacheSize) {
+            this.sqrtCache.set(rounded, result);
+        }
+        
+        return result;
     }
 
     getPooledParticle() {
