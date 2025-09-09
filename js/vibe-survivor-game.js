@@ -153,7 +153,14 @@ class VibeSurvivor {
             try {
                 this.canvas = document.getElementById('survivor-canvas');
                 if (this.canvas) {
-                    this.ctx = this.canvas.getContext('2d');
+                    this.ctx = this.canvas.getContext('2d', { 
+                        willReadFrequently: false  // Enable GPU acceleration
+                    });
+                    
+                    // Optimize canvas settings for maximum performance
+                    this.ctx.imageSmoothingEnabled = false; // Disable antialiasing for speed
+                    this.ctx.globalCompositeOperation = 'source-over'; // Fastest composite mode
+                    
                     this.resizeCanvas();
                     // Ensure canvas gets proper dimensions after CSS settles
                     setTimeout(() => {
@@ -1688,10 +1695,18 @@ class VibeSurvivor {
         }
         
         try {
-            this.ctx = this.canvas.getContext('2d');
+            this.ctx = this.canvas.getContext('2d', { 
+                        alpha: false,  // No transparency - better performance
+                        willReadFrequently: false  // Enable GPU acceleration
+                    });
             if (!this.ctx) {
                 throw new Error('Could not get canvas context');
             }
+            
+            // Optimize canvas settings for maximum performance
+            this.ctx.imageSmoothingEnabled = false; // Disable antialiasing for speed
+            this.ctx.globalCompositeOperation = 'source-over'; // Fastest composite mode
+            
             // Canvas ready
             this.resizeCanvas();
             
@@ -5188,7 +5203,9 @@ class VibeSurvivor {
     
     createCanvasLayer(name, zIndex) {
         const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { 
+            willReadFrequently: false 
+        });
         
         // Copy dimensions from main canvas
         canvas.width = this.canvas.width;
@@ -5760,13 +5777,17 @@ class VibeSurvivor {
             
             if (typeof OffscreenCanvas !== 'undefined') {
                 this.gridOffscreen = new OffscreenCanvas(this.canvas.width, this.canvas.height);
-                this.gridOffscreenCtx = this.gridOffscreen.getContext('2d');
+                this.gridOffscreenCtx = this.gridOffscreen.getContext('2d', { 
+                    willReadFrequently: false 
+                });
             } else {
                 // Fallback for browsers without OffscreenCanvas
                 this.gridOffscreen = document.createElement('canvas');
                 this.gridOffscreen.width = this.canvas.width;
                 this.gridOffscreen.height = this.canvas.height;
-                this.gridOffscreenCtx = this.gridOffscreen.getContext('2d');
+                this.gridOffscreenCtx = this.gridOffscreen.getContext('2d', { 
+                    willReadFrequently: false 
+                });
             }
             
             // Pre-render the grid (but don't block if it fails)
