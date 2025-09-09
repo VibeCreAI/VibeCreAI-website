@@ -5485,9 +5485,9 @@ class VibeSurvivor {
             enabled: true,
             currentLevel: 3, // 1=lowest, 5=highest
             targetFPS: 55,   // Target FPS to maintain
-            lowFPSThreshold: 45,
-            highFPSThreshold: 58,
-            checkInterval: 60, // Check every 60 frames
+            lowFPSThreshold: 35, // More responsive - reduce quality sooner
+            highFPSThreshold: 50, // More conservative - don't increase quality too eagerly
+            checkInterval: 30, // Check every 30 frames - twice as responsive
             frameCount: 0,
             adjustmentCooldown: 180, // Wait 3 seconds between adjustments
             lastAdjustment: 0,
