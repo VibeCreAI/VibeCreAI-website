@@ -3771,19 +3771,21 @@ class VibeSurvivor {
             const orb = this.xpOrbs[i];
             const dx = this.player.x - orb.x;
             const dy = this.player.y - orb.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
+            const distanceSquared = dx * dx + dy * dy;
             
             // Magnet effect
             const magnetRange = this.player.passives.magnet ? 80 : 40;
-            if (distance < magnetRange) {
+            const magnetRangeSquared = magnetRange * magnetRange;
+            if (distanceSquared < magnetRangeSquared) {
+                const distance = Math.sqrt(distanceSquared); // Only calculate sqrt when needed
                 orb.x += (dx / distance) * 4;
                 orb.y += (dy / distance) * 4;
             }
             
             orb.glow = (orb.glow + 0.2) % (Math.PI * 2);
             
-            // Collect orb
-            if (distance < 15) {
+            // Collect orb (optimized comparison)
+            if (distanceSquared < 225) { // 15 * 15 = 225
                 this.player.xp += orb.value;
                 
                 // Update trail multiplier based on XP progress
@@ -4487,9 +4489,11 @@ class VibeSurvivor {
             nearbyEnemies.forEach((enemy, eIndex) => {
                 const dx = projectile.x - enemy.x;
                 const dy = projectile.y - enemy.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
+                const distanceSquared = dx * dx + dy * dy;
+                const collisionRadius = enemy.radius + (projectile.size || 3);
+                const collisionRadiusSquared = collisionRadius * collisionRadius;
                 
-                if (distance < enemy.radius + (projectile.size || 3) && hitCount < maxHits) {
+                if (distanceSquared < collisionRadiusSquared && hitCount < maxHits) {
                     hitCount++;
                     let damage = projectile.damage;
                     
@@ -4547,9 +4551,11 @@ class VibeSurvivor {
         nearbyEnemies.forEach((enemy, index) => {
             const dx = this.player.x - enemy.x;
             const dy = this.player.y - enemy.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
+            const distanceSquared = dx * dx + dy * dy;
+            const collisionRadius = this.player.radius + enemy.radius;
+            const collisionRadiusSquared = collisionRadius * collisionRadius;
             
-            if (distance < this.player.radius + enemy.radius && !this.player.invulnerable) {
+            if (distanceSquared < collisionRadiusSquared && !this.player.invulnerable) {
                 let damage = enemy.contactDamage;
                 
                 // Armor reduction
