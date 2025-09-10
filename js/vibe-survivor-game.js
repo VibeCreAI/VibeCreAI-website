@@ -132,13 +132,13 @@ class VibeSurvivor {
         this.hpOrbSpawnTimer = 0;
         this.hpOrbSpawnRate = 120; // frames between HP orb spawn chances (2 seconds)
         this.hpOrbSpawnChance = 0.08; // 8% chance per check (much more frequent)
-        this.maxHpOrbs = 3; // Maximum HP orbs on map (increased for better availability)
+        this.maxHpOrbs = 1; // Maximum HP orbs on map
         
         // Magnet orb spawn system (same rarity as HP orbs)
         this.magnetOrbSpawnTimer = 0;
         this.magnetOrbSpawnRate = 120; // frames between magnet orb spawn chances (2 seconds)
         this.magnetOrbSpawnChance = 0.08; // 8% chance per check
-        this.maxMagnetOrbs = 3; // Maximum magnet orbs on map
+        this.maxMagnetOrbs = 1; // Maximum magnet orbs on map
         
         // Boss progression system (starts after first boss defeat)
         this.bossesKilled = 0;
