@@ -4974,7 +4974,13 @@ class VibeSurvivor {
                 return this.isInViewport(entity.x, entity.y, entity.size || 2, 'aggressive');
                 
             case 'projectile':
-                // Tight culling for projectiles
+                // Special priority for complex weapons to prevent edge case disappearing
+                if (entity.type === 'flame' || entity.type === 'lightning' || entity.type === 'shockburst') {
+                    // More lenient culling for complex weapons
+                    if (distanceFromPlayer > 800) return false;
+                    return this.isInViewport(entity.x, entity.y, entity.size || 3, 'normal');
+                }
+                // Tight culling for basic projectiles
                 if (distanceFromPlayer > 600) return false;
                 return this.isInViewport(entity.x, entity.y, entity.size || 3, 'tight');
                 
@@ -5080,6 +5086,24 @@ class VibeSurvivor {
                 projectile.homing = false;
                 projectile.target = null;
                 return projectile;
+            }
+        }
+        
+        // Safety limit: Prevent memory issues with too many complex weapons
+        const activeProjectiles = this.projectiles.length;
+        const maxProjectiles = 1000; // Reasonable limit for performance
+        
+        if (activeProjectiles >= maxProjectiles) {
+            console.warn('🚨 Projectile limit reached:', activeProjectiles);
+            // Return oldest projectile instead of creating new one
+            const oldestProjectile = this.projectiles[0];
+            if (oldestProjectile) {
+                // Reset and reuse
+                oldestProjectile.trail = [];
+                oldestProjectile.rotation = 0;
+                oldestProjectile.homing = false;
+                oldestProjectile.target = null;
+                return oldestProjectile;
             }
         }
         
@@ -6927,9 +6951,13 @@ class VibeSurvivor {
         const complexTypes = ['plasma', 'flame', 'lightning', 'missile', 'boss-missile', 'shockburst'];
         for (const type of complexTypes) {
             const projectiles = projectilesByType[type];
-            if (!projectiles) continue;
+            if (!projectiles || projectiles.length === 0) continue;
+            
+            // Extra safety: Ensure consistent rendering context for each weapon type
+            this.ctx.save();
             
             for (const projectile of projectiles) {
+                // Individual projectile context save/restore for isolation
                 this.ctx.save();
                 
                 switch (type) {
@@ -7119,8 +7147,12 @@ class VibeSurvivor {
                         break;
                 }
                 
+                // Force context restore for each projectile
                 this.ctx.restore();
             }
+            
+            // Type-level context restore for safety
+            this.ctx.restore();
         }
         
         this.ctx.restore();
