@@ -23,7 +23,8 @@ class VibeSurvivor {
             dashCooldown: 0,
             trail: [],
             passives: {},
-            trailMultiplier: 1.0
+            trailMultiplier: 1.0,
+            magnetBoost: 0 // Temporary magnet boost from magnet orbs (frames remaining)
         };
         
         // Game properties
@@ -33,7 +34,7 @@ class VibeSurvivor {
         this.particles = [];
         this.xpOrbs = [];
         this.hpOrbs = [];
-        this.hpOrbs = []; // HP orbs for healing
+        this.magnetOrbs = [];
         this.weapons = [{
             type: 'basic',
             level: 1,
@@ -132,6 +133,12 @@ class VibeSurvivor {
         this.hpOrbSpawnRate = 120; // frames between HP orb spawn chances (2 seconds)
         this.hpOrbSpawnChance = 0.08; // 8% chance per check (much more frequent)
         this.maxHpOrbs = 3; // Maximum HP orbs on map (increased for better availability)
+        
+        // Magnet orb spawn system (same rarity as HP orbs)
+        this.magnetOrbSpawnTimer = 0;
+        this.magnetOrbSpawnRate = 120; // frames between magnet orb spawn chances (2 seconds)
+        this.magnetOrbSpawnChance = 0.08; // 8% chance per check
+        this.maxMagnetOrbs = 3; // Maximum magnet orbs on map
         
         // Boss progression system (starts after first boss defeat)
         this.bossesKilled = 0;
@@ -1850,6 +1857,7 @@ class VibeSurvivor {
         this.particles = [];
         this.xpOrbs = [];
         this.hpOrbs = [];
+        this.magnetOrbs = [];
         this.notifications = [];
         
         // Reset object pools - mark all as inactive
@@ -1867,6 +1875,9 @@ class VibeSurvivor {
         }
         if (this.hpOrbPool) {
             this.hpOrbPool.forEach(orb => orb.active = false);
+        }
+        if (this.magnetOrbPool) {
+            this.magnetOrbPool.forEach(orb => orb.active = false);
         }
         
         // Reset frame rate monitoring
@@ -1942,6 +1953,11 @@ class VibeSurvivor {
         }
         
         this.updatePlayer();
+        
+        // Update magnet boost timer
+        if (this.player.magnetBoost > 0) {
+            this.player.magnetBoost--;
+        }
         this.updatePassives();
         this.updateWeapons();
         this.spawnEnemies();
@@ -1950,6 +1966,8 @@ class VibeSurvivor {
         this.updateXPOrbs();
         this.spawnHPOrbs();
         this.updateHPOrbs();
+        this.spawnMagnetOrbs();
+        this.updateMagnetOrbs();
         
         this.checkCollisions();
         this.checkLevelUp();
@@ -3888,13 +3906,20 @@ class VibeSurvivor {
             const dy = this.player.y - orb.y;
             const distanceSquared = dx * dx + dy * dy;
             
-            // Magnet effect
-            const magnetRange = this.player.passives.magnet ? 80 : 40;
+            // Player magnet effect (enhanced when magnetBoost is active)
+            let magnetRange = this.player.passives.magnet ? 80 : 40;
+            
+            // Enhanced magnet range and strength when magnetBoost is active
+            if (this.player.magnetBoost > 0) {
+                magnetRange = 2000; // Large range when magnet boost is active
+            }
+            
             const magnetRangeSquared = magnetRange * magnetRange;
             if (distanceSquared < magnetRangeSquared) {
                 const distance = Math.sqrt(distanceSquared); // Only calculate sqrt when needed
-                orb.x += (dx / distance) * 4;
-                orb.y += (dy / distance) * 4;
+                const attractionSpeed = this.player.magnetBoost > 0 ? 12 : 4; // Triple speed with boost (50% faster than double)
+                orb.x += (dx / distance) * attractionSpeed;
+                orb.y += (dy / distance) * attractionSpeed;
             }
             
             orb.glow = (orb.glow + 0.2) % (Math.PI * 2);
@@ -3966,6 +3991,49 @@ class VibeSurvivor {
             }
         }
     }
+
+    updateMagnetOrbs() {
+        // Skip magnet orb collection during boss defeat animation
+        if (this.bossDefeating) {
+            return;
+        }
+        
+        // Use reverse iteration for safe and efficient removal
+        for (let i = this.magnetOrbs.length - 1; i >= 0; i--) {
+            const orb = this.magnetOrbs[i];
+            const dx = this.player.x - orb.x;
+            const dy = this.player.y - orb.y;
+            const distanceSquared = dx * dx + dy * dy;
+            
+            // Magnet effect - same as other orbs
+            const magnetRange = this.player.passives.magnet ? 80 : 40;
+            const magnetRangeSquared = magnetRange * magnetRange;
+            if (distanceSquared < magnetRangeSquared) {
+                const distance = Math.sqrt(distanceSquared);
+                orb.x += (dx / distance) * 4;
+                orb.y += (dy / distance) * 4;
+            }
+            
+            orb.glow = (orb.glow + 0.2) % (Math.PI * 2);
+            
+            // Collect orb
+            if (distanceSquared < 225) { // 15 * 15 = 225
+                // Give player temporary magnet boost (2 seconds = 120 frames)
+                this.player.magnetBoost = 120;
+                
+                // Show magnet activation notification
+                this.showToastNotification(`🧲 MAGNET ACTIVATED!`, 'upgrade');
+                
+                // Return to pool
+                orb.active = false;
+                this.magnetOrbs.splice(i, 1);
+            } else if (orb.life-- <= 0) {
+                // Return to pool when expired
+                orb.active = false;
+                this.magnetOrbs.splice(i, 1);
+            }
+        }
+    }
     
     createXPOrb(x, y) {
         const orb = this.getPooledXPOrb();
@@ -4013,6 +4081,50 @@ class VibeSurvivor {
             orb.y = this.player.y + Math.sin(angle) * distance;
             orb.healAmount = 30;
             this.hpOrbs.push(orb);
+        }
+    }
+
+    spawnMagnetOrbs() {
+        // Only spawn magnet orbs during active gameplay
+        if (this.playerDead || this.isPaused || this.bossDefeating) {
+            return;
+        }
+
+        // Check if it's time to attempt magnet orb spawn
+        this.magnetOrbSpawnTimer++;
+        // Removed excessive logging
+        if (this.magnetOrbSpawnTimer >= this.magnetOrbSpawnRate) {
+            this.magnetOrbSpawnTimer = 0;
+
+            // Don't spawn if we already have maximum magnet orbs
+            if (this.magnetOrbs.length >= this.maxMagnetOrbs) {
+                return;
+            }
+
+            // Random chance to spawn magnet orb (same as HP orbs)
+            if (Math.random() < this.magnetOrbSpawnChance) {
+                // Spawning magnet orb
+                this.createMagnetOrb();
+                console.log('🧲 Magnet orbs on map:', this.magnetOrbs.length);
+            }
+        }
+    }
+
+    createMagnetOrb() {
+        const orb = this.getPooledMagnetOrb();
+        console.log('🧲 getPooledMagnetOrb returned:', orb ? 'orb found' : 'NO ORB');
+        if (orb) {
+            // Spawn at random location within reasonable distance from player (same as HP orbs)
+            const angle = Math.random() * Math.PI * 2;
+            const minDistance = 300;
+            const maxDistance = 800;
+            const distance = minDistance + Math.random() * (maxDistance - minDistance);
+            
+            orb.x = this.player.x + Math.cos(angle) * distance;
+            orb.y = this.player.y + Math.sin(angle) * distance;
+            orb.attractionRange = 1000;
+            this.magnetOrbs.push(orb);
+            // Magnet orb created successfully
         }
     }
     
@@ -4545,7 +4657,7 @@ class VibeSurvivor {
         // Shorter duration based on type and message importance
         const durations = {
             'boss': 3000,      // 3 seconds for boss notifications
-            'victory': 3500,   // 3.5 seconds for victory
+            'victory': 3000,   // 3 seconds for victory
             'upgrade': 2500,   // 2.5 seconds for upgrades
             'heal': 2000       // 2 seconds for healing notifications
         };
@@ -5239,6 +5351,10 @@ class VibeSurvivor {
                 // Standard culling for HP orbs (same as XP orbs)
                 return this.isInViewport(entity.x, entity.y, 15, 'normal');
                 
+            case 'magnet':
+                // Standard culling for magnet orbs (same as XP orbs)
+                return this.isInViewport(entity.x, entity.y, 15, 'normal');
+                
             default:
                 return this.isInViewport(entity.x, entity.y, entity.radius || 10, 'normal');
         }
@@ -5322,6 +5438,18 @@ class VibeSurvivor {
         for (let i = 0; i < this.hpOrbPoolSize; i++) {
             this.hpOrbPool.push({
                 x: 0, y: 0, healAmount: 30,
+                life: 3600, glow: 0,
+                active: false
+            });
+        }
+        
+        // Magnet orb pool for attraction performance
+        this.magnetOrbPool = [];
+        this.magnetOrbPoolSize = 20;
+        
+        for (let i = 0; i < this.magnetOrbPoolSize; i++) {
+            this.magnetOrbPool.push({
+                x: 0, y: 0, attractionRange: 1000,
                 life: 3600, glow: 0,
                 active: false
             });
@@ -5412,6 +5540,27 @@ class VibeSurvivor {
             active: true
         };
         this.hpOrbPool.push(newOrb);
+        return newOrb;
+    }
+
+    getPooledMagnetOrb() {
+        for (let i = 0; i < this.magnetOrbPool.length; i++) {
+            if (!this.magnetOrbPool[i].active) {
+                const orb = this.magnetOrbPool[i];
+                orb.active = true;
+                orb.life = 3600; // Reset life (60 seconds)
+                orb.glow = 0; // Reset glow
+                return orb;
+            }
+        }
+        
+        // If no available orb in pool, expand pool dynamically
+        const newOrb = {
+            x: 0, y: 0, attractionRange: 1000,
+            life: 3600, glow: 0,
+            active: true
+        };
+        this.magnetOrbPool.push(newOrb);
         return newOrb;
     }
 
@@ -6568,6 +6717,7 @@ class VibeSurvivor {
             this.drawXPOrbs();
         this.drawHPOrbs();
             this.drawHPOrbs();
+            this.drawMagnetOrbs();
             
             // Restore original context
             this.ctx = originalCtx;
@@ -6641,6 +6791,7 @@ class VibeSurvivor {
         this.drawProjectilesWithBatching();
         this.drawXPOrbs();
         this.drawHPOrbs();
+        this.drawMagnetOrbs();
         this.drawExplosionsWithBatching();
         this.drawParticlesWithBatching();
         this.drawNotifications();
@@ -7475,17 +7626,48 @@ class VibeSurvivor {
             this.ctx.save();
             
             // Glow effect - red neon
-            const glowIntensity = 0.5 + this.fastSin(orb.glow) * 0.3;
-            const gradient = this.ctx.createRadialGradient(orb.x, orb.y, 0, orb.x, orb.y, 15);
+            const glowIntensity = 0.6 + this.fastSin(orb.glow) * 0.4;
+            const gradient = this.ctx.createRadialGradient(orb.x, orb.y, 0, orb.x, orb.y, 20);
             gradient.addColorStop(0, `rgba(255, 0, 0, ${glowIntensity})`);
             gradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
             
             this.ctx.fillStyle = gradient;
-            this.ctx.fillRect(orb.x - 15, orb.y - 15, 30, 30);
+            this.ctx.fillRect(orb.x - 20, orb.y - 20, 40, 40);
             
-            // Orb body - red neon
+            // Heart emoji
+            this.ctx.font = '24px Arial';
+            this.ctx.textAlign = 'center';
+            this.ctx.textBaseline = 'middle';
             this.ctx.fillStyle = '#FF0000';
-            this.ctx.strokeStyle = '#FFFFFF';
+            this.ctx.fillText('❤️', orb.x, orb.y);
+            
+            this.ctx.restore();
+        });
+    }
+
+    drawMagnetOrbs() {
+        // Removed excessive drawing logging
+        this.magnetOrbs.forEach(orb => {
+            // Enhanced frustum culling: Skip magnet orbs that shouldn't be rendered
+            if (!this.shouldRender(orb, 'magnet')) {
+                return; // Skip rendering this orb
+            }
+            this.ctx.save();
+            
+            // Glow effect - subtle blue/purple neon for magnet
+            const glowIntensity = 0.4 + this.fastSin(orb.glow) * 0.3;
+            const gradient = this.ctx.createRadialGradient(orb.x, orb.y, 0, orb.x, orb.y, 25);
+            gradient.addColorStop(0, `rgba(0, 100, 255, ${glowIntensity * 0.3})`); // Much more subtle
+            gradient.addColorStop(1, 'rgba(100, 0, 255, 0)');
+            
+            this.ctx.fillStyle = gradient;
+            this.ctx.fillRect(orb.x - 25, orb.y - 25, 50, 50);
+            
+            // Magnet emoji (render without fillStyle to avoid conflicts)
+            this.ctx.font = '24px Arial';
+            this.ctx.textAlign = 'center';
+            this.ctx.textBaseline = 'middle';
+            this.ctx.fillText('🧲', orb.x, orb.y);
             this.ctx.lineWidth = 1;
             
             this.ctx.beginPath();
