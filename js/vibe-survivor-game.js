@@ -3107,6 +3107,12 @@ class VibeSurvivor {
     }
     
     spawnEnemies() {
+        // Skip enemy spawning during boss defeat animation for clean victory sequence  
+        if (this.bossDefeating) {
+            // No new enemies spawn during boss defeat cinematic moment
+            return;
+        }
+        
         this.frameCount++;
         
         // Performance limit: maximum number of enemies on screen
@@ -3851,6 +3857,13 @@ class VibeSurvivor {
     }
     
     updateXPOrbs() {
+        // Skip XP orb collection during boss defeat animation for clean victory sequence
+        if (this.bossDefeating) {
+            // XP orbs remain visible but are not collectible during boss defeat animation
+            // This prevents level up timing conflicts during the cinematic moment
+            return;
+        }
+        
         // Use reverse iteration for safe and efficient removal
         for (let i = this.xpOrbs.length - 1; i >= 0; i--) {
             const orb = this.xpOrbs[i];
