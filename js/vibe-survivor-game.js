@@ -162,9 +162,16 @@ class VibeSurvivor {
             try {
                 this.canvas = document.getElementById('survivor-canvas');
                 if (this.canvas) {
-                    this.ctx = this.canvas.getContext('2d', { 
-                        willReadFrequently: false  // Enable GPU acceleration
-                    });
+                    // Get browser-specific optimization profile
+                    const browserProfile = this.getBrowserOptimizationProfile();
+                    
+                    // Create context with optimized settings
+                    this.ctx = this.canvas.getContext('2d', browserProfile.contextOptions);
+                    
+                    // Debug logging for optimization verification
+                    console.log(`🎮 Browser detected: ${browserProfile.browser}`);
+                    console.log(`🎮 Context options:`, browserProfile.contextOptions);
+                    console.log(`🎮 Reason: ${browserProfile.reason}`);
                     
                     // Optimize canvas settings for maximum performance
                     this.ctx.imageSmoothingEnabled = false; // Disable antialiasing for speed
@@ -1455,9 +1462,13 @@ class VibeSurvivor {
         
         try {
             this.canvas = document.getElementById('survivor-canvas');
+            // Get browser-specific optimization profile
+            const browserProfile = this.getBrowserOptimizationProfile();
+            
             this.ctx = this.canvas.getContext('2d', { 
                 alpha: false, // No transparency needed - better performance
-                desynchronized: true // Allow browser to optimize rendering
+                desynchronized: true, // Allow browser to optimize rendering
+                ...browserProfile.contextOptions // Apply browser-specific settings
             });
             this.resizeCanvas();
             
@@ -1704,9 +1715,12 @@ class VibeSurvivor {
         }
         
         try {
+            // Get browser-specific optimization profile
+            const browserProfile = this.getBrowserOptimizationProfile();
+            
             this.ctx = this.canvas.getContext('2d', { 
                         alpha: false,  // No transparency - better performance
-                        willReadFrequently: false  // Enable GPU acceleration
+                        ...browserProfile.contextOptions  // Apply browser-specific settings
                     });
             if (!this.ctx) {
                 throw new Error('Could not get canvas context');
@@ -2164,6 +2178,61 @@ class VibeSurvivor {
         return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
                ('ontouchstart' in window) ||
                (navigator.maxTouchPoints > 0);
+    }
+
+    // Enhanced browser detection for canvas optimization
+    getBrowserOptimizationProfile() {
+        const userAgent = navigator.userAgent.toLowerCase();
+        
+        // Check if Chrome first
+        const isChrome = userAgent.includes('chrome') && !userAgent.includes('edg');
+        
+        if (!isChrome) {
+            // Samsung Browser (Chrome-based but optimized)
+            if (userAgent.includes('samsungbrowser')) {
+                return {
+                    browser: 'samsung-mobile',
+                    contextOptions: { willReadFrequently: false },
+                    reason: 'Samsung browser has optimized GPU drivers'
+                };
+            }
+            
+            // Other browsers (Firefox, Safari, etc.)
+            return {
+                browser: 'other',
+                contextOptions: { willReadFrequently: false },
+                reason: 'Default browser optimization'
+            };
+        }
+        
+        // Chrome Mobile (the problematic one)
+        if ((userAgent.includes('android') && userAgent.includes('mobile')) ||
+            userAgent.includes('iphone') || userAgent.includes('ipod') ||
+            userAgent.includes('ipad')) {
+            return {
+                browser: 'chrome-mobile',
+                contextOptions: { willReadFrequently: true },
+                reason: 'Chrome mobile GPU acceleration issues - using CPU rendering'
+            };
+        }
+        
+        // Chrome Desktop (should work fine with GPU)
+        if (userAgent.includes('windows nt') || 
+            userAgent.includes('macintosh') || 
+            userAgent.includes('linux')) {
+            return {
+                browser: 'chrome-desktop', 
+                contextOptions: { willReadFrequently: false },
+                reason: 'Chrome desktop GPU acceleration works well'
+            };
+        }
+        
+        // Chrome unknown platform - be safe and disable GPU
+        return {
+            browser: 'chrome-unknown',
+            contextOptions: { willReadFrequently: true },
+            reason: 'Unknown Chrome platform - using safe CPU rendering'
+        };
     }
 
     detectPerformanceMode() {
