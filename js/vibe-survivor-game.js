@@ -56,7 +56,6 @@ class VibeSurvivor {
         
         // Performance optimization - detect if we should reduce rendering quality
         this.performanceMode = false;
-        this.frameSkipCounter = 0;
         
         // Frame rate monitoring and adaptive quality
         this.frameRateMonitor = {
@@ -1858,7 +1857,6 @@ class VibeSurvivor {
         this.backgroundCanvasCache = null;
         
         this.performanceMode = false;
-        this.frameSkipCounter = 0;
         
         this.camera = { x: 0, y: 0 };
     }
@@ -1869,15 +1867,7 @@ class VibeSurvivor {
         // Update frame rate monitoring
         this.updateFrameRate();
         
-        // Performance optimization: Skip frames if needed (FIXED LOGIC)
-        if (this.performanceMode) {
-            this.frameSkipCounter++;
-            // Only skip if counter is odd (runs every other frame = 30fps)
-            if (this.frameSkipCounter % 2 === 1) {
-                this.gameLoopId = requestAnimationFrame(() => this.gameLoop());
-                return;
-            }
-        }
+        // Performance optimization: Visual quality scaling handles performance instead of frame skipping
         
         // Only update game state if not paused, but always draw current state
         if (!this.isPaused) {
