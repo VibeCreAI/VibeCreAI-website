@@ -1127,10 +1127,10 @@ class VibeSurvivor {
 
             .mobile-dash-btn {
                 position: absolute;
-                bottom: 60px;
-                right: 60px;
-                width: 80px;
-                height: 80px;
+                bottom: 30px;
+                right: 30px;
+                width: 100px;
+                height: 100px;
                 background: rgba(0, 255, 255, 0.3);
                 border: 2px solid rgba(0, 255, 255, 0.6);
                 border-radius: 50%;
@@ -2356,8 +2356,8 @@ class VibeSurvivor {
         if (!dashBtn) return;
         
         // Always force consistent positioning - same as original CSS
-        dashBtn.style.right = '60px';
-        dashBtn.style.bottom = '60px';
+        dashBtn.style.right = '30px';
+        dashBtn.style.bottom = '30px';
     }
     
     updateTouchControlsPositioning() {
