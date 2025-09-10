@@ -95,6 +95,9 @@ class VibeSurvivor {
         
         // Initialize adaptive quality scaling
         this.initializeAdaptiveQuality();
+        
+        // Initialize trigonometric lookup tables
+        this.initTrigLookupTables();
         this.touchControls = {
             joystick: {
                 active: false,
@@ -2405,8 +2408,8 @@ class VibeSurvivor {
             const limitedDistance = Math.min(distance, maxDistance);
             const angle = Math.atan2(deltaY, deltaX);
             
-            const limitedX = Math.cos(angle) * limitedDistance;
-            const limitedY = Math.sin(angle) * limitedDistance;
+            const limitedX = this.fastCos(angle) * limitedDistance;
+            const limitedY = this.fastSin(angle) * limitedDistance;
             
             // Skip visual handle updates - no graphics needed
             // handle.style.transform = `translate(calc(-50% + ${limitedX}px), calc(-50% + ${limitedY}px))`;  // Commented out
@@ -2505,8 +2508,8 @@ class VibeSurvivor {
                 if (projectileCount > 1) {
                     const angleOffset = (i - (projectileCount - 1) / 2) * 0.2; // Small spread
                     const angle = Math.atan2(dy, dx) + angleOffset;
-                    adjustedDx = Math.cos(angle) * distance;
-                    adjustedDy = Math.sin(angle) * distance;
+                    adjustedDx = this.fastCos(angle) * distance;
+                    adjustedDy = this.fastSin(angle) * distance;
                 }
             
                 switch (weapon.type) {
@@ -2571,8 +2574,8 @@ class VibeSurvivor {
         // Set projectile properties
         projectile.x = this.player.x;
         projectile.y = this.player.y;
-        projectile.vx = Math.cos(angle) * scaledSpeed;
-        projectile.vy = Math.sin(angle) * scaledSpeed;
+        projectile.vx = this.fastCos(angle) * scaledSpeed;
+        projectile.vy = this.fastSin(angle) * scaledSpeed;
         projectile.baseSpeed = weapon.projectileSpeed; // Store base speed for scaling
         projectile.damage = weapon.damage;
         projectile.life = 120;
@@ -2596,8 +2599,8 @@ class VibeSurvivor {
             
             projectile.x = this.player.x;
             projectile.y = this.player.y;
-            projectile.vx = Math.cos(offsetAngle) * scaledSpeed;
-            projectile.vy = Math.sin(offsetAngle) * scaledSpeed;
+            projectile.vx = this.fastCos(offsetAngle) * scaledSpeed;
+            projectile.vy = this.fastSin(offsetAngle) * scaledSpeed;
             projectile.baseSpeed = weapon.projectileSpeed;
             projectile.damage = weapon.damage * 0.8;
             projectile.life = 100;
@@ -2615,8 +2618,8 @@ class VibeSurvivor {
         
         projectile.x = this.player.x;
         projectile.y = this.player.y;
-        projectile.vx = Math.cos(angle) * weapon.projectileSpeed * 2;
-        projectile.vy = Math.sin(angle) * weapon.projectileSpeed * 2;
+        projectile.vx = this.fastCos(angle) * weapon.projectileSpeed * 2;
+        projectile.vy = this.fastSin(angle) * weapon.projectileSpeed * 2;
         projectile.damage = weapon.damage;
         projectile.life = 60;
         projectile.type = 'laser';
@@ -2633,8 +2636,8 @@ class VibeSurvivor {
         
         projectile.x = this.player.x;
         projectile.y = this.player.y;
-        projectile.vx = Math.cos(angle) * weapon.projectileSpeed;
-        projectile.vy = Math.sin(angle) * weapon.projectileSpeed;
+        projectile.vx = this.fastCos(angle) * weapon.projectileSpeed;
+        projectile.vy = this.fastSin(angle) * weapon.projectileSpeed;
         projectile.damage = weapon.damage;
         projectile.life = 150;
         projectile.type = 'plasma';
@@ -2658,8 +2661,8 @@ class VibeSurvivor {
             
             projectile.x = this.player.x;
             projectile.y = this.player.y;
-            projectile.vx = Math.cos(shotAngle) * speed;
-            projectile.vy = Math.sin(shotAngle) * speed;
+            projectile.vx = this.fastCos(shotAngle) * speed;
+            projectile.vy = this.fastSin(shotAngle) * speed;
             projectile.damage = weapon.damage * 0.6;
             projectile.life = 80;
             projectile.type = 'shotgun';
@@ -2836,8 +2839,8 @@ class VibeSurvivor {
             
             projectile.x = this.player.x;
             projectile.y = this.player.y;
-            projectile.vx = Math.cos(offsetAngle) * speed;
-            projectile.vy = Math.sin(offsetAngle) * speed;
+            projectile.vx = this.fastCos(offsetAngle) * speed;
+            projectile.vy = this.fastSin(offsetAngle) * speed;
             projectile.damage = weapon.damage * 0.4;
             projectile.life = 90;
             projectile.type = 'flame';
@@ -2855,8 +2858,8 @@ class VibeSurvivor {
         
         projectile.x = this.player.x;
         projectile.y = this.player.y;
-        projectile.vx = Math.cos(angle) * weapon.projectileSpeed * 3;
-        projectile.vy = Math.sin(angle) * weapon.projectileSpeed * 3;
+        projectile.vx = this.fastCos(angle) * weapon.projectileSpeed * 3;
+        projectile.vy = this.fastSin(angle) * weapon.projectileSpeed * 3;
         projectile.damage = weapon.damage;
         projectile.life = 45;
         projectile.type = 'railgun';
@@ -2952,8 +2955,8 @@ class VibeSurvivor {
             
             projectile.x = this.player.x;
             projectile.y = this.player.y;
-            projectile.vx = Math.cos(angle) * weapon.projectileSpeed * 0.7; // Start slower for better curves
-            projectile.vy = Math.sin(angle) * weapon.projectileSpeed * 0.7;
+            projectile.vx = this.fastCos(angle) * weapon.projectileSpeed * 0.7; // Start slower for better curves
+            projectile.vy = this.fastSin(angle) * weapon.projectileSpeed * 0.7;
             projectile.damage = weapon.damage;
             projectile.life = 160; // Slightly longer lifetime: 2.7 seconds for more chasing
             projectile.type = 'homing_laser';
@@ -3008,8 +3011,8 @@ class VibeSurvivor {
             const missile = {
                 x: boss.x,
                 y: boss.y,
-                vx: Math.cos(angleToPlayer + angleOffset) * speed,
-                vy: Math.sin(angleToPlayer + angleOffset) * speed,
+                vx: this.fastCos(angleToPlayer + angleOffset) * speed,
+                vy: this.fastSin(angleToPlayer + angleOffset) * speed,
                 damage: damage,
                 life: 300, // Long-lived missiles
                 type: 'boss-missile',
@@ -3141,8 +3144,8 @@ class VibeSurvivor {
         // Spawn boss at a specific distance from player (reduced for mobile visibility)
         const spawnDistance = 250;
         const angle = Math.random() * Math.PI * 2;
-        const x = this.player.x + Math.cos(angle) * spawnDistance;
-        const y = this.player.y + Math.sin(angle) * spawnDistance;
+        const x = this.player.x + this.fastCos(angle) * spawnDistance;
+        const y = this.player.y + this.fastSin(angle) * spawnDistance;
         
         const config = this.getEnemyConfig('boss');
         const scaledSpeed = config.speed;
@@ -3183,8 +3186,8 @@ class VibeSurvivor {
         // Spawn progressively stronger boss after first boss defeat
         const spawnDistance = 250;
         const angle = Math.random() * Math.PI * 2;
-        const x = this.player.x + Math.cos(angle) * spawnDistance;
-        const y = this.player.y + Math.sin(angle) * spawnDistance;
+        const x = this.player.x + this.fastCos(angle) * spawnDistance;
+        const y = this.player.y + this.fastSin(angle) * spawnDistance;
         
         const baseConfig = this.getEnemyConfig('boss');
         
@@ -3395,8 +3398,8 @@ class VibeSurvivor {
                         enemy.y += (dy / distance) * enemy.speed;
                     } else {
                         const orbitAngle = Math.atan2(dy, dx) + Math.PI / 2;
-                        enemy.x += Math.cos(orbitAngle) * enemy.speed;
-                        enemy.y += Math.sin(orbitAngle) * enemy.speed;
+                        enemy.x += this.fastCos(orbitAngle) * enemy.speed;
+                        enemy.y += this.fastSin(orbitAngle) * enemy.speed;
                     }
                     break;
                     
@@ -3591,8 +3594,8 @@ class VibeSurvivor {
         for (let i = 0; i < count; i++) {
             const angle = (Math.PI * 2 * i) / count;
             this.enemies.push({
-                x: x + Math.cos(angle) * 30,
-                y: y + Math.sin(angle) * 30,
+                x: x + this.fastCos(angle) * 30,
+                y: y + this.fastSin(angle) * 30,
                 radius: 6,
                 speed: 1.5,
                 maxHealth: 8,
@@ -4669,8 +4672,8 @@ class VibeSurvivor {
                 
                 particle.x = x;
                 particle.y = y;
-                particle.vx = Math.cos(angle) * speed;
-                particle.vy = Math.sin(angle) * speed;
+                particle.vx = this.fastCos(angle) * speed;
+                particle.vy = this.fastSin(angle) * speed;
                 particle.size = 2 + Math.random() * 3;
                 particle.color = ['#FF6600', '#FF9900', '#FFCC00'][Math.floor(Math.random() * 3)];
                 particle.life = 0.8 + Math.random() * 0.4;
@@ -4716,8 +4719,8 @@ class VibeSurvivor {
                 
                 particle.x = bossX;
                 particle.y = bossY;
-                particle.vx = Math.cos(angle) * speed;
-                particle.vy = Math.sin(angle) * speed;
+                particle.vx = this.fastCos(angle) * speed;
+                particle.vy = this.fastSin(angle) * speed;
                 particle.size = 3 + Math.random() * 5;
                 // Gold and orange colors for victory theme
                 particle.color = ['#FFD700', '#FF8C00', '#FFA500', '#FFFF00'][Math.floor(Math.random() * 4)];
@@ -4735,8 +4738,8 @@ class VibeSurvivor {
             setTimeout(() => {
                 const angle = (Math.PI * 2 * i) / secondaryExplosions;
                 const distance = bossRadius * 2;
-                const explX = bossX + Math.cos(angle) * distance;
-                const explY = bossY + Math.sin(angle) * distance;
+                const explX = bossX + this.fastCos(angle) * distance;
+                const explY = bossY + this.fastSin(angle) * distance;
                 
                 this.createExplosion(explX, explY, bossRadius * 1.5, 0);
                 
@@ -4750,8 +4753,8 @@ class VibeSurvivor {
                         
                         particle.x = explX;
                         particle.y = explY;
-                        particle.vx = Math.cos(sparkleAngle) * sparkleSpeed;
-                        particle.vy = Math.sin(sparkleAngle) * sparkleSpeed;
+                        particle.vx = this.fastCos(sparkleAngle) * sparkleSpeed;
+                        particle.vy = this.fastSin(sparkleAngle) * sparkleSpeed;
                         particle.size = 1 + Math.random() * 2;
                         particle.color = ['#FFFFFF', '#FFFF00', '#FFD700'][Math.floor(Math.random() * 3)];
                         particle.life = 0.8 + Math.random() * 0.5;
@@ -5310,6 +5313,52 @@ class VibeSurvivor {
         
         // Fall back to Math.pow for complex cases (decimals, negatives, large numbers)
         return Math.pow(base, exponent);
+    }
+
+    // Step 5D: Sine/Cosine Lookup Tables for trigonometric optimizations
+    initTrigLookupTables() {
+        // Pre-calculate sin/cos values for angles from 0 to 2π with high precision
+        this.TRIG_TABLE_SIZE = 3600; // 0.1 degree precision (360 * 10)
+        this.TRIG_ANGLE_SCALE = this.TRIG_TABLE_SIZE / (2 * Math.PI);
+        
+        this.sinTable = new Float32Array(this.TRIG_TABLE_SIZE + 1);
+        this.cosTable = new Float32Array(this.TRIG_TABLE_SIZE + 1);
+        
+        for (let i = 0; i <= this.TRIG_TABLE_SIZE; i++) {
+            const angle = (i / this.TRIG_TABLE_SIZE) * 2 * Math.PI;
+            this.sinTable[i] = Math.sin(angle);
+            this.cosTable[i] = Math.cos(angle);
+        }
+    }
+
+    // Fast sine lookup with linear interpolation
+    fastSin(angle) {
+        // Fast angle normalization using modulo
+        angle = angle % (2 * Math.PI);
+        if (angle < 0) angle += 2 * Math.PI;
+        
+        const index = angle * this.TRIG_ANGLE_SCALE;
+        const i0 = Math.floor(index);
+        const i1 = (i0 + 1) % this.TRIG_TABLE_SIZE;
+        const frac = index - i0;
+        
+        // Linear interpolation for better accuracy
+        return this.sinTable[i0] + (this.sinTable[i1] - this.sinTable[i0]) * frac;
+    }
+
+    // Fast cosine lookup with linear interpolation
+    fastCos(angle) {
+        // Fast angle normalization using modulo
+        angle = angle % (2 * Math.PI);
+        if (angle < 0) angle += 2 * Math.PI;
+        
+        const index = angle * this.TRIG_ANGLE_SCALE;
+        const i0 = Math.floor(index);
+        const i1 = (i0 + 1) % this.TRIG_TABLE_SIZE;
+        const frac = index - i0;
+        
+        // Linear interpolation for better accuracy
+        return this.cosTable[i0] + (this.cosTable[i1] - this.cosTable[i0]) * frac;
     }
 
     getPooledParticle() {
@@ -6496,7 +6545,7 @@ class VibeSurvivor {
         this.ctx.globalAlpha = this.player.invulnerable > 0 ? 0.5 : 1;
         
         // Neon glow effect
-        const glowSize = 20 + Math.sin(this.player.glow) * 5;
+        const glowSize = 20 + this.fastSin(this.player.glow) * 5;
         const gradient = this.ctx.createRadialGradient(
             this.player.x, this.player.y, 0,
             this.player.x, this.player.y, glowSize
@@ -6689,7 +6738,7 @@ class VibeSurvivor {
                     const bossLevel = enemy.bossLevel || 1;
                     const glowMultiplier = this.fastPow(1.1, bossLevel - 1); // Scale glow with boss level
                     const baseGlowSize = 60 * glowMultiplier;
-                    const glowSize = baseGlowSize + Math.sin(Date.now() * 0.008) * (20 * glowMultiplier);
+                    const glowSize = baseGlowSize + this.fastSin(Date.now() * 0.008) * (20 * glowMultiplier);
                     
                     // Increase glow intensity for higher level bosses
                     const glowIntensity = Math.min(0.6, 0.4 + (bossLevel - 1) * 0.02);
@@ -6728,8 +6777,8 @@ class VibeSurvivor {
                         this.ctx.beginPath();
                         for (let i = 0; i < 8; i++) {
                             const angle = (Math.PI * 2 * i) / 8;
-                            const x = Math.cos(angle) * rb;
-                            const y = Math.sin(angle) * rb;
+                            const x = this.fastCos(angle) * rb;
+                            const y = this.fastSin(angle) * rb;
                             if (i === 0) {
                                 this.ctx.moveTo(x, y);
                             } else {
@@ -7086,7 +7135,7 @@ class VibeSurvivor {
             this.ctx.save();
             
             // Glow effect
-            const glowIntensity = 0.5 + Math.sin(orb.glow) * 0.3;
+            const glowIntensity = 0.5 + this.fastSin(orb.glow) * 0.3;
             const gradient = this.ctx.createRadialGradient(orb.x, orb.y, 0, orb.x, orb.y, 15);
             gradient.addColorStop(0, `rgba(0, 255, 255, ${glowIntensity})`);
             gradient.addColorStop(1, 'rgba(0, 255, 255, 0)');
