@@ -3652,7 +3652,7 @@ class VibeSurvivor {
                     // Delay the victory screen to allow animation to play
                     setTimeout(() => {
                         this.bossDefeated();
-                    }, 2000); // 2.0 second delay for animation
+                    }, 3000); // 3.0 second delay for animation
                     
                     return; // Exit early, animation will handle the rest
                 }
@@ -8185,8 +8185,7 @@ class VibeSurvivor {
         this.waveNumber = Math.max(1, this.waveNumber + 1);
         this.spawnRate = Math.max(0.3, this.spawnRate * 0.9); // Spawn enemies faster
         
-        // Restore player to full health as a reward
-        this.player.health = this.player.maxHealth;
+        // Player health is maintained from battle as a challenge
         
         // Add bonus XP for defeating boss
         this.player.xp += 50;
