@@ -130,6 +130,11 @@ class VibeSurvivor {
         this.bossLevel = 1;
         this.bossDefeating = false; // Animation state for boss defeat
         
+        // Level up and timing state management
+        this.pendingLevelUps = 0;           // Count of deferred level ups
+        this.bossVictoryInProgress = false; // Victory screen active
+        this.timePaused = false;            // Whether game time should pause
+        
         // Menu navigation state for keyboard controls
         this.menuNavigationState = {
             active: false,
@@ -1872,6 +1877,12 @@ class VibeSurvivor {
         
         this.performanceMode = false;
         
+        // Reset level up and timing state
+        this.pendingLevelUps = 0;
+        this.bossVictoryInProgress = false;
+        this.timePaused = false;
+        this.bossDefeating = false;
+        
         this.camera = { x: 0, y: 0 };
     }
     
@@ -1904,8 +1915,16 @@ class VibeSurvivor {
         // Skip game logic if player is dead
         if (this.playerDead) return;
         
-        this.frameCount++;
-        this.gameTime = this.frameCount / 60;
+        // Only update time and frame count if not paused (menus, victory screens, etc.)
+        if (!this.timePaused) {
+            this.frameCount++;
+            this.gameTime = this.frameCount / 60;
+        } else {
+            // Debug: Log when time is paused to track the issue
+            if (this.frameCount % 60 === 0) { // Log once per second worth of frames
+                console.log('⏸️ Time paused - frameCount frozen at:', this.frameCount, 'gameTime:', this.gameTime.toFixed(1));
+            }
+        }
         
         this.updatePlayer();
         this.updatePassives();
@@ -3899,12 +3918,43 @@ class VibeSurvivor {
                 this.player.trail.shift();
             }
             
+            // Defer level up menu during boss defeat animation OR victory screen
+            if (this.bossDefeating || this.bossVictoryInProgress) {
+                this.pendingLevelUps++;
+                console.log('🎮 Level up deferred - boss defeat sequence in progress');
+                return;
+            }
+            
             this.showLevelUpChoices();
+        }
+    }
+
+    // Process deferred level ups after victory screen or other interruptions
+    processPendingLevelUps() {
+        if (this.pendingLevelUps > 0) {
+            this.pendingLevelUps--;
+            console.log(`🎮 Processing deferred level up (${this.pendingLevelUps} remaining)`);
+            
+            // Ensure time stays paused during deferred menus
+            this.timePaused = true;
+            this.gameRunning = false;
+            
+            this.showLevelUpChoices();  // Show one level up menu
+            // Will be called again after this menu closes if more pending
+        } else {
+            // No more level ups, resume normal game state
+            console.log('🎮 All deferred level ups processed, resuming game');
+            console.log('⏰ Resuming time - frameCount:', this.frameCount, 'gameTime:', this.gameTime.toFixed(1));
+            
+            this.timePaused = false;
+            this.bossVictoryInProgress = false;
+            this.gameRunning = true;
         }
     }
     
     showLevelUpChoices() {
         this.gameRunning = false;
+        this.timePaused = true;  // Pause time during weapon upgrade menu
         const choices = this.generateUpgradeChoices();
         this.createLevelUpModal(choices);
     }
@@ -4063,8 +4113,18 @@ class VibeSurvivor {
                 this.resetMenuNavigation();
                 this.selectUpgrade(choice);
                 document.getElementById('levelup-modal').remove();
-                this.gameRunning = true;
-                this.gameLoop();
+                
+                console.log('🎮 Weapon upgrade selected, checking for more pending level ups...');
+                console.log('⏰ Before processing - frameCount:', this.frameCount, 'gameTime:', this.gameTime.toFixed(1));
+                
+                // Process any remaining deferred level ups, or resume game
+                this.processPendingLevelUps();
+                
+                // If no more pending level ups, start game loop
+                if (this.pendingLevelUps === 0 && this.gameRunning) {
+                    console.log('🎮 Starting game loop after all upgrades processed');
+                    this.gameLoop();
+                }
             });
         });
     }
@@ -7791,8 +7851,10 @@ class VibeSurvivor {
     bossDefeated() {
         console.log('Boss defeated! Starting victory sequence...');
         
-        // Reset boss defeat animation state
-        this.bossDefeating = false;
+        // Set victory sequence state and pause game time
+        this.bossVictoryInProgress = true;  // Mark victory screen active
+        this.timePaused = true;             // Pause game time during victory
+        this.bossDefeating = false;         // Reset animation state
         this.gameRunning = false;
         
         // Cancel any running game loop
@@ -8024,8 +8086,19 @@ class VibeSurvivor {
             // Remove overlay
             victoryOverlay.remove();
             style.remove();
-            // Continue game with increased difficulty
-            this.continueAfterBoss();
+            
+            console.log('🎮 Victory CONTINUE clicked - checking for deferred level ups...');
+            console.log('⏰ Pending level ups:', this.pendingLevelUps);
+            console.log('⏰ Current state - frameCount:', this.frameCount, 'gameTime:', this.gameTime.toFixed(1));
+            
+            // Process any deferred level ups before continuing
+            this.processPendingLevelUps();
+            
+            // If no pending level ups, continue immediately
+            if (this.pendingLevelUps === 0) {
+                console.log('🎮 No deferred level ups, continuing after boss immediately');
+                this.continueAfterBoss();
+            }
         };
         
         const victoryRetryHandler = (e) => {
@@ -8036,6 +8109,10 @@ class VibeSurvivor {
             // Remove overlay
             victoryOverlay.remove();
             style.remove();
+            // Clear any pending level ups since we're restarting
+            this.pendingLevelUps = 0;
+            this.bossVictoryInProgress = false;
+            this.timePaused = false;
             // Restart game
             this.startGame();
         };
@@ -8048,6 +8125,10 @@ class VibeSurvivor {
             // Remove overlay
             victoryOverlay.remove();
             style.remove();
+            // Clear any pending level ups since we're exiting
+            this.pendingLevelUps = 0;
+            this.bossVictoryInProgress = false;
+            this.timePaused = false;
             // Close game
             this.closeGame();
         };
