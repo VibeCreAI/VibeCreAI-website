@@ -32,6 +32,8 @@ class VibeSurvivor {
         this.projectilePool = []; // Object pool for reusing projectile objects
         this.particles = [];
         this.xpOrbs = [];
+        this.hpOrbs = [];
+        this.hpOrbs = []; // HP orbs for healing
         this.weapons = [{
             type: 'basic',
             level: 1,
@@ -124,6 +126,12 @@ class VibeSurvivor {
         this.camera = { x: 0, y: 0 };
         this.spawnRate = 120; // frames between spawns
         this.waveMultiplier = 1;
+        
+        // HP orb spawn system
+        this.hpOrbSpawnTimer = 0;
+        this.hpOrbSpawnRate = 120; // frames between HP orb spawn chances (2 seconds)
+        this.hpOrbSpawnChance = 0.08; // 8% chance per check (much more frequent)
+        this.maxHpOrbs = 3; // Maximum HP orbs on map (increased for better availability)
         
         // Boss progression system (starts after first boss defeat)
         this.bossesKilled = 0;
@@ -1841,6 +1849,7 @@ class VibeSurvivor {
         this.projectiles = [];
         this.particles = [];
         this.xpOrbs = [];
+        this.hpOrbs = [];
         this.notifications = [];
         
         // Reset object pools - mark all as inactive
@@ -1852,6 +1861,12 @@ class VibeSurvivor {
         }
         if (this.enemyPool) {
             this.enemyPool.forEach(enemy => enemy.active = false);
+        }
+        if (this.xpOrbPool) {
+            this.xpOrbPool.forEach(orb => orb.active = false);
+        }
+        if (this.hpOrbPool) {
+            this.hpOrbPool.forEach(orb => orb.active = false);
         }
         
         // Reset frame rate monitoring
@@ -1933,6 +1948,8 @@ class VibeSurvivor {
         this.updateEnemies();
         this.updateProjectiles();
         this.updateXPOrbs();
+        this.spawnHPOrbs();
+        this.updateHPOrbs();
         
         this.checkCollisions();
         this.checkLevelUp();
@@ -3901,6 +3918,54 @@ class VibeSurvivor {
             }
         }
     }
+
+    updateHPOrbs() {
+        // Skip HP orb collection during boss defeat animation
+        if (this.bossDefeating) {
+            return;
+        }
+        
+        // Use reverse iteration for safe and efficient removal
+        for (let i = this.hpOrbs.length - 1; i >= 0; i--) {
+            const orb = this.hpOrbs[i];
+            const dx = this.player.x - orb.x;
+            const dy = this.player.y - orb.y;
+            const distanceSquared = dx * dx + dy * dy;
+            
+            // Magnet effect - same as XP orbs
+            const magnetRange = this.player.passives.magnet ? 80 : 40;
+            const magnetRangeSquared = magnetRange * magnetRange;
+            if (distanceSquared < magnetRangeSquared) {
+                const distance = Math.sqrt(distanceSquared);
+                orb.x += (dx / distance) * 4;
+                orb.y += (dy / distance) * 4;
+            }
+            
+            orb.glow = (orb.glow + 0.2) % (Math.PI * 2);
+            
+            // Collect orb
+            if (distanceSquared < 225) { // 15 * 15 = 225
+                // Heal player
+                const healAmount = orb.healAmount;
+                const oldHealth = this.player.health;
+                this.player.health = Math.min(this.player.maxHealth, this.player.health + healAmount);
+                const actualHeal = this.player.health - oldHealth;
+                
+                // Show healing notification if we actually healed
+                if (actualHeal > 0) {
+                    this.showToastNotification(`❤️ +${actualHeal} HP`, 'heal');
+                }
+                
+                // Return to pool
+                orb.active = false;
+                this.hpOrbs.splice(i, 1);
+            } else if (orb.life-- <= 0) {
+                // Return to pool when expired
+                orb.active = false;
+                this.hpOrbs.splice(i, 1);
+            }
+        }
+    }
     
     createXPOrb(x, y) {
         const orb = this.getPooledXPOrb();
@@ -3909,6 +3974,45 @@ class VibeSurvivor {
             orb.y = y;
             orb.value = 1;
             this.xpOrbs.push(orb);
+        }
+    }
+
+    spawnHPOrbs() {
+        // Only spawn HP orbs during active gameplay
+        if (this.playerDead || this.isPaused || this.bossDefeating) {
+            return;
+        }
+
+        // Check if it's time to attempt HP orb spawn
+        this.hpOrbSpawnTimer++;
+        if (this.hpOrbSpawnTimer >= this.hpOrbSpawnRate) {
+            this.hpOrbSpawnTimer = 0;
+
+            // Don't spawn if we already have maximum HP orbs
+            if (this.hpOrbs.length >= this.maxHpOrbs) {
+                return;
+            }
+
+            // Random chance to spawn HP orb
+            if (Math.random() < this.hpOrbSpawnChance) {
+                this.createHPOrb();
+            }
+        }
+    }
+
+    createHPOrb() {
+        const orb = this.getPooledHPOrb();
+        if (orb) {
+            // Spawn at random location within reasonable distance from player
+            const angle = Math.random() * Math.PI * 2;
+            const minDistance = 300;
+            const maxDistance = 800;
+            const distance = minDistance + Math.random() * (maxDistance - minDistance);
+            
+            orb.x = this.player.x + Math.cos(angle) * distance;
+            orb.y = this.player.y + Math.sin(angle) * distance;
+            orb.healAmount = 30;
+            this.hpOrbs.push(orb);
         }
     }
     
@@ -4442,7 +4546,8 @@ class VibeSurvivor {
         const durations = {
             'boss': 3000,      // 3 seconds for boss notifications
             'victory': 3500,   // 3.5 seconds for victory
-            'upgrade': 2500    // 2.5 seconds for upgrades
+            'upgrade': 2500,   // 2.5 seconds for upgrades
+            'heal': 2000       // 2 seconds for healing notifications
         };
         
         this.createToast(message, type, durations[type]);
@@ -5130,6 +5235,10 @@ class VibeSurvivor {
                 // Standard culling for XP orbs
                 return this.isInViewport(entity.x, entity.y, 15, 'normal');
                 
+            case 'hp':
+                // Standard culling for HP orbs (same as XP orbs)
+                return this.isInViewport(entity.x, entity.y, 15, 'normal');
+                
             default:
                 return this.isInViewport(entity.x, entity.y, entity.radius || 10, 'normal');
         }
@@ -5205,6 +5314,18 @@ class VibeSurvivor {
                 active: false
             });
         }
+        
+        // HP orb pool for healing performance
+        this.hpOrbPool = [];
+        this.hpOrbPoolSize = 20;
+        
+        for (let i = 0; i < this.hpOrbPoolSize; i++) {
+            this.hpOrbPool.push({
+                x: 0, y: 0, healAmount: 30,
+                life: 3600, glow: 0,
+                active: false
+            });
+        }
     }
     
     // Get projectile from pool
@@ -5270,6 +5391,27 @@ class VibeSurvivor {
             active: true
         };
         this.xpOrbPool.push(newOrb);
+        return newOrb;
+    }
+
+    getPooledHPOrb() {
+        for (let i = 0; i < this.hpOrbPool.length; i++) {
+            if (!this.hpOrbPool[i].active) {
+                const orb = this.hpOrbPool[i];
+                orb.active = true;
+                orb.life = 3600; // Reset life (60 seconds)
+                orb.glow = 0; // Reset glow
+                return orb;
+            }
+        }
+        
+        // If no available orb in pool, expand pool dynamically
+        const newOrb = {
+            x: 0, y: 0, healAmount: 30,
+            life: 3600, glow: 0,
+            active: true
+        };
+        this.hpOrbPool.push(newOrb);
         return newOrb;
     }
 
@@ -6424,6 +6566,8 @@ class VibeSurvivor {
             this.drawEnemiesWithBatching();
             this.drawProjectilesWithBatching();
             this.drawXPOrbs();
+        this.drawHPOrbs();
+            this.drawHPOrbs();
             
             // Restore original context
             this.ctx = originalCtx;
@@ -6496,6 +6640,7 @@ class VibeSurvivor {
         this.drawEnemiesWithBatching();
         this.drawProjectilesWithBatching();
         this.drawXPOrbs();
+        this.drawHPOrbs();
         this.drawExplosionsWithBatching();
         this.drawParticlesWithBatching();
         this.drawNotifications();
@@ -7309,6 +7454,37 @@ class VibeSurvivor {
             
             // Orb body
             this.ctx.fillStyle = '#00FFFF';
+            this.ctx.strokeStyle = '#FFFFFF';
+            this.ctx.lineWidth = 1;
+            
+            this.ctx.beginPath();
+            this.ctx.arc(orb.x, orb.y, 5, 0, Math.PI * 2);
+            this.ctx.fill();
+            this.ctx.stroke();
+            
+            this.ctx.restore();
+        });
+    }
+
+    drawHPOrbs() {
+        this.hpOrbs.forEach(orb => {
+            // Enhanced frustum culling: Skip HP orbs that shouldn't be rendered
+            if (!this.shouldRender(orb, 'hp')) {
+                return; // Skip rendering this orb
+            }
+            this.ctx.save();
+            
+            // Glow effect - red neon
+            const glowIntensity = 0.5 + this.fastSin(orb.glow) * 0.3;
+            const gradient = this.ctx.createRadialGradient(orb.x, orb.y, 0, orb.x, orb.y, 15);
+            gradient.addColorStop(0, `rgba(255, 0, 0, ${glowIntensity})`);
+            gradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
+            
+            this.ctx.fillStyle = gradient;
+            this.ctx.fillRect(orb.x - 15, orb.y - 15, 30, 30);
+            
+            // Orb body - red neon
+            this.ctx.fillStyle = '#FF0000';
             this.ctx.strokeStyle = '#FFFFFF';
             this.ctx.lineWidth = 1;
             
