@@ -2706,6 +2706,10 @@ class VibeSurvivor {
                             this.createShockburst(weapon, nearestEnemy);
                         }
                         break;
+                    case 'gatling_gun':
+                        // Separate barrel firing system - each barrel has its own timer
+                        this.fireGatlingBarrels(weapon, nearestEnemy);
+                        break;
                 }
             }
         }
@@ -2977,7 +2981,166 @@ class VibeSurvivor {
             this.projectiles.push(projectile);
         }
     }
-    
+
+    createGatlingGun(weapon, targetEnemy) {
+        const maxRange = 450; // Wide detection range
+        const numBarrels = weapon.level; // Each level adds another barrel!
+        
+        // Find multiple nearest enemies within range
+        const availableTargets = this.enemies
+            .map(enemy => {
+                const dx = enemy.x - this.player.x;
+                const dy = enemy.y - this.player.y;
+                const distance = this.cachedSqrt(dx * dx + dy * dy);
+                return { enemy, distance };
+            })
+            .filter(target => target.distance <= maxRange)
+            .sort((a, b) => a.distance - b.distance)
+            .slice(0, numBarrels) // Get up to numBarrels closest enemies
+            .map(target => target.enemy);
+        
+        if (availableTargets.length === 0) return; // No targets in range
+        
+        // Enhanced damage and fire rate scaling
+        const baseDamage = 35; // Much higher base damage
+        const baseFireRate = 4; // Base fire rate per barrel (stays constant)
+        const damagePerLevel = 8; // Significant damage increase per level
+        
+        // Each barrel should fire at the same rate regardless of number of barrels
+        // So total fire rate should scale proportionally with number of barrels
+        const perBarrelFireRate = baseFireRate; // Each barrel fires every 4 frames
+        const actualDamage = baseDamage + (damagePerLevel * (weapon.level - 1));
+        
+        // Update weapon's fire rate to maintain consistent per-barrel rate
+        // Each barrel should fire every 4 frames regardless of number of barrels
+        weapon.actualFireRate = perBarrelFireRate;
+        
+        // Fire from each barrel at different targets
+        for (let barrelIndex = 0; barrelIndex < availableTargets.length; barrelIndex++) {
+            const target = availableTargets[barrelIndex];
+            
+            // Calculate angle to this specific target
+            const dx = target.x - this.player.x;
+            const dy = target.y - this.player.y;
+            const angle = Math.atan2(dy, dx);
+            
+            // Create projectile for this barrel
+            const projectile = this.getPooledProjectile();
+            if (!projectile) continue;
+            
+            // Slight offset for multiple barrels visual effect
+            const barrelOffset = (barrelIndex - (numBarrels - 1) / 2) * 8;
+            const offsetX = Math.cos(angle + Math.PI/2) * barrelOffset;
+            const offsetY = Math.sin(angle + Math.PI/2) * barrelOffset;
+            
+            projectile.x = this.player.x + offsetX;
+            projectile.y = this.player.y + offsetY;
+            projectile.vx = Math.cos(angle) * (weapon.projectileSpeed || 10);
+            projectile.vy = Math.sin(angle) * (weapon.projectileSpeed || 10);
+            projectile.damage = actualDamage;
+            projectile.range = weapon.range || 450;
+            projectile.life = 60;
+            projectile.type = 'gatling_gun';
+            projectile.color = '#FFD700'; // Gold color for gatling bullets
+            projectile.active = true;
+            
+            this.projectiles.push(projectile);
+            
+            // Create muzzle flash for each barrel
+            this.createHitParticles(
+                this.player.x + offsetX + Math.cos(angle) * 20, 
+                this.player.y + offsetY + Math.sin(angle) * 20, 
+                '#FFD700'
+            );
+        }
+    }
+
+    fireGatlingBarrels(weapon, targetEnemy) {
+        const numBarrels = weapon.level;
+        const perBarrelFireRate = 4; // Each barrel fires every 4 frames
+        const maxRange = 450;
+        
+        // Initialize barrel timers if they don't exist
+        if (!weapon.barrelTimers) {
+            weapon.barrelTimers = [];
+            for (let i = 0; i < numBarrels; i++) {
+                // Stagger the initial timing so barrels don't all fire at once
+                weapon.barrelTimers[i] = this.frameCount - (i * Math.floor(perBarrelFireRate / numBarrels));
+            }
+        }
+        
+        // Add new barrel timers if weapon leveled up
+        while (weapon.barrelTimers.length < numBarrels) {
+            const newBarrelIndex = weapon.barrelTimers.length;
+            weapon.barrelTimers[newBarrelIndex] = this.frameCount - (newBarrelIndex * Math.floor(perBarrelFireRate / numBarrels));
+        }
+        
+        // Find available targets
+        const availableTargets = this.enemies
+            .map(enemy => {
+                const dx = enemy.x - this.player.x;
+                const dy = enemy.y - this.player.y;
+                const distance = this.cachedSqrt(dx * dx + dy * dy);
+                return { enemy, distance };
+            })
+            .filter(target => target.distance <= maxRange)
+            .sort((a, b) => a.distance - b.distance)
+            .slice(0, numBarrels)
+            .map(target => target.enemy);
+        
+        if (availableTargets.length === 0) return;
+        
+        // Fire each barrel independently
+        for (let barrelIndex = 0; barrelIndex < numBarrels && barrelIndex < availableTargets.length; barrelIndex++) {
+            // Check if this barrel is ready to fire
+            if (this.frameCount - weapon.barrelTimers[barrelIndex] >= perBarrelFireRate) {
+                this.fireSingleBarrel(weapon, availableTargets[barrelIndex], barrelIndex, numBarrels);
+                weapon.barrelTimers[barrelIndex] = this.frameCount;
+            }
+        }
+    }
+
+    fireSingleBarrel(weapon, target, barrelIndex, totalBarrels) {
+        // Enhanced damage scaling
+        const baseDamage = 35;
+        const damagePerLevel = 8;
+        const actualDamage = baseDamage + (damagePerLevel * (weapon.level - 1));
+        
+        // Calculate angle to target
+        const dx = target.x - this.player.x;
+        const dy = target.y - this.player.y;
+        const angle = Math.atan2(dy, dx);
+        
+        // Create projectile for this barrel
+        const projectile = this.getPooledProjectile();
+        if (!projectile) return;
+        
+        // Slight offset for multiple barrels visual effect
+        const barrelOffset = (barrelIndex - (totalBarrels - 1) / 2) * 8;
+        const offsetX = Math.cos(angle + Math.PI/2) * barrelOffset;
+        const offsetY = Math.sin(angle + Math.PI/2) * barrelOffset;
+        
+        projectile.x = this.player.x + offsetX;
+        projectile.y = this.player.y + offsetY;
+        projectile.vx = Math.cos(angle) * (weapon.projectileSpeed || 10);
+        projectile.vy = Math.sin(angle) * (weapon.projectileSpeed || 10);
+        projectile.damage = actualDamage;
+        projectile.range = weapon.range || 450;
+        projectile.life = 60;
+        projectile.type = 'gatling_gun';
+        projectile.color = '#FFD700';
+        projectile.active = true;
+        
+        this.projectiles.push(projectile);
+        
+        // Create muzzle flash for this barrel
+        this.createHitParticles(
+            this.player.x + offsetX + Math.cos(angle) * 20, 
+            this.player.y + offsetY + Math.sin(angle) * 20, 
+            '#FFD700'
+        );
+    }
+
     createFlameStream(weapon, dx, dy, distance) {
         const angle = Math.atan2(dy, dx);
         const flameCount = 3;
@@ -4309,7 +4472,8 @@ class VibeSurvivor {
             'railgun': 'Railgun',
             'missiles': 'Homing Missiles',
             'homing_laser': 'Homing Laser',
-            'shockburst': 'Shockburst'
+            'shockburst': 'Shockburst',
+            'gatling_gun': 'Gatling Gun'
         };
         return names[type] || 'Unknown Weapon';
     }
@@ -4325,7 +4489,8 @@ class VibeSurvivor {
             'railgun': 'Ultra high damage piercing shot',
             'missiles': 'Homing missiles with explosive damage',
             'homing_laser': 'Homing piercing laser beams with limited duration',
-            'shockburst': 'Explosive chain lightning that jumps between enemies'
+            'shockburst': 'Explosive chain lightning that jumps between enemies',
+            'gatling_gun': 'Multi-barrel rapid-fire system - each level adds another barrel targeting different enemies'
         };
         return descriptions[type] || 'Unknown weapon type';
     }
@@ -4759,7 +4924,8 @@ class VibeSurvivor {
             'railgun': { damage: 50, fireRate: 90, range: 500, projectileSpeed: 15, piercing: 999 },
             'missiles': { damage: 35, fireRate: 120, range: 400, projectileSpeed: 5, homing: true, explosionRadius: 60 },
             'homing_laser': { damage: 30, fireRate: 100, range: 400, projectileSpeed: 8, homing: true, piercing: true, isMergeWeapon: true },
-            'shockburst': { damage: 50, fireRate: 80, range: 300, projectileSpeed: 0, explosionRadius: 100, isMergeWeapon: true }
+            'shockburst': { damage: 50, fireRate: 80, range: 300, projectileSpeed: 0, explosionRadius: 100, isMergeWeapon: true },
+            'gatling_gun': { damage: 35, fireRate: 4, range: 450, projectileSpeed: 10, isMergeWeapon: true }
         };
         
         const config = weaponConfigs[weaponType];
@@ -4786,6 +4952,14 @@ class VibeSurvivor {
         
         if (lightningWeapon && plasmaWeapon) {
             this.performWeaponMerge('shockburst', [lightningWeapon, plasmaWeapon]);
+        }
+        
+        // Check for rapid fire level 5 + spread shot level 3
+        const rapidWeapon = this.weapons.find(w => w.type === 'rapid' && w.level >= 5);
+        const spreadWeapon = this.weapons.find(w => w.type === 'spread' && w.level >= 3);
+        
+        if (rapidWeapon && spreadWeapon) {
+            this.performWeaponMerge('gatling_gun', [rapidWeapon, spreadWeapon]);
         }
     }
     
@@ -4826,7 +5000,8 @@ class VibeSurvivor {
             'railgun': { damage: 50, fireRate: 90, range: 500, projectileSpeed: 15, piercing: 999 },
             'missiles': { damage: 35, fireRate: 120, range: 400, projectileSpeed: 5, homing: true, explosionRadius: 60 },
             'homing_laser': { damage: 20, fireRate: 100, range: 400, projectileSpeed: 8, homing: true, piercing: true, isMergeWeapon: true },
-            'shockburst': { damage: 50, fireRate: 80, range: 300, projectileSpeed: 0, explosionRadius: 100, isMergeWeapon: true }
+            'shockburst': { damage: 50, fireRate: 80, range: 300, projectileSpeed: 0, explosionRadius: 100, isMergeWeapon: true },
+            'gatling_gun': { damage: 35, fireRate: 4, range: 450, projectileSpeed: 10, isMergeWeapon: true }
         };
         return weaponConfigs[weaponType] || {};
     }
@@ -7334,8 +7509,8 @@ class VibeSurvivor {
         // Render batched projectiles
         this.ctx.save();
         
-        // Render basic/spread/shotgun projectiles together (simple circles)
-        const basicTypes = ['basic', 'spread', 'shotgun'];
+        // Render basic/spread/shotgun/gatling_gun projectiles together (simple circles)
+        const basicTypes = ['basic', 'spread', 'shotgun', 'gatling_gun'];
         for (const type of basicTypes) {
             const projectiles = projectilesByType[type];
             if (!projectiles) continue;
