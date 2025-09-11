@@ -186,12 +186,12 @@ class VibeSurvivor {
                     const browserProfile = this.getBrowserOptimizationProfile();
                     
                     // Create context with optimized settings
-                    this.ctx = this.canvas.getContext('2d', browserProfile.contextOptions);
+                    this.ctx = this.canvas.getContext('2d', { 
+                        willReadFrequently: false, // Force GPU acceleration 
+                        ...browserProfile.contextOptions 
+                    });
                     
-                    // Debug logging for optimization verification
-                    console.log(`🎮 Browser detected: ${browserProfile.browser}`);
-                    console.log(`🎮 Context options:`, browserProfile.contextOptions);
-                    console.log(`🎮 Reason: ${browserProfile.reason}`);
+                    // Browser optimization applied
                     
                     // Optimize canvas settings for maximum performance
                     this.ctx.imageSmoothingEnabled = false; // Disable antialiasing for speed
@@ -1488,6 +1488,7 @@ class VibeSurvivor {
             this.ctx = this.canvas.getContext('2d', { 
                 alpha: false, // No transparency needed - better performance
                 desynchronized: true, // Allow browser to optimize rendering
+                willReadFrequently: false, // Force GPU acceleration
                 ...browserProfile.contextOptions // Apply browser-specific settings
             });
             this.resizeCanvas();
@@ -1521,7 +1522,7 @@ class VibeSurvivor {
                     const headerHeight = 60; // Header height
                     const verticalPadding = 60; // Increased padding to show canvas borders (30px top + 30px bottom)
                     canvasHeight = Math.round(modalRect.height - headerHeight - verticalPadding);
-                    console.log(`Fallback canvas sizing from modal: ${canvasWidth}x${canvasHeight} (modal: ${Math.round(modalRect.width)}x${Math.round(modalRect.height)})`);
+                    
                 }
             }
             
@@ -1547,7 +1548,7 @@ class VibeSurvivor {
                 // Set internal canvas resolution to match calculated dimensions
                 this.canvas.width = canvasWidth;
                 this.canvas.height = canvasHeight;
-                console.log(`Canvas resized to: ${canvasWidth}x${canvasHeight}`);
+                
             } else {
                 console.warn('Canvas has zero dimensions, skipping resize');
                 return;
@@ -1667,7 +1668,7 @@ class VibeSurvivor {
                 this.initializeMenuNavigation('start', startButtons);
             }
             
-            console.log('showStartScreen: Start screen activated and forced visible');
+            
         } else {
             console.error('showStartScreen: Start screen element not found');
         }
@@ -1740,6 +1741,7 @@ class VibeSurvivor {
             
             this.ctx = this.canvas.getContext('2d', { 
                         alpha: false,  // No transparency - better performance
+                        willReadFrequently: false, // Force GPU acceleration
                         ...browserProfile.contextOptions  // Apply browser-specific settings
                     });
             if (!this.ctx) {
@@ -1948,7 +1950,7 @@ class VibeSurvivor {
         } else {
             // Debug: Log when time is paused to track the issue
             if (this.frameCount % 60 === 0) { // Log once per second worth of frames
-                console.log('⏸️ Time paused - frameCount frozen at:', this.frameCount, 'gameTime:', this.gameTime.toFixed(1));
+                
             }
         }
         
@@ -2265,8 +2267,8 @@ class VibeSurvivor {
             userAgent.includes('ipad')) {
             return {
                 browser: 'chrome-mobile',
-                contextOptions: { willReadFrequently: true },
-                reason: 'Chrome mobile GPU acceleration issues - using CPU rendering'
+                contextOptions: { willReadFrequently: false },
+                reason: 'Chrome mobile - forcing GPU acceleration for better performance'
             };
         }
         
@@ -2284,8 +2286,8 @@ class VibeSurvivor {
         // Chrome unknown platform - be safe and disable GPU
         return {
             browser: 'chrome-unknown',
-            contextOptions: { willReadFrequently: true },
-            reason: 'Unknown Chrome platform - using safe CPU rendering'
+            contextOptions: { willReadFrequently: false },
+            reason: 'Unknown Chrome platform - forcing GPU acceleration for better performance'
         };
     }
 
@@ -3354,7 +3356,7 @@ class VibeSurvivor {
             }
         });
         
-        console.log(`Spawned Boss Level ${this.bossLevel}: HP=${scaledHealth}, Speed=${scaledSpeed.toFixed(2)}, Damage=${scaledDamage}, Size=${scaledRadius}`);
+        
         this.bossSpawned = true;
         
         // Show boss notification for scaled boss
@@ -3670,7 +3672,7 @@ class VibeSurvivor {
                     
                     // Start boss defeat animation sequence
                     this.bossDefeating = true;
-                    console.log('Boss defeated! Starting animation sequence...');
+                    
                     
                     // Create spectacular defeat animation
                     this.createBossDefeatAnimation(enemy.x, enemy.y, enemy.radius);
@@ -4105,14 +4107,14 @@ class VibeSurvivor {
             if (Math.random() < this.magnetOrbSpawnChance) {
                 // Spawning magnet orb
                 this.createMagnetOrb();
-                console.log('🧲 Magnet orbs on map:', this.magnetOrbs.length);
+                
             }
         }
     }
 
     createMagnetOrb() {
         const orb = this.getPooledMagnetOrb();
-        console.log('🧲 getPooledMagnetOrb returned:', orb ? 'orb found' : 'NO ORB');
+        
         if (orb) {
             // Spawn at random location within reasonable distance from player (same as HP orbs)
             const angle = Math.random() * Math.PI * 2;
@@ -4150,7 +4152,7 @@ class VibeSurvivor {
             // Defer level up menu during boss defeat animation OR victory screen
             if (this.bossDefeating || this.bossVictoryInProgress) {
                 this.pendingLevelUps++;
-                console.log('🎮 Level up deferred - boss defeat sequence in progress');
+                
                 return;
             }
             
@@ -4162,7 +4164,7 @@ class VibeSurvivor {
     processPendingLevelUps() {
         if (this.pendingLevelUps > 0) {
             this.pendingLevelUps--;
-            console.log(`🎮 Processing deferred level up (${this.pendingLevelUps} remaining)`);
+            
             
             // Ensure time stays paused during deferred menus
             this.timePaused = true;
@@ -4172,8 +4174,7 @@ class VibeSurvivor {
             // Will be called again after this menu closes if more pending
         } else {
             // No more level ups, resume normal game state
-            console.log('🎮 All deferred level ups processed, resuming game');
-            console.log('⏰ Resuming time - frameCount:', this.frameCount, 'gameTime:', this.gameTime.toFixed(1));
+            
             
             this.timePaused = false;
             this.bossVictoryInProgress = false;
@@ -4343,15 +4344,14 @@ class VibeSurvivor {
                 this.selectUpgrade(choice);
                 document.getElementById('levelup-modal').remove();
                 
-                console.log('🎮 Weapon upgrade selected, checking for more pending level ups...');
-                console.log('⏰ Before processing - frameCount:', this.frameCount, 'gameTime:', this.gameTime.toFixed(1));
+                
                 
                 // Process any remaining deferred level ups, or resume game
                 this.processPendingLevelUps();
                 
                 // If no more pending level ups, start game loop
                 if (this.pendingLevelUps === 0 && this.gameRunning) {
-                    console.log('🎮 Starting game loop after all upgrades processed');
+                    
                     this.gameLoop();
                 }
             });
@@ -4453,7 +4453,7 @@ class VibeSurvivor {
             }
         });
         
-        console.log(`Level up modal sized: ${modalMaxWidth}x${modalMaxHeight}, choices: ${choiceCount}, mobile: ${isMobile}`);
+        
     }
 
     
@@ -4667,7 +4667,7 @@ class VibeSurvivor {
 
     
     testToast() {
-        console.log('Testing toast notification...');
+        
         this.showToastNotification('TEST NOTIFICATION!', 'upgrade');
     }
     
@@ -5046,7 +5046,7 @@ class VibeSurvivor {
     }
 
     createBossDefeatAnimation(bossX, bossY, bossRadius) {
-        console.log('Creating boss defeat animation...');
+        
         
         // Show boss defeat notification during animation
         this.createToast("BOSS DEFEATED! DIFFICULTY INCREASED!", 'victory', 3000);
@@ -5122,7 +5122,7 @@ class VibeSurvivor {
         this.redFlash.duration = 60;
         this.redFlash.maxIntensity = 0.8;
         
-        console.log('Boss defeat animation created successfully');
+        
     }
     
     createHitParticles(x, y, color) {
@@ -5581,7 +5581,7 @@ class VibeSurvivor {
             ]
         };
         
-        console.log('Smart garbage collection system initialized');
+        
         this.scheduleIdleCleanup();
     }
     
@@ -5648,7 +5648,7 @@ class VibeSurvivor {
                 const inactivePool = this.projectilePool.filter(p => !p.active);
                 newPool.push(...inactivePool.slice(0, keepCount - newPool.length));
                 this.projectilePool = newPool;
-                console.log(`Compacted projectile pool: ${this.projectilePool.length} objects`);
+                
             }
         }
     }
@@ -5663,7 +5663,7 @@ class VibeSurvivor {
                 const inactivePool = this.particlePool.filter(p => !p.active);
                 newPool.push(...inactivePool.slice(0, keepCount - newPool.length));
                 this.particlePool = newPool;
-                console.log(`Compacted particle pool: ${this.particlePool.length} objects`);
+                
             }
         }
     }
@@ -5678,7 +5678,7 @@ class VibeSurvivor {
                 const inactivePool = this.xpOrbPool.filter(o => !o.active);
                 newPool.push(...inactivePool.slice(0, keepCount - newPool.length));
                 this.xpOrbPool = newPool;
-                console.log(`Compacted XP orb pool: ${this.xpOrbPool.length} objects`);
+                
             }
         }
     }
@@ -5687,7 +5687,7 @@ class VibeSurvivor {
         // Clean up excessive trail points from player and projectiles
         if (this.player && this.player.trail && this.player.trail.length > 20) {
             this.player.trail = this.player.trail.slice(-15);
-            console.log('Cleaned up player trail');
+            
         }
         
         // Clean up projectile trails
@@ -5700,7 +5700,7 @@ class VibeSurvivor {
         });
         
         if (cleanedProjectiles > 0) {
-            console.log(`Cleaned up trails from ${cleanedProjectiles} projectiles`);
+            
         }
     }
     
@@ -5912,7 +5912,7 @@ class VibeSurvivor {
             maxBatchSize: 50, // Maximum entities per batch before forcing a draw
             enabled: true
         };
-        console.log('Batch rendering system initialized');
+        
     }
 
     // =====================
@@ -5942,7 +5942,7 @@ class VibeSurvivor {
         this.createCanvasLayer('effects', 3);    // Particles, explosions
         this.createCanvasLayer('ui', 4);         // UI elements, notifications
         
-        console.log('Canvas layers system initialized');
+        
     }
     
     createCanvasLayer(name, zIndex) {
@@ -5973,7 +5973,7 @@ class VibeSurvivor {
             needsRedraw: true
         };
         
-        console.log(`Canvas layer '${name}' created with z-index ${zIndex}`);
+        
     }
     
     resizeCanvasLayers() {
@@ -6037,7 +6037,7 @@ class VibeSurvivor {
         }
         
         this.canvasLayers = null;
-        console.log('Canvas layers cleaned up');
+        
     }
 
     // =====================
@@ -6105,7 +6105,7 @@ class VibeSurvivor {
             }
         };
         
-        console.log('Adaptive quality scaling initialized at level', this.adaptiveQuality.currentLevel);
+        
     }
     
     updateAdaptiveQuality() {
@@ -6128,11 +6128,11 @@ class VibeSurvivor {
         if (currentFPS < this.adaptiveQuality.lowFPSThreshold && currentLevel > 1) {
             // Performance too low, decrease quality
             newLevel = Math.max(1, currentLevel - 1);
-            console.log(`🔻 Adaptive quality: FPS ${currentFPS.toFixed(1)} < ${this.adaptiveQuality.lowFPSThreshold}, reducing quality ${currentLevel} → ${newLevel}`);
+            
         } else if (currentFPS > this.adaptiveQuality.highFPSThreshold && currentLevel < 5) {
             // Performance good, try increasing quality
             newLevel = Math.min(5, currentLevel + 1);
-            console.log(`🔺 Adaptive quality: FPS ${currentFPS.toFixed(1)} > ${this.adaptiveQuality.highFPSThreshold}, increasing quality ${currentLevel} → ${newLevel}`);
+            
         }
         
         // Apply quality change if needed
@@ -6178,7 +6178,7 @@ class VibeSurvivor {
             this.player.maxTrailLength = maxTrailLength;
         }
         
-        console.log(`⚙️ Quality level set to ${level} (${this.getQualityLevelName(level)})`);
+        
     }
     
     getQualityLevelName(level) {
@@ -6208,7 +6208,7 @@ class VibeSurvivor {
     
     forceQualityLevel(level) {
         // Allow manual quality override for testing
-        console.log(`🔧 Manual quality override: ${this.adaptiveQuality.currentLevel} → ${level}`);
+        
         this.setQualityLevel(level);
         this.adaptiveQuality.lastAdjustment = Date.now();
     }
@@ -6538,7 +6538,7 @@ class VibeSurvivor {
             this.prerenderGrid();
             
             this.hasOffscreenCanvases = true;
-            console.log('Grid caching enabled');
+            
             
         } catch (e) {
             console.warn('OffscreenCanvas setup failed, using normal rendering:', e);
@@ -6839,7 +6839,7 @@ class VibeSurvivor {
             this.drawGrid();
             this.ctx.restore();
             
-            console.log(`Start screen background rendered: ${this.canvas.width}x${this.canvas.height}`);
+            
         } else {
             console.warn(`Cannot render background - invalid canvas dimensions: ${this.canvas.width}x${this.canvas.height}`);
         }
@@ -8220,7 +8220,7 @@ class VibeSurvivor {
     }
     
     bossDefeated() {
-        console.log('Boss defeated! Starting victory sequence...');
+        
         
         // Set victory sequence state and pause game time
         this.bossVictoryInProgress = true;  // Mark victory screen active
@@ -8232,7 +8232,7 @@ class VibeSurvivor {
         if (this.gameLoopId) {
             cancelAnimationFrame(this.gameLoopId);
             this.gameLoopId = null;
-            console.log('Game loop cancelled');
+            
         }
         
         // Creating victory overlay
@@ -8439,7 +8439,7 @@ class VibeSurvivor {
         
         if (gameContainer) {
             gameContainer.appendChild(victoryOverlay);
-            console.log('Victory overlay added to:', gameContainer.id || 'body');
+            
         } else {
             console.error('Could not find container for victory overlay');
         }
@@ -8458,16 +8458,14 @@ class VibeSurvivor {
             victoryOverlay.remove();
             style.remove();
             
-            console.log('🎮 Victory CONTINUE clicked - checking for deferred level ups...');
-            console.log('⏰ Pending level ups:', this.pendingLevelUps);
-            console.log('⏰ Current state - frameCount:', this.frameCount, 'gameTime:', this.gameTime.toFixed(1));
+            
             
             // Process any deferred level ups before continuing
             this.processPendingLevelUps();
             
             // If no pending level ups, continue immediately
             if (this.pendingLevelUps === 0) {
-                console.log('🎮 No deferred level ups, continuing after boss immediately');
+                
                 this.continueAfterBoss();
             }
         };
@@ -8561,7 +8559,7 @@ class VibeSurvivor {
     
 
     closeGame() {
-        console.log('🔄 Closing Vibe Survivor - Refreshing page for clean reset...');
+        
         
         // Stop game immediately to prevent any lingering processes
         this.gameRunning = false;
@@ -8592,7 +8590,7 @@ class VibeSurvivor {
         
         // Brief delay to allow final cleanup, then refresh
         setTimeout(() => {
-            console.log('🔄 Refreshing page for complete reset...');
+            
             window.location.reload();
         }, 200);
     }
@@ -8618,23 +8616,22 @@ class VibeSurvivor {
             const startBtn = document.getElementById('start-survivor');
             if (startBtn) {
                 startBtn.addEventListener('click', () => {
-                    console.log('Start button clicked');
+                    
                     this.startGame();
                 });
             }
             
-            console.log('Start screen recreated and activated');
-            console.log('Start screen HTML length:', startScreen.innerHTML.length);
+            
         } else {
             console.error('Start screen element not found');
         }
         
-        console.log('Game reopened and showing start screen');
+        
     }
     
     
     cleanRestart() {
-        console.log('Executing clean restart...');
+        
         
         // Reset all game state
         this.resetGame();
@@ -8648,13 +8645,13 @@ class VibeSurvivor {
         
         // Start the game directly - no intermediate screens
         setTimeout(() => {
-            console.log('Starting fresh game after clean restart...');
+            
             this.startGame();
         }, 200);
     }
     
     cleanExit() {
-        console.log('Executing clean exit...');
+        
         
         // Restore body scrolling behavior
         this.restoreBackgroundScrolling();
