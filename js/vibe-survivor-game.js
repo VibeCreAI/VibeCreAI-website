@@ -297,6 +297,7 @@ class VibeSurvivor {
                                     <h2>GAME PAUSED</h2>
                                     <div class="pause-buttons">
                                         <button id="resume-btn" class="survivor-btn primary">RESUME</button>
+                                        <button id="pause-restart-btn" class="survivor-btn">RESTART</button>
                                         <button id="exit-to-menu-btn" class="survivor-btn">EXIT</button>
                                     </div>
                                     <p class="pause-hint">Press ESC to resume</p>
@@ -1346,6 +1347,10 @@ class VibeSurvivor {
             this.closeGame();
         });
         
+        document.getElementById('pause-restart-btn').addEventListener('click', () => {
+            this.restartGame();
+        });
+        
         // Keyboard controls
         document.addEventListener('keydown', (e) => {
             // Menu navigation takes priority
@@ -1770,6 +1775,18 @@ class VibeSurvivor {
             window.PerformanceManager.optimizeMemory();
         }
         
+        // Force garbage collection if available for better restart performance
+        if (window.gc) {
+            window.gc();
+        } else if (window.GCController) {
+            window.GCController.collect();
+        }
+        
+        // Clear any remaining cached textures or WebGL resources
+        if (this.ctx && typeof this.ctx.clearRect === 'function') {
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        }
+        
         // Auto-detect performance mode based on browser and device
         this.detectPerformanceMode();
         
@@ -1889,7 +1906,14 @@ class VibeSurvivor {
         this.frameRateMonitor.averageFPS = 60;
         this.frameRateMonitor.lastCheck = 0;
         
-        // Reset adaptive quality to defaults
+        // Reset adaptive quality to optimal starting level
+        if (this.adaptiveQuality) {
+            this.adaptiveQuality.currentLevel = 3; // Reset to medium quality
+            this.adaptiveQuality.frameCount = 0;
+            this.adaptiveQuality.lastAdjustment = 0;
+        }
+        
+        // Reset frame rate monitor adaptive quality to defaults
         this.frameRateMonitor.adaptiveQuality = {
             particleCount: 1.0,
             effectQuality: 1.0,
@@ -1902,6 +1926,18 @@ class VibeSurvivor {
         this.lastEntityPositions = new Map();
         this.staticCanvasCache = null;
         this.backgroundCanvasCache = null;
+        
+        // Clear grid cache for fresh rendering
+        if (this.gridOffscreen) {
+            this.gridOffscreen = null;
+            this.gridOffscreenCtx = null;
+        }
+        
+        // Clear canvas layers cache for fresh rendering
+        if (this.canvasLayers) {
+            this.cleanupCanvasLayers();
+            this.canvasLayersInitialized = false;
+        }
         
         this.performanceMode = false;
         
