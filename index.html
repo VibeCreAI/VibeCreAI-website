@@ -815,15 +815,11 @@
             // Hero subtitle shuffle animation with True Focus effect - start immediately
             const subtitle = document.getElementById('hero-subtitle');
             if (subtitle) {
-                const subtitleShuffle = new LogoShuffle(subtitle);
-                subtitleShuffle.logoText = "VIBE CODING CREATIVE AI";
-                subtitleShuffle.logoStructure = [
-                    { text: "VIBE CODING CREATIVE AI", class: "" }
-                ];
-                subtitleShuffle.shuffle().then(() => {
-                    // Apply True Focus effect after shuffle completes
-                    applyTrueFocusEffect(subtitle);
-                });
+                // Set the subtitle text directly
+                subtitle.textContent = "VIBE CODING CREATIVE AI";
+                
+                // Apply True Focus effect immediately
+                applyTrueFocusEffect(subtitle);
             }
 
             // CTA buttons animation - start immediately
