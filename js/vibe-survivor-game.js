@@ -1489,6 +1489,11 @@ class VibeSurvivor {
         });
         
         document.getElementById('pause-restart-btn').addEventListener('click', () => {
+            // Close pause menu first, then restart
+            this.isPaused = false;
+            const pauseMenu = document.getElementById('pause-menu');
+            if (pauseMenu) pauseMenu.style.display = 'none';
+            this.resetMenuNavigation();
             this.restartGame();
         });
         
@@ -1990,6 +1995,8 @@ class VibeSurvivor {
         this.spawnRate = 120;
         this.waveMultiplier = 1;
         this.bossSpawned = false;
+        this.bossLevel = 1;
+        this.bossesKilled = 0;
         this.isPaused = false; // Ensure pause state is reset
         
         // Reset player - start at world center
@@ -2311,8 +2318,9 @@ class VibeSurvivor {
             
             // Initialize keyboard navigation for pause menu
             const resumeBtn = document.getElementById('resume-btn');
+            const restartBtn = document.getElementById('pause-restart-btn');
             const exitBtn = document.getElementById('exit-to-menu-btn');
-            const pauseButtons = [resumeBtn, exitBtn].filter(btn => btn); // Filter out null buttons
+            const pauseButtons = [resumeBtn, restartBtn, exitBtn].filter(btn => btn); // Filter out null buttons
             
             if (pauseButtons.length > 0) {
                 this.menuNavigationState.active = true;
@@ -2374,9 +2382,9 @@ class VibeSurvivor {
         // Show help button if player level >= 5 OR any weapon level >= 3
         const shouldShow = this.player.level >= 5 || this.weapons.some(weapon => weapon.level >= 3);
         
-        // DEBUG: Always show help button for now to test
-        console.log('Help button check:', { playerLevel: this.player.level, weaponLevels: this.weapons.map(w => w.level), shouldShow });
-        helpBtn.style.display = 'flex';
+        if (shouldShow) {
+            helpBtn.style.display = 'flex';
+        }
     }
 
     // Menu Navigation Methods
@@ -2413,11 +2421,14 @@ class VibeSurvivor {
         const buttonCount = this.menuNavigationState.menuButtons.length;
         if (buttonCount === 0) return;
         
+        const oldIndex = this.menuNavigationState.selectedIndex;
+        
         if (direction === 'up' || direction === 'left') {
             this.menuNavigationState.selectedIndex = (this.menuNavigationState.selectedIndex - 1 + buttonCount) % buttonCount;
         } else if (direction === 'down' || direction === 'right') {
             this.menuNavigationState.selectedIndex = (this.menuNavigationState.selectedIndex + 1) % buttonCount;
         }
+        
         
         this.updateMenuSelection();
     }
