@@ -217,7 +217,7 @@ body {
 
 /* Typography and Text Styles */
 .tagline {
-    font-family: monospace;
+    font-family: 'Born2bSportyFont', monospace;
     font-size: 1.2rem;
     color: var(--primary-color);
     margin-bottom: 40px;

@@ -459,8 +459,8 @@
             }
         }
 
-        // Logo typing animation class
-        class LogoTypewriter {
+        // Logo shuffle animation class
+        class LogoShuffle {
             constructor(container) {
                 this.container = container;
                 this.logoText = "VIBECREAI";
@@ -471,59 +471,164 @@
                     { text: "RE", class: "title-small" },
                     { text: "AI", class: "title-ai" }
                 ];
-                this.currentIndex = 0;
-                this.currentStructureIndex = 0;
-                this.currentCharInStructure = 0;
+                this.scrambleChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:,.<>?';
             }
 
-            type() {
+            shuffle() {
                 return new Promise((resolve) => {
-                    const typeChar = () => {
-                        if (this.currentStructureIndex >= this.logoStructure.length) {
-                            // All typing is complete
-                            resolve();
-                            return;
+                    // Clear container and set up structure
+                    this.container.innerHTML = '';
+                    const characterElements = [];
+
+                    // Create the character elements
+                    this.logoStructure.forEach((part) => {
+                        const partSpan = document.createElement('span');
+                        partSpan.className = part.class;
+                        this.container.appendChild(partSpan);
+
+                        // Create individual character spans within each part
+                        for (let i = 0; i < part.text.length; i++) {
+                            const charSpan = document.createElement('span');
+                            charSpan.textContent = part.text[i];
+                            charSpan.style.display = 'inline-block';
+                            partSpan.appendChild(charSpan);
+                            
+                            characterElements.push({
+                                element: charSpan,
+                                finalChar: part.text[i],
+                                isShuffling: true
+                            });
                         }
+                    });
 
-                        const currentPart = this.logoStructure[this.currentStructureIndex];
-                        
-                        if (this.currentCharInStructure === 0) {
-                            // Create new span for this part
-                            const span = document.createElement('span');
-                            span.className = currentPart.class;
-                            // Add all parts to the same container
-                            this.container.appendChild(span);
-                        }
+                    // Start shuffling each character
+                    const shuffleDuration = 1000; // Total shuffle time in ms
+                    const updateInterval = 50; // Update every 50ms
+                    let startTime = Date.now();
+                    
+                    const shuffleInterval = setInterval(() => {
+                        const elapsed = Date.now() - startTime;
+                        let allComplete = true;
 
-                        // Get the current span from the container
-                        const currentSpan = this.container.lastElementChild;
-                        
-                        const charToAdd = currentPart.text[this.currentCharInStructure];
-                        currentSpan.textContent += charToAdd;
-
-                        // Animate the character appearance
-                        anime({
-                            targets: currentSpan,
-                            scale: [1.2, 1],
-                            duration: 150,
-                            easing: 'easeOutQuad'
+                        characterElements.forEach((charData, index) => {
+                            if (charData.isShuffling) {
+                                // Calculate when this character should stop shuffling
+                                const charDelay = index * 80; // Stagger by 80ms per character
+                                const charDuration = 400; // Each character shuffles for 400ms
+                                
+                                if (elapsed < charDelay) {
+                                    // Haven't started shuffling this character yet
+                                    allComplete = false;
+                                } else if (elapsed < charDelay + charDuration) {
+                                    // Currently shuffling this character
+                                    charData.element.textContent = this.getRandomChar();
+                                    allComplete = false;
+                                } else {
+                                    // Done shuffling, show final character
+                                    charData.element.textContent = charData.finalChar;
+                                    charData.isShuffling = false;
+                                }
+                            }
                         });
 
-                        this.currentCharInStructure++;
-
-                        if (this.currentCharInStructure >= currentPart.text.length) {
-                            // Move to next part
-                            this.currentStructureIndex++;
-                            this.currentCharInStructure = 0;
-                            setTimeout(typeChar, 100); // Slightly longer pause between parts
-                        } else {
-                            setTimeout(typeChar, 80); // Typing speed
+                        // Stop when all characters are done
+                        if (allComplete) {
+                            clearInterval(shuffleInterval);
+                            resolve();
                         }
-                    };
+                    }, updateInterval);
 
-                    typeChar();
+                    // Safety timeout
+                    setTimeout(() => {
+                        clearInterval(shuffleInterval);
+                        // Ensure all characters show final values
+                        characterElements.forEach((charData) => {
+                            charData.element.textContent = charData.finalChar;
+                        });
+                        resolve();
+                    }, shuffleDuration + 500);
                 });
             }
+
+            getRandomChar() {
+                return this.scrambleChars[Math.floor(Math.random() * this.scrambleChars.length)];
+            }
+        }
+
+        // True Focus Effect Function
+        function applyTrueFocusEffect(element) {
+            const text = element.textContent;
+            
+            // Define the word chunks we want to focus on
+            const wordChunks = ["VIBE CODING", "CREATIVE", "AI"];
+            
+            // Clear the element and create focus container
+            element.innerHTML = '';
+            element.className += ' focus-container';
+            
+            // Create chunk elements
+            const chunkElements = [];
+            wordChunks.forEach((chunk, index) => {
+                const chunkSpan = document.createElement('span');
+                chunkSpan.className = 'focus-word';
+                chunkSpan.textContent = chunk;
+                chunkSpan.style.marginRight = '1em';
+                element.appendChild(chunkSpan);
+                chunkElements.push(chunkSpan);
+                
+                // Add space after each chunk except the last
+                if (index < wordChunks.length - 1) {
+                    element.appendChild(document.createTextNode(' '));
+                }
+            });
+            
+            // Create focus frame
+            const focusFrame = document.createElement('div');
+            focusFrame.className = 'focus-frame';
+            
+            // Add corner elements
+            const corners = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
+            corners.forEach(corner => {
+                const cornerDiv = document.createElement('div');
+                cornerDiv.className = `corner ${corner}`;
+                focusFrame.appendChild(cornerDiv);
+            });
+            
+            element.appendChild(focusFrame);
+            
+            // Animation logic
+            let currentIndex = 0;
+            
+            function focusChunk(index) {
+                // Remove focus from all chunks
+                chunkElements.forEach(chunk => chunk.classList.remove('focused'));
+                
+                // Focus current chunk
+                if (chunkElements[index]) {
+                    const currentChunk = chunkElements[index];
+                    currentChunk.classList.add('focused');
+                    
+                    // Position focus frame around current chunk
+                    focusFrame.style.left = (currentChunk.offsetLeft - 8) + 'px';
+                    focusFrame.style.top = (currentChunk.offsetTop - 8) + 'px';
+                    focusFrame.style.width = (currentChunk.offsetWidth + 16) + 'px';
+                    focusFrame.style.height = (currentChunk.offsetHeight + 16) + 'px';
+                    focusFrame.classList.add('active');
+                }
+            }
+            
+            // Start the animation cycle
+            function cycleFocus() {
+                focusChunk(currentIndex);
+                currentIndex = (currentIndex + 1) % chunkElements.length;
+            }
+            
+            // Initial focus
+            setTimeout(() => {
+                cycleFocus();
+                // Continue cycling every 2 seconds
+                setInterval(cycleFocus, 2000);
+            }, 500);
         }
 
         // Global Performance Management System
@@ -684,70 +789,50 @@
         
         // Initialize all animations
         function initAnimations() {
-            // Hero title drop-down animation with logo typing
+            // Hero title drop-down animation with logo shuffle - start immediately
             anime({
                 targets: '.hero-title',
                 opacity: [0, 1],
                 translateY: [-100, 0],
                 duration: 1200,
                 easing: 'easeOutExpo',
-                delay: 500,
+                delay: 0, // Start immediately
                 complete: () => {
-                    // Start logo typing animation after drop-down completes
-                    const logoContainer = document.getElementById('logo-text-container');
-                    
-                    // Clear the container to ensure clean start
-                    logoContainer.innerHTML = '';
-                    
-                    const logoTypewriter = new LogoTypewriter(logoContainer);
-                    logoTypewriter.type();
+                    // Logo shuffle starts immediately with title animation
                 }
             });
 
-            // Hero subtitle animation
-            const subtitle = document.getElementById('hero-subtitle');
-            const subtitleText = "VIBE CODING + CREATIVE + AI";
-            let subtitleIndex = 0;
-
-            function animateSubtitle() {
-                if (subtitleIndex < subtitleText.length) {
-                    const span = document.createElement('span');
-                    span.textContent = subtitleText[subtitleIndex];
-                    subtitle.appendChild(span);
-                    
-                    anime({
-                        targets: span,
-                        opacity: [0, 1],
-                        translateY: [10, 0],
-                        scale: [0.8, 1],
-                        duration: 400,
-                        easing: 'easeOutExpo'
-                    });
-                    
-                    subtitleIndex++;
-                    setTimeout(animateSubtitle, 50);
-                } else {
-                    // Pulsing effect after text is revealed
-                    anime({
-                        targets: subtitle.children,
-                        textShadow: '0 0 10px rgba(0, 255, 255, 1)',
-                        direction: 'alternate',
-                        loop: true,
-                        duration: 1000,
-                        easing: 'easeInOutQuad',
-                        delay: anime.stagger(100)
-                    });
-                }
+            // Start logo shuffle animation immediately
+            const logoContainer = document.getElementById('logo-text-container');
+            if (logoContainer) {
+                // Clear the container to ensure clean start
+                logoContainer.innerHTML = '';
+                
+                const logoShuffle = new LogoShuffle(logoContainer);
+                logoShuffle.shuffle();
             }
-            setTimeout(animateSubtitle, 1000);
 
-            // CTA buttons animation
+            // Hero subtitle shuffle animation with True Focus effect - start immediately
+            const subtitle = document.getElementById('hero-subtitle');
+            if (subtitle) {
+                const subtitleShuffle = new LogoShuffle(subtitle);
+                subtitleShuffle.logoText = "VIBE CODING CREATIVE AI";
+                subtitleShuffle.logoStructure = [
+                    { text: "VIBE CODING CREATIVE AI", class: "" }
+                ];
+                subtitleShuffle.shuffle().then(() => {
+                    // Apply True Focus effect after shuffle completes
+                    applyTrueFocusEffect(subtitle);
+                });
+            }
+
+            // CTA buttons animation - start immediately
             anime({
                 targets: '.cta-button',
                 opacity: [0, 1],
                 translateY: [30, 0],
                 duration: 1000,
-                delay: anime.stagger(100, {start: 1000}),
+                delay: anime.stagger(100, {start: 0}), // Start immediately
                 easing: 'easeOutExpo'
             });
 

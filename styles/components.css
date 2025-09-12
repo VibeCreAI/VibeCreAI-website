@@ -219,6 +219,7 @@ body.terminal-active .cta-container {
 }
 
 .hero-subtitle {
+    font-family: 'Born2bSportyFont', monospace;
     font-size: 1.5rem;
     margin-bottom: 30px;
     color: var(--primary-color);
