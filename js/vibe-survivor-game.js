@@ -2379,12 +2379,8 @@ class VibeSurvivor {
         const helpBtn = document.getElementById('help-btn');
         if (!helpBtn) return;
         
-        // Show help button if player level >= 5 OR any weapon level >= 3
-        const shouldShow = this.player.level >= 5 || this.weapons.some(weapon => weapon.level >= 3);
-        
-        if (shouldShow) {
-            helpBtn.style.display = 'flex';
-        }
+        // Always show help button - players should have access to merger recipes
+        helpBtn.style.display = 'flex';
     }
 
     // Menu Navigation Methods
