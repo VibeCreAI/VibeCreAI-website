@@ -47,6 +47,7 @@ class VibeSurvivor {
         
         // Pause functionality
         this.isPaused = false;
+        this.isHelpOpen = false;
         
         // Background music
         this.backgroundMusic = new Audio('sound/Vibe_Survivor.mp3');
@@ -291,6 +292,9 @@ class VibeSurvivor {
                                 <span>DASH</span>
                             </div>
                             
+                            <!-- Help Button (canvas overlay) -->
+                            <button id="help-btn" class="canvas-help-btn" style="display: none;">?</button>
+                            
                             <!-- Pause Menu -->
                             <div id="pause-menu" class="pause-menu" style="display: none;">
                                 <div class="pause-content">
@@ -301,6 +305,32 @@ class VibeSurvivor {
                                         <button id="exit-to-menu-btn" class="survivor-btn">EXIT</button>
                                     </div>
                                     <p class="pause-hint">Press ESC to resume</p>
+                                </div>
+                            </div>
+
+                            <!-- Help Menu -->
+                            <div id="help-menu" class="help-menu" style="display: none;">
+                                <div class="help-content">
+                                    <h2>🔧 WEAPON MERGERS</h2>
+                                    <div class="help-recipes">
+                                        <div class="merge-recipe">
+                                            <h3>⚡ Homing Laser</h3>
+                                            <p>Laser lvl 3 + Missiles lvl 3</p>
+                                            <span class="recipe-desc">Heat-seeking laser beams</span>
+                                        </div>
+                                        <div class="merge-recipe">
+                                            <h3>💥 Shockburst</h3>
+                                            <p>Lightning lvl 3 + Plasma lvl 3</p>
+                                            <span class="recipe-desc">Explosive energy bursts</span>
+                                        </div>
+                                        <div class="merge-recipe">
+                                            <h3>🔫 Gatling Gun</h3>
+                                            <p>Rapid Fire lvl 5 + Spread Shot lvl 3</p>
+                                            <span class="recipe-desc">Multi-barrel rapid fire</span>
+                                        </div>
+                                    </div>
+                                    <button id="close-help-btn" class="survivor-btn">CLOSE</button>
+                                    <p class="help-hint">Press ESC to close</p>
                                 </div>
                             </div>
 
@@ -930,6 +960,76 @@ class VibeSurvivor {
             }
             
 
+            .help-menu {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.8);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 20000;
+                backdrop-filter: blur(5px);
+            }
+
+            .help-content {
+                background: linear-gradient(135deg, #0a0a1a, #1a0a2a);
+                border: 2px solid #00ffff;
+                border-radius: 15px;
+                padding: 30px;
+                text-align: center;
+                max-width: 400px;
+                width: 90%;
+                max-height: 80vh;
+                overflow-y: auto;
+            }
+
+            .help-content h2 {
+                color: #00ffff;
+                margin-bottom: 20px;
+                font-size: 24px;
+                text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+            }
+
+            .help-recipes {
+                margin-bottom: 25px;
+            }
+
+            .merge-recipe {
+                background: rgba(0, 255, 255, 0.05);
+                border: 1px solid rgba(0, 255, 255, 0.2);
+                border-radius: 10px;
+                padding: 15px;
+                margin-bottom: 15px;
+                text-align: left;
+            }
+
+            .merge-recipe h3 {
+                color: #00ffff;
+                margin-bottom: 8px;
+                font-size: 18px;
+            }
+
+            .merge-recipe p {
+                color: #ffffff;
+                margin-bottom: 5px;
+                font-weight: bold;
+            }
+
+            .recipe-desc {
+                color: #aaaaaa;
+                font-style: italic;
+                font-size: 14px;
+            }
+
+            .help-hint {
+                color: #888;
+                font-size: 14px;
+                margin-top: 15px;
+            }
+
             .pause-menu {
                 position: absolute;
                 top: 0;
@@ -1169,6 +1269,42 @@ class VibeSurvivor {
                 transform: scale(0.9);
             }
 
+            .canvas-help-btn {
+                position: absolute;
+                top: 30px;
+                right: 30px;
+                width: 50px;
+                height: 50px;
+                background: rgba(0, 255, 255, 0.3);
+                border: 2px solid rgba(0, 255, 255, 0.6);
+                border-radius: 50%;
+                color: #00ffff;
+                font-size: 20px;
+                font-weight: bold;
+                cursor: pointer;
+                pointer-events: auto;
+                user-select: none;
+                transition: all 0.3s ease;
+                box-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
+                backdrop-filter: blur(3px);
+                z-index: 1000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .canvas-help-btn:hover {
+                background: rgba(0, 255, 255, 0.5);
+                transform: scale(1.1);
+                box-shadow: 0 0 20px rgba(0, 255, 255, 0.8);
+            }
+
+            .canvas-help-btn:active {
+                background: #00ffff;
+                color: #000;
+                transform: scale(0.9);
+            }
+
             .vibe-survivor-hidden {
                 display: none !important;
             }
@@ -1338,6 +1474,11 @@ class VibeSurvivor {
             this.togglePause();
         });
         
+        // Help button event listener
+        document.getElementById('help-btn').addEventListener('click', () => {
+            this.toggleHelp();
+        });
+        
         // Pause menu event listeners
         document.getElementById('resume-btn').addEventListener('click', () => {
             this.togglePause();
@@ -1349,6 +1490,11 @@ class VibeSurvivor {
         
         document.getElementById('pause-restart-btn').addEventListener('click', () => {
             this.restartGame();
+        });
+        
+        // Help menu event listeners
+        document.getElementById('close-help-btn').addEventListener('click', () => {
+            this.toggleHelp();
         });
         
         // Keyboard controls
@@ -1390,6 +1536,8 @@ class VibeSurvivor {
                             // Can't escape game over menu  
                         } else if (this.menuNavigationState.menuType === 'pause') {
                             this.togglePause();
+                        } else if (this.menuNavigationState.menuType === 'help') {
+                            this.toggleHelp();
                         }
                         break;
                 }
@@ -1606,6 +1754,9 @@ class VibeSurvivor {
             if (stats) {
                 stats.style.display = 'flex';
             }
+            
+            // Check if help button should be shown
+            this.checkHelpButtonVisibility();
             
             // Ensure header maintains proper flexbox layout
             header.style.display = 'flex';
@@ -2192,6 +2343,42 @@ class VibeSurvivor {
         }
     }
 
+    toggleHelp() {
+        this.isHelpOpen = !this.isHelpOpen;
+        const helpMenu = document.getElementById('help-menu');
+        
+        if (this.isHelpOpen) {
+            helpMenu.style.display = 'flex';
+            
+            // Initialize keyboard navigation for help menu
+            const closeBtn = document.getElementById('close-help-btn');
+            if (closeBtn) {
+                this.menuNavigationState.active = true;
+                this.menuNavigationState.menuType = 'help';
+                this.menuNavigationState.selectedIndex = 0;
+                this.menuNavigationState.menuButtons = [closeBtn];
+                this.updateMenuSelection();
+            }
+        } else {
+            helpMenu.style.display = 'none';
+            
+            // Deactivate keyboard navigation
+            this.resetMenuNavigation();
+        }
+    }
+
+    checkHelpButtonVisibility() {
+        const helpBtn = document.getElementById('help-btn');
+        if (!helpBtn) return;
+        
+        // Show help button if player level >= 5 OR any weapon level >= 3
+        const shouldShow = this.player.level >= 5 || this.weapons.some(weapon => weapon.level >= 3);
+        
+        // DEBUG: Always show help button for now to test
+        console.log('Help button check:', { playerLevel: this.player.level, weaponLevels: this.weapons.map(w => w.level), shouldShow });
+        helpBtn.style.display = 'flex';
+    }
+
     // Menu Navigation Methods
     initializeMenuNavigation(menuType, buttons) {
         this.menuNavigationState.active = true;
@@ -2499,7 +2686,8 @@ class VibeSurvivor {
                                        target.closest('.upgrade-choice') ||
                                        target.closest('.levelup-modal') ||
                                        target.closest('.pause-menu') ||
-                                       target.closest('#mobile-dash-btn');
+                                       target.closest('#mobile-dash-btn') ||
+                                       target.closest('#help-btn');
             
             if (isInteractiveElement) return;
             
@@ -4323,6 +4511,9 @@ class VibeSurvivor {
             this.player.level++;
             this.player.trailMultiplier = 1.0; // Reset trail length
             
+            // Check if help button should be shown
+            this.checkHelpButtonVisibility();
+            
             // Force trail to shrink back to base length immediately
             const baseMaxLength = 8;
             while (this.player.trail.length > baseMaxLength) {
@@ -4868,6 +5059,9 @@ class VibeSurvivor {
         
         this.player.health = Math.min(this.player.maxHealth, this.player.health + 10);
         this.showUpgradeNotification(choice.name);
+        
+        // Check if help button should be shown
+        this.checkHelpButtonVisibility();
     }
     
     upgradeExistingWeapon(weaponIndex) {
