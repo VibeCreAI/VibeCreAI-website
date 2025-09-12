@@ -3056,26 +3056,11 @@ class VibeSurvivor {
     }
 
     fireGatlingBarrels(weapon, targetEnemy) {
+        // Remove redundant fire rate check - let main game loop handle timing
         const numBarrels = weapon.level;
-        const perBarrelFireRate = 4; // Each barrel fires every 4 frames
         const maxRange = 450;
         
-        // Initialize barrel timers if they don't exist
-        if (!weapon.barrelTimers) {
-            weapon.barrelTimers = [];
-            for (let i = 0; i < numBarrels; i++) {
-                // Stagger the initial timing so barrels don't all fire at once
-                weapon.barrelTimers[i] = this.frameCount - (i * Math.floor(perBarrelFireRate / numBarrels));
-            }
-        }
-        
-        // Add new barrel timers if weapon leveled up
-        while (weapon.barrelTimers.length < numBarrels) {
-            const newBarrelIndex = weapon.barrelTimers.length;
-            weapon.barrelTimers[newBarrelIndex] = this.frameCount - (newBarrelIndex * Math.floor(perBarrelFireRate / numBarrels));
-        }
-        
-        // Find available targets
+        // Find available targets (up to numBarrels)
         const availableTargets = this.enemies
             .map(enemy => {
                 const dx = enemy.x - this.player.x;
@@ -3090,13 +3075,9 @@ class VibeSurvivor {
         
         if (availableTargets.length === 0) return;
         
-        // Fire each barrel independently
+        // Fire all barrels simultaneously - one projectile per target
         for (let barrelIndex = 0; barrelIndex < numBarrels && barrelIndex < availableTargets.length; barrelIndex++) {
-            // Check if this barrel is ready to fire
-            if (this.frameCount - weapon.barrelTimers[barrelIndex] >= perBarrelFireRate) {
-                this.fireSingleBarrel(weapon, availableTargets[barrelIndex], barrelIndex, numBarrels);
-                weapon.barrelTimers[barrelIndex] = this.frameCount;
-            }
+            this.fireSingleBarrel(weapon, availableTargets[barrelIndex], barrelIndex, numBarrels);
         }
     }
 
@@ -4893,7 +4874,13 @@ class VibeSurvivor {
         const weapon = this.weapons[weaponIndex];
         weapon.level++;
         weapon.damage = Math.floor(weapon.damage * 1.3);
-        weapon.fireRate = Math.max(10, weapon.fireRate - 3);
+        // Special handling for merge weapons - don't increase their fire rate
+        if (weapon.isMergeWeapon) {
+            // Keep merge weapons at their original fire rate for consistent timing
+            weapon.fireRate = weapon.fireRate;
+        } else {
+            weapon.fireRate = Math.max(10, weapon.fireRate - 3);
+        }
         
         // Double projectile count at level 2
         if (weapon.level === 2 && !weapon.projectileCount) {
