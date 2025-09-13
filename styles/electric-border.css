@@ -1,0 +1,113 @@
+/**
+ * Electric Border CSS - SVG-based electric distortion effect
+ * Recreating the ReactBits electric-border effect with jagged lightning edges
+ * https://reactbits.dev/animations/electric-border
+ */
+
+/* Electric border effect with SVG distortion */
+.electric-border-enabled {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+/* Multi-layer electric border system - exact ReactBits structure */
+.electric-border-enabled:hover::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* Main stroke layer with SVG filter */
+.electric-border-enabled:hover::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    border: 2px solid var(--electric-color);
+    pointer-events: none;
+    box-sizing: border-box;
+    filter: url(#electric-turbulence);
+    z-index: 1;
+}
+
+/* Glow layers using additional pseudo-elements through CSS */
+.electric-border-enabled:hover {
+    position: relative;
+}
+
+.electric-border-enabled:hover::before {
+    /* Glow layer 1 */
+    border: 2px solid var(--electric-color);
+    opacity: 0.6;
+    filter: blur(calc(0.5px + (2px * 0.25)));
+    z-index: 0;
+}
+
+/* Background glow layer */
+.electric-border-enabled:hover {
+    box-shadow: 
+        0 0 0 2px var(--electric-color),
+        0 0 16px -4px var(--electric-color),
+        0 0 32px -8px var(--electric-color);
+}
+
+/* Electric intensity animation */
+@keyframes electric-intensity {
+    0%, 100% {
+        opacity: 1;
+        filter: url(#electric-turbulence);
+    }
+    50% {
+        opacity: 0.8;
+        filter: url(#electric-turbulence);
+    }
+}
+
+/* Electric pulse animation */
+@keyframes electric-pulse {
+    0%, 100% {
+        opacity: 0.2;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.3;
+        transform: scale(1.02);
+    }
+}
+
+/* Theme colors - CSS custom properties */
+:root {
+    --electric-color: #00ffff; /* Default cyan */
+}
+
+.theme-synthwave {
+    --electric-color: #ff00ff; /* Synthwave pink */
+}
+
+.theme-matrix {
+    --electric-color: #00ff41; /* Matrix green */
+}
+
+.theme-ghost {
+    --electric-color: #b8b8ff; /* Ghost purple */
+}
+
+/* Disable on touch devices for performance */
+@media (hover: none) {
+    .electric-border-enabled::before,
+    .electric-border-enabled::after {
+        display: none;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .electric-border-enabled::before,
+    .electric-border-enabled::after {
+        animation: none !important;
+        transition: opacity 0.2s ease !important;
+    }
+}
