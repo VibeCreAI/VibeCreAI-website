@@ -868,3 +868,99 @@ footer {
     background: #e81123;
     color: #ffffff;
 }
+
+/* ==============================================
+   PIXEL MAZE BACKGROUND SYSTEM
+   ============================================== */
+
+/* Maze Grid Container */
+#mazeGrid {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    overflow: hidden;
+    background: var(--dark-bg);
+}
+
+/* SVG-Based Maze Styles */
+#mazeGrid {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    overflow: hidden;
+}
+
+/* Base maze cell styles for SVG rects */
+.maze-cell.base {
+    fill: rgba(16, 33, 62, 0.15);
+    transition: fill 0.4s ease;
+}
+
+/* Wall styles - theme-aware */
+.maze-cell.blocker {
+    fill: rgba(78, 205, 196, 0.25);
+    transition: fill 0.4s ease;
+}
+
+/* Theme-specific wall adaptations */
+.theme-synthwave .maze-cell.blocker {
+    fill: rgba(255, 0, 255, 0.25);
+}
+
+.theme-matrix .maze-cell.blocker {
+    fill: rgba(0, 255, 65, 0.25);
+}
+
+.theme-ghost .maze-cell.blocker {
+    fill: rgba(184, 184, 255, 0.25);
+}
+
+/* Moving elements - always bright and visible */
+.maze-cell.solid1 { 
+    fill: #ff6b6b !important;
+}
+
+.maze-cell.solid2 { 
+    fill: #4ecdc4 !important;
+}
+
+.maze-cell.solid3 { 
+    fill: #45b7d1 !important;
+}
+
+.maze-cell.solid4 { 
+    fill: #ffeaa7 !important;
+}
+
+
+
+/* Subtle container animation for depth */
+#mazeGrid {
+    animation: maze-ambient 12s ease-in-out infinite;
+}
+
+@keyframes maze-ambient {
+    0%, 100% { 
+        filter: brightness(1) hue-rotate(0deg);
+    }
+    25% { 
+        filter: brightness(1.01) hue-rotate(1deg);
+    }
+    50% { 
+        filter: brightness(0.99) hue-rotate(-0.5deg);
+    }
+    75% { 
+        filter: brightness(1.005) hue-rotate(0.5deg);
+    }
+}
+
+/* Performance optimizations for SVG maze */
+#mazeGrid rect {
+    will-change: fill;
+}
