@@ -639,36 +639,60 @@
             
             // Animation logic
             let currentIndex = 0;
-            
+            let focusInterval = null;
+            let chunkPositions = [];
+
+            // Cache chunk positions to avoid forced reflows
+            function cacheChunkPositions() {
+                chunkPositions = chunkElements.map(chunk => ({
+                    left: chunk.offsetLeft,
+                    top: chunk.offsetTop,
+                    width: chunk.offsetWidth,
+                    height: chunk.offsetHeight
+                }));
+            }
+
             function focusChunk(index) {
+                // Skip if paused for performance
+                if (window.PerformanceManager && window.PerformanceManager.neuralNetworkPaused) {
+                    return;
+                }
+
                 // Remove focus from all chunks
                 chunkElements.forEach(chunk => chunk.classList.remove('focused'));
-                
+
                 // Focus current chunk
-                if (chunkElements[index]) {
+                if (chunkElements[index] && chunkPositions[index]) {
                     const currentChunk = chunkElements[index];
+                    const pos = chunkPositions[index];
                     currentChunk.classList.add('focused');
-                    
-                    // Position focus frame around current chunk
-                    focusFrame.style.left = (currentChunk.offsetLeft - 8) + 'px';
-                    focusFrame.style.top = (currentChunk.offsetTop - 8) + 'px';
-                    focusFrame.style.width = (currentChunk.offsetWidth + 16) + 'px';
-                    focusFrame.style.height = (currentChunk.offsetHeight + 16) + 'px';
+
+                    // Use cached positions to avoid forced reflows
+                    focusFrame.style.left = (pos.left - 8) + 'px';
+                    focusFrame.style.top = (pos.top - 8) + 'px';
+                    focusFrame.style.width = (pos.width + 16) + 'px';
+                    focusFrame.style.height = (pos.height + 16) + 'px';
                     focusFrame.classList.add('active');
                 }
             }
-            
+
             // Start the animation cycle
             function cycleFocus() {
                 focusChunk(currentIndex);
                 currentIndex = (currentIndex + 1) % chunkElements.length;
             }
+
+            // Store interval reference for cleanup
+            window.chunkFocusInterval = null;
+            // Make cycleFocus globally accessible for resuming
+            window.cycleFocus = cycleFocus;
             
             // Initial focus
             setTimeout(() => {
+                cacheChunkPositions(); // Cache positions once
                 cycleFocus();
                 // Continue cycling every 2 seconds
-                setInterval(cycleFocus, 2000);
+                window.chunkFocusInterval = setInterval(cycleFocus, 2000);
             }, 500);
         }
 
@@ -681,8 +705,8 @@
                 console.log('🛑 PAUSING: Background animations for game performance...');
                 
                 // Force pause pixel maze background
-                if (window.pixelMaze && window.pixelMaze.isRunning) {
-                    window.pixelMaze.destroy();
+                if (window.pixelMaze && window.pixelMaze.isRunning()) {
+                    window.pixelMaze.cleanup();
                     console.log('💀 Pixel maze animation stopped');
                 }
                 this.neuralNetworkPaused = true;
@@ -692,6 +716,13 @@
                     clearTimeout(window.taglineTimeout);
                     window.taglineTimeout = null;
                     console.log('💀 Tagline animation stopped');
+                }
+
+                // Pause chunk focus animation
+                if (window.chunkFocusInterval) {
+                    clearInterval(window.chunkFocusInterval);
+                    window.chunkFocusInterval = null;
+                    console.log('💀 Chunk focus animation stopped');
                 }
                 
 
@@ -705,11 +736,17 @@
                 // Resume pixel maze background
                 if (this.neuralNetworkPaused && window.pixelMaze) {
                     this.neuralNetworkPaused = false;
-                    
+
                     // Restart pixel maze with current state
-                    if (!window.pixelMaze.isRunning) {
+                    if (!window.pixelMaze.isRunning()) {
                         window.pixelMaze.init();
                     }
+                }
+
+                // Resume chunk focus animation
+                if (!window.chunkFocusInterval && window.cycleFocus) {
+                    window.chunkFocusInterval = setInterval(window.cycleFocus, 2000);
+                    console.log('✅ Chunk focus animation resumed');
                 }
                 
 
