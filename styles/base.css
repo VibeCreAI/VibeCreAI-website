@@ -3,11 +3,27 @@
  * Core styles, variables, and foundational elements
  */
 
-/* Font Face Declaration */
+/* Font Face Declarations */
 @font-face {
     font-family: 'Born2bSportyFont';
     src: url('../fonts/Born2bSportyFS.otf') format('opentype');
     font-display: swap; /* Fallback if font fails to load */
+}
+
+@font-face {
+    font-family: 'MinecraftFont';
+    src: url('../fonts/MinecraftRegular.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'MinecraftFont';
+    src: url('../fonts/MinecraftItalic.otf') format('opentype');
+    font-weight: normal;
+    font-style: italic;
+    font-display: swap;
 }
 
 /* CSS Custom Properties (Variables) */
@@ -37,7 +53,7 @@ html {
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'MinecraftFont', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: var(--dark-bg);
     color: var(--text-color);
     min-width: 380px; /* Minimum website width */
@@ -73,6 +89,7 @@ body {
 }
 
 .section-title {
+    font-family: 'Born2bSportyFont', monospace;
     font-size: 3rem;
     text-align: center;
     margin-bottom: 60px;
@@ -82,6 +99,7 @@ body {
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     display: inline-block;
     width: 100%;
+    letter-spacing: 0.05em;
 }
 
 .section-subtitle {
@@ -99,9 +117,9 @@ body {
     text-align: center;
     margin-bottom: 40px;
     margin-top: -30px;
-    color: var(--primary-color);
+    color: rgba(255, 255, 255, 0.8);
+    font-style: italic;
     letter-spacing: 0.05em;
-    opacity: 0.9;
 }
 
 /* Loading Screen Base Styles */
@@ -165,6 +183,8 @@ body {
 
 /* Base Button Styles */
 .cta-button {
+    font-family: 'Born2bSportyFont', monospace;
+    font-size: 1.1rem;
     padding: 15px 40px;
     background: transparent;
     color: var(--primary-color);

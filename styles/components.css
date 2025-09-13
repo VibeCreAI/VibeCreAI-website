@@ -58,11 +58,14 @@ nav {
 }
 
 .nav-links a {
+    font-family: 'Born2bSportyFont', monospace;
+    font-size: 1.3rem;
     color: var(--text-color);
     text-decoration: none;
     position: relative;
     transition: all 0.3s ease;
     padding: 5px 10px;
+    letter-spacing: 0.05em;
 }
 
 .nav-links a::before {
@@ -294,6 +297,7 @@ body.terminal-active .cta-container {
 }
 
 .vibe-icon {
+    font-family: 'Born2bSportyFont', monospace;
     font-size: 0.9rem;
     font-weight: bold;
     color: var(--primary-color);
@@ -307,6 +311,7 @@ body.terminal-active .cta-container {
 }
 
 .vibe-tooltip {
+    font-family: 'Born2bSportyFont', monospace;
     position: absolute;
     bottom: 70px;
     right: 0;
@@ -386,9 +391,11 @@ body.terminal-active .cta-container {
 }
 
 .about-card h3 {
+    font-family: 'Born2bSportyFont', monospace;
     font-size: 1.5rem;
     margin-bottom: 15px;
     color: var(--primary-color);
+    letter-spacing: 0.05em;
 }
 
 /* Apps Section */
@@ -478,9 +485,11 @@ body.terminal-active .cta-container {
 }
 
 .app-title {
+    font-family: 'Born2bSportyFont', monospace;
     font-size: 1.5rem;
     margin-bottom: 10px;
     color: var(--primary-color);
+    letter-spacing: 0.05em;
 }
 
 .app-description {
@@ -492,6 +501,8 @@ body.terminal-active .cta-container {
 }
 
 .app-button {
+    font-family: 'Born2bSportyFont', monospace;
+    font-size: 1rem;
     padding: 10px 30px;
     background: transparent;
     border: 1px solid var(--primary-color);
@@ -501,6 +512,7 @@ body.terminal-active .cta-container {
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
+    letter-spacing: 0.05em;
 }
 
 .app-button:hover {
@@ -547,7 +559,7 @@ body.terminal-active .cta-container {
 }
 
 .game-button {
-    font-size: 0.85rem;
+    font-size: 1rem;
     font-weight: bold;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -631,6 +643,8 @@ body.terminal-active .cta-container {
 }
 
 .form-group button {
+    font-family: 'Born2bSportyFont', monospace;
+    font-size: 1.1rem;
     padding: 15px 40px;
     background: transparent;
     color: var(--primary-color);
@@ -691,12 +705,14 @@ body.terminal-active .cta-container {
 
 /* Footer */
 footer {
+    font-family: 'Born2bSportyFont', monospace;
     padding: 30px 50px;
     background: rgba(0, 0, 0, 0.8);
     text-align: center;
     border-top: 1px solid var(--primary-color);
     position: relative;
     z-index: 10;
+    letter-spacing: 0.05em;
 }
 
 /* Terminal Interface */
