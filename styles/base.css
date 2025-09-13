@@ -280,6 +280,11 @@ body {
     opacity: 0.6;
 }
 
+/* Tagline Container */
+.tagline-container {
+    cursor: pointer;
+}
+
 /* Particle System Base */
 .particle {
     position: fixed;
@@ -308,4 +313,138 @@ body {
     pointer-events: none;
     z-index: 2;
     opacity: 0.1;
+}
+
+/* Dinosaur Animation Styles */
+.dino-container {
+    position: relative;
+    height: 25px;
+    margin: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    animation: walkLeftRight 8s linear infinite;
+}
+
+.dino-container:hover {
+    animation-play-state: paused;
+}
+
+.dino-scene {
+    position: relative;
+    font-size: 3px;
+}
+
+.dino-scene > * {
+    background: #e0e0e0;
+    height: 0.5em;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 0.5em;
+    pointer-events: none;
+}
+
+.dino {
+    animation: dino 0.25s both steps(1) infinite;
+    width: 1em;
+    height: 1em;
+}
+
+.eye {
+    animation: eye 4s both steps(1) infinite;
+    width: 1em;
+    height: 1em;
+}
+
+.mouth {
+    animation: mouth 4s both steps(1) infinite;
+    width: 1em;
+    height: 1em;
+}
+
+
+
+/* Walking animation */
+@keyframes walkLeftRight {
+    0% { transform: translateX(-150px) scaleX(1); }
+    50% { transform: translateX(150px) scaleX(1); }
+    50.1% { transform: translateX(150px) scaleX(-1); }
+    100% { transform: translateX(-150px) scaleX(-1); }
+}
+
+/* Dinosaur pixel art keyframes */
+@keyframes eye {
+    0% {
+        box-shadow: 3em -9em 0 0 #e0e0e0;
+    }
+    5% {
+        box-shadow: 0 0 0 0 #e0e0e0;
+    }
+    50% {
+        box-shadow: 0em 0em 0 0 #e0e0e0;
+    }
+}
+
+@keyframes mouth {
+    0% {
+        box-shadow: 6em -4em 0 0 #e0e0e0, 7em -4em 0 0 #e0e0e0, 8em -4em 0 0 #e0e0e0;
+    }
+    50% {
+        box-shadow: 5em -3em 0 0 #e0e0e0, 6em -3em 0 0 #e0e0e0, 7em -3em 0 0 #e0e0e0, 8em -3em 0 0 #e0e0e0;
+    }
+}
+
+
+
+
+
+@keyframes dino {
+    0% {
+        box-shadow: 
+        2em -10em 0 0 #e0e0e0, 3em -10em 0 0 #e0e0e0, 4em -10em 0 0 #e0e0e0, 5em -10em 0 0 #e0e0e0, 6em -10em 0 0 #e0e0e0, 7em -10em 0 0 #e0e0e0, 8em -10em 0 0 #e0e0e0, 9em -10em 0 0 #e0e0e0,
+        1em -9em 0 0 #e0e0e0, 2em -9em 0 0 #e0e0e0, 4em -9em 0 0 #e0e0e0, 5em -9em 0 0 #e0e0e0, 6em -9em 0 0 #e0e0e0, 7em -9em 0 0 #e0e0e0, 8em -9em 0 0 #e0e0e0, 9em -9em 0 0 #e0e0e0, 10em -9em 0 0 #e0e0e0,
+        1em -8em 0 0 #e0e0e0, 2em -8em 0 0 #e0e0e0, 3em -8em 0 0 #e0e0e0, 4em -8em 0 0 #e0e0e0, 5em -8em 0 0 #e0e0e0, 6em -8em 0 0 #e0e0e0, 7em -8em 0 0 #e0e0e0, 8em -8em 0 0 #e0e0e0, 9em -8em 0 0 #e0e0e0, 10em -8em 0 0 #e0e0e0,
+        1em -7em 0 0 #e0e0e0, 2em -7em 0 0 #e0e0e0, 3em -7em 0 0 #e0e0e0, 4em -7em 0 0 #e0e0e0, 5em -7em 0 0 #e0e0e0, 6em -7em 0 0 #e0e0e0, 7em -7em 0 0 #e0e0e0, 8em -7em 0 0 #e0e0e0, 9em -7em 0 0 #e0e0e0, 10em -7em 0 0 #e0e0e0,
+        1em -6em 0 0 #e0e0e0, 2em -6em 0 0 #e0e0e0, 3em -6em 0 0 #e0e0e0, 4em -6em 0 0 #e0e0e0, 5em -6em 0 0 #e0e0e0, 6em -6em 0 0 #e0e0e0, 7em -6em 0 0 #e0e0e0, 8em -6em 0 0 #e0e0e0, 9em -6em 0 0 #e0e0e0, 10em -6em 0 0 #e0e0e0,
+        1em -5em 0 0 #e0e0e0, 2em -5em 0 0 #e0e0e0, 3em -5em 0 0 #e0e0e0, 4em -5em 0 0 #e0e0e0, 5em -5em 0 0 #e0e0e0,
+        0em -4em 0 0 #e0e0e0, 1em -4em 0 0 #e0e0e0, 2em -4em 0 0 #e0e0e0, 3em -4em 0 0 #e0e0e0, 4em -4em 0 0 #e0e0e0, 5em -4em 0 0 #e0e0e0,
+        -9em -3em 0 0 #e0e0e0, -3em -3em 0 0 #e0e0e0, -2em -3em 0 0 #e0e0e0, -1em -3em 0 0 #e0e0e0, 0em -3em 0 0 #e0e0e0, 1em -3em 0 0 #e0e0e0, 2em -3em 0 0 #e0e0e0, 3em -3em 0 0 #e0e0e0, 4em -3em 0 0 #e0e0e0,
+        -9em -2em 0 0 #e0e0e0, -2em -2em 0 0 #e0e0e0, -1em -2em 0 0 #e0e0e0, 0em -2em 0 0 #e0e0e0, 1em -2em 0 0 #e0e0e0, 2em -2em 0 0 #e0e0e0, 3em -2em 0 0 #e0e0e0, 4em -2em 0 0 #e0e0e0,
+        -9em -1em 0 0 #e0e0e0, -8em -1em 0 0 #e0e0e0, -3em -1em 0 0 #e0e0e0, -2em -1em 0 0 #e0e0e0, -1em -1em 0 0 #e0e0e0, 0em -1em 0 0 #e0e0e0, 1em -1em 0 0 #e0e0e0, 2em -1em 0 0 #e0e0e0, 3em -1em 0 0 #e0e0e0, 4em -1em 0 0 #e0e0e0, 5em -1em 0 0 #e0e0e0, 6em -1em 0 0 #e0e0e0,
+        -9em 0em 0 0 #e0e0e0, -8em 0em 0 0 #e0e0e0, -7em 0em 0 0 #e0e0e0, -4em 0em 0 0 #e0e0e0, -3em 0em 0 0 #e0e0e0, -2em 0em 0 0 #e0e0e0, -1em 0em 0 0 #e0e0e0, 0em 0em 0 0 #e0e0e0, 1em 0em 0 0 #e0e0e0, 2em 0em 0 0 #e0e0e0, 3em 0em 0 0 #e0e0e0, 4em 0em 0 0 #e0e0e0, 6em 0em 0 0 #e0e0e0,
+        -9em 1em 0 0 #e0e0e0, -8em 1em 0 0 #e0e0e0, -7em 1em 0 0 #e0e0e0, -6em 1em 0 0 #e0e0e0, -5em 1em 0 0 #e0e0e0, -4em 1em 0 0 #e0e0e0, -3em 1em 0 0 #e0e0e0, -2em 1em 0 0 #e0e0e0, -1em 1em 0 0 #e0e0e0, 0em 1em 0 0 #e0e0e0, 1em 1em 0 0 #e0e0e0, 2em 1em 0 0 #e0e0e0, 3em 1em 0 0 #e0e0e0, 4em 1em 0 0 #e0e0e0,
+        -8em 2em 0 0 #e0e0e0, -7em 2em 0 0 #e0e0e0, -6em 2em 0 0 #e0e0e0, -5em 2em 0 0 #e0e0e0, -4em 2em 0 0 #e0e0e0, -3em 2em 0 0 #e0e0e0, -2em 2em 0 0 #e0e0e0, -1em 2em 0 0 #e0e0e0, 0em 2em 0 0 #e0e0e0, 1em 2em 0 0 #e0e0e0, 2em 2em 0 0 #e0e0e0, 3em 2em 0 0 #e0e0e0, 4em 2em 0 0 #e0e0e0,
+        -7em 3em 0 0 #e0e0e0, -6em 3em 0 0 #e0e0e0, -5em 3em 0 0 #e0e0e0, -4em 3em 0 0 #e0e0e0, -3em 3em 0 0 #e0e0e0, -2em 3em 0 0 #e0e0e0, -1em 3em 0 0 #e0e0e0, 0em 3em 0 0 #e0e0e0, 1em 3em 0 0 #e0e0e0, 2em 3em 0 0 #e0e0e0, 3em 3em 0 0 #e0e0e0,
+        -6em 4em 0 0 #e0e0e0, -5em 4em 0 0 #e0e0e0, -4em 4em 0 0 #e0e0e0, -3em 4em 0 0 #e0e0e0, -2em 4em 0 0 #e0e0e0, -1em 4em 0 0 #e0e0e0, 0em 4em 0 0 #e0e0e0, 1em 4em 0 0 #e0e0e0, 2em 4em 0 0 #e0e0e0,
+        -5em 5em 0 0 #e0e0e0, -4em 5em 0 0 #e0e0e0, -3em 5em 0 0 #e0e0e0, -2em 5em 0 0 #e0e0e0, -1em 5em 0 0 #e0e0e0, 0em 5em 0 0 #e0e0e0, 1em 5em 0 0 #e0e0e0,
+        -4em 6em 0 0 #e0e0e0, -3em 6em 0 0 #e0e0e0, 0em 6em 0 0 #e0e0e0, 1em 6em 0 0 #e0e0e0,
+        -3em 7em 0 0 #e0e0e0, -2em 7em 0 0 #e0e0e0, 1em 7em 0 0 #e0e0e0,
+        1em 8em 0 0 #e0e0e0,
+        1em 9em 0 0 #e0e0e0, 2em 9em 0 0 #e0e0e0;
+    }
+    50% {
+        box-shadow:
+        2em -10em 0 0 #e0e0e0, 3em -10em 0 0 #e0e0e0, 4em -10em 0 0 #e0e0e0, 5em -10em 0 0 #e0e0e0, 6em -10em 0 0 #e0e0e0, 7em -10em 0 0 #e0e0e0, 8em -10em 0 0 #e0e0e0, 9em -10em 0 0 #e0e0e0,
+        1em -9em 0 0 #e0e0e0, 2em -9em 0 0 #e0e0e0, 4em -9em 0 0 #e0e0e0, 5em -9em 0 0 #e0e0e0, 6em -9em 0 0 #e0e0e0, 7em -9em 0 0 #e0e0e0, 8em -9em 0 0 #e0e0e0, 9em -9em 0 0 #e0e0e0, 10em -9em 0 0 #e0e0e0,
+        1em -8em 0 0 #e0e0e0, 2em -8em 0 0 #e0e0e0, 3em -8em 0 0 #e0e0e0, 4em -8em 0 0 #e0e0e0, 5em -8em 0 0 #e0e0e0, 6em -8em 0 0 #e0e0e0, 7em -8em 0 0 #e0e0e0, 8em -8em 0 0 #e0e0e0, 9em -8em 0 0 #e0e0e0, 10em -8em 0 0 #e0e0e0,
+        1em -7em 0 0 #e0e0e0, 2em -7em 0 0 #e0e0e0, 3em -7em 0 0 #e0e0e0, 4em -7em 0 0 #e0e0e0, 5em -7em 0 0 #e0e0e0, 6em -7em 0 0 #e0e0e0, 7em -7em 0 0 #e0e0e0, 8em -7em 0 0 #e0e0e0, 9em -7em 0 0 #e0e0e0, 10em -7em 0 0 #e0e0e0,
+        1em -6em 0 0 #e0e0e0, 2em -6em 0 0 #e0e0e0, 3em -6em 0 0 #e0e0e0, 4em -6em 0 0 #e0e0e0, 5em -6em 0 0 #e0e0e0, 6em -6em 0 0 #e0e0e0, 7em -6em 0 0 #e0e0e0, 8em -6em 0 0 #e0e0e0, 9em -6em 0 0 #e0e0e0, 10em -6em 0 0 #e0e0e0,
+        1em -5em 0 0 #e0e0e0, 2em -5em 0 0 #e0e0e0, 3em -5em 0 0 #e0e0e0, 4em -5em 0 0 #e0e0e0, 5em -5em 0 0 #e0e0e0,
+        -3em -4em 0 0 #e0e0e0, -2em -4em 0 0 #e0e0e0, 0em -4em 0 0 #e0e0e0, 1em -4em 0 0 #e0e0e0, 2em -4em 0 0 #e0e0e0, 3em -4em 0 0 #e0e0e0, 4em -4em 0 0 #e0e0e0, 5em -4em 0 0 #e0e0e0,
+        -9em -3em 0 0 #e0e0e0, -2em -3em 0 0 #e0e0e0, -1em -3em 0 0 #e0e0e0, 0em -3em 0 0 #e0e0e0, 1em -3em 0 0 #e0e0e0, 2em -3em 0 0 #e0e0e0, 3em -3em 0 0 #e0e0e0, 4em -3em 0 0 #e0e0e0,
+        -9em -2em 0 0 #e0e0e0, -2em -2em 0 0 #e0e0e0, -1em -2em 0 0 #e0e0e0, 0em -2em 0 0 #e0e0e0, 1em -2em 0 0 #e0e0e0, 2em -2em 0 0 #e0e0e0, 3em -2em 0 0 #e0e0e0, 4em -2em 0 0 #e0e0e0,
+        -9em -1em 0 0 #e0e0e0, -8em -1em 0 0 #e0e0e0, -3em -1em 0 0 #e0e0e0, -2em -1em 0 0 #e0e0e0, -1em -1em 0 0 #e0e0e0, 0em -1em 0 0 #e0e0e0, 1em -1em 0 0 #e0e0e0, 2em -1em 0 0 #e0e0e0, 3em -1em 0 0 #e0e0e0, 4em -1em 0 0 #e0e0e0,
+        -9em 0em 0 0 #e0e0e0, -8em 0em 0 0 #e0e0e0, -7em 0em 0 0 #e0e0e0, -4em 0em 0 0 #e0e0e0, -3em 0em 0 0 #e0e0e0, -2em 0em 0 0 #e0e0e0, -1em 0em 0 0 #e0e0e0, 0em 0em 0 0 #e0e0e0, 1em 0em 0 0 #e0e0e0, 2em 0em 0 0 #e0e0e0, 3em 0em 0 0 #e0e0e0, 4em 0em 0 0 #e0e0e0, 5em 0em 0 0 #e0e0e0, 6em 0em 0 0 #e0e0e0,
+        -9em 1em 0 0 #e0e0e0, -8em 1em 0 0 #e0e0e0, -7em 1em 0 0 #e0e0e0, -6em 1em 0 0 #e0e0e0, -5em 1em 0 0 #e0e0e0, -4em 1em 0 0 #e0e0e0, -3em 1em 0 0 #e0e0e0, -2em 1em 0 0 #e0e0e0, -1em 1em 0 0 #e0e0e0, 0em 1em 0 0 #e0e0e0, 1em 1em 0 0 #e0e0e0, 2em 1em 0 0 #e0e0e0, 3em 1em 0 0 #e0e0e0, 4em 1em 0 0 #e0e0e0, 6em 1em 0 0 #e0e0e0,
+        -8em 2em 0 0 #e0e0e0, -7em 2em 0 0 #e0e0e0, -6em 2em 0 0 #e0e0e0, -5em 2em 0 0 #e0e0e0, -4em 2em 0 0 #e0e0e0, -3em 2em 0 0 #e0e0e0, -2em 2em 0 0 #e0e0e0, -1em 2em 0 0 #e0e0e0, 0em 2em 0 0 #e0e0e0, 1em 2em 0 0 #e0e0e0, 2em 2em 0 0 #e0e0e0, 3em 2em 0 0 #e0e0e0, 4em 2em 0 0 #e0e0e0,
+        -7em 3em 0 0 #e0e0e0, -6em 3em 0 0 #e0e0e0, -5em 3em 0 0 #e0e0e0, -4em 3em 0 0 #e0e0e0, -3em 3em 0 0 #e0e0e0, -2em 3em 0 0 #e0e0e0, -1em 3em 0 0 #e0e0e0, 0em 3em 0 0 #e0e0e0, 1em 3em 0 0 #e0e0e0, 2em 3em 0 0 #e0e0e0, 3em 3em 0 0 #e0e0e0,
+        -6em 4em 0 0 #e0e0e0, -5em 4em 0 0 #e0e0e0, -4em 4em 0 0 #e0e0e0, -3em 4em 0 0 #e0e0e0, -2em 4em 0 0 #e0e0e0, -1em 4em 0 0 #e0e0e0, 0em 4em 0 0 #e0e0e0, 1em 4em 0 0 #e0e0e0, 2em 4em 0 0 #e0e0e0,
+        -5em 5em 0 0 #e0e0e0, -4em 5em 0 0 #e0e0e0, -3em 5em 0 0 #e0e0e0, -2em 5em 0 0 #e0e0e0, -1em 5em 0 0 #e0e0e0, 0em 5em 0 0 #e0e0e0, 1em 5em 0 0 #e0e0e0,
+        -4em 6em 0 0 #e0e0e0, -3em 6em 0 0 #e0e0e0, -2em 6em 0 0 #e0e0e0, 1em 6em 0 0 #e0e0e0, 2em 6em 0 0 #e0e0e0,
+        -4em 7em 0 0 #e0e0e0, -3em 7em 0 0 #e0e0e0,
+        -4em 8em 0 0 #e0e0e0,
+        -4em 9em 0 0 #e0e0e0, -3em 9em 0 0 #e0e0e0;
+    }
 }

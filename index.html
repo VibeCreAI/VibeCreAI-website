@@ -176,6 +176,16 @@
 <p class="hero-subtitle" id="hero-subtitle"></p>
             <div class="tagline-container">
                 <div class="tagline" id="tagline"></div>
+                
+                <!-- Dinosaur Animation -->
+                <div class="dino-container" id="dino-container">
+                    <div class="dino-scene">
+                        <div class="dino"></div>
+                        <div class="eye"></div>
+                        <div class="mouth"></div>
+                    </div>
+                </div>
+                
                 <div class="source-code-terminal" id="source-code-terminal">
                     <div class="terminal-header">
                         <div class="terminal-title">Click '/next' to navigate:</div>
@@ -1712,16 +1722,17 @@
                 title: "TECH STACK",
                 prompt: "cat tech_stack.js",
                 content: `const techStack = {
-    "frontend": ["HTML5", "CSS3", "JavaScript"],
-    "animations": "Anime.js",
+    "frontend": ["HTML5", "CSS3", "Vanilla JS"],
+    "animations": ["Anime.js", "CSS Keyframes"],
     "effects": [
         "Neural Network Canvas",
+        "Pixel Art Dinosaur",
         "Matrix Rain Effect",
-        "Particle System",
-        "Custom Cursor"
+        "Interactive Terminal"
     ],
-    "ai_tools": ["Claude", "Cursor IDE"],
-    "deployment": "GitHub Pages"
+    "icons": "Grommet Icons (SVG)",
+    "ai_tools": ["Claude Code", "Cursor IDE"],
+    "deployment": "Vercel + Custom Domain"
 };`
             },
             {
@@ -1921,8 +1932,9 @@ Email: contact@vibecreai.com`
             }
         }, {passive: false});
         
-        // Tagline click handler
-        tagline.addEventListener('click', (e) => {
+        // Tagline container click handler (includes dinosaur area)
+        const taglineContainer = document.querySelector('.tagline-container');
+        taglineContainer.addEventListener('click', (e) => {
             e.preventDefault();
             
             if (!terminalOpen) {
@@ -2038,6 +2050,7 @@ Email: contact@vibecreai.com`
                 closeTerminalFunction();
             }
         });
+        
         
         // Close terminal function
         function closeTerminalFunction() {
