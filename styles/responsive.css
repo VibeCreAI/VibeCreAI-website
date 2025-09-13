@@ -40,8 +40,8 @@
     
     body.terminal-active .cta-container {
         z-index: 1002;
-        margin-bottom: 30px;
-        padding-top: 20px;
+        margin-bottom: 20px; /* Keep consistent with desktop (was 30px) */
+        /* padding-top: 20px; - Removed to maintain consistent height */
     }
     
     body.terminal-active .cta-button {
@@ -197,8 +197,8 @@
     
     body.terminal-active .cta-container {
         z-index: 1002;
-        margin-bottom: 30px;
-        padding-top: 20px;
+        margin-bottom: 20px; /* Keep consistent with desktop (was 30px) */
+        /* padding-top: 20px; - Removed to maintain consistent height */
     }
     
     body.terminal-active .cta-button {
@@ -273,7 +273,7 @@
     
     .tagline {
         font-size: 1.14rem; /* 95% of 1.2rem */
-        min-height: 2.375rem; /* 95% of 2.5rem */
+        /* min-height removed to maintain consistent dinosaur positioning across all window sizes */
     }
     
     .cta-button {

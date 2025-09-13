@@ -327,6 +327,13 @@ body {
     animation: walkLeftRight 8s linear infinite;
 }
 
+/* Adjust dinosaur position for desktop to compensate for layout shift */
+@media (min-width: 769px) {
+    .dino-container {
+        margin-bottom: 7px; /* Move dinosaur 5px higher on desktop */
+    }
+}
+
 .dino-container:hover {
     animation-play-state: paused;
 }

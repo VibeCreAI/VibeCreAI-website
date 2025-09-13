@@ -362,19 +362,10 @@
             }
         });
 
-        // Mobile Detection
+        // Mobile Detection - REMOVED to prevent height changes at any breakpoint
         function isMobileDevice() {
-            // Check for mobile user agents
-            const mobileUserAgents = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            
-            // Check for touch devices, but exclude desktop touch screens
-            const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-            
-            // More specific mobile detection - combine user agent with screen size and touch
-            const isSmallScreen = window.innerWidth <= 768 && window.innerHeight <= 1024;
-            
-            // Return true only if it's actually a mobile device
-            return mobileUserAgents || (isTouchDevice && isSmallScreen);
+            // Always return false to maintain consistent layout across all window sizes
+            return false;
         }
 
 

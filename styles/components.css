@@ -9,6 +9,8 @@ header {
     top: 0;
     width: 100%;
     padding: 20px 20px;
+    min-height: 80px; /* Fixed height to maintain consistency regardless of hamburger menu */
+    box-sizing: border-box;
     z-index: 1000;
     backdrop-filter: blur(10px);
     background: rgba(0, 0, 0, 0.5);
