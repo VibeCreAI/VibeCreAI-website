@@ -1474,8 +1474,15 @@ class VibeSurvivor {
             this.togglePause();
         });
         
-        // Help button event listener
-        document.getElementById('help-btn').addEventListener('click', () => {
+        // Help button event listeners (both click and touch for mobile support)
+        const helpBtn = document.getElementById('help-btn');
+        helpBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.toggleHelp();
+        });
+        helpBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             this.toggleHelp();
         });
         
@@ -1497,8 +1504,15 @@ class VibeSurvivor {
             this.restartGame();
         });
         
-        // Help menu event listeners
-        document.getElementById('close-help-btn').addEventListener('click', () => {
+        // Help menu event listeners (both click and touch for mobile support)
+        const closeHelpBtn = document.getElementById('close-help-btn');
+        closeHelpBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.toggleHelp();
+        });
+        closeHelpBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             this.toggleHelp();
         });
         
