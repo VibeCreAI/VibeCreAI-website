@@ -751,7 +751,7 @@ class VibeSurvivor {
             .vibe-survivor-header h2 {
                 color: #00ffff;
                 margin: 0;
-                font-family: 'Arial', sans-serif;
+                font-family: 'MinecraftFont', Arial, sans-serif;
                 font-weight: bold;
                 text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
             }
@@ -858,7 +858,7 @@ class VibeSurvivor {
                 color: #00ffff;
                 font-size: 32px;
                 margin-bottom: 20px;
-                font-family: 'Arial Black', sans-serif;
+                font-family: 'MinecraftFont', 'Arial Black', sans-serif;
                 animation: neonPulse 2s ease-in-out infinite;
             }
 
@@ -866,14 +866,14 @@ class VibeSurvivor {
                 color: rgba(255, 255, 255, 0.8);
                 margin-bottom: 30px;
                 font-size: 16px;
-                font-family: 'Courier New', monospace;
+                font-family: 'MinecraftFont', 'Courier New', monospace;
             }
 
             .controls-info {
                 color: rgba(255, 255, 255, 0.8) !important;
                 margin-top: 20px !important;
                 font-size: 16px !important;
-                font-family: 'Courier New', monospace !important;
+                font-family: 'MinecraftFont', 'Courier New', monospace !important;
             }
 
             .survivor-btn {
@@ -886,7 +886,7 @@ class VibeSurvivor {
                 transition: all 0.3s ease;
                 text-transform: uppercase;
                 letter-spacing: 2px;
-                font-family: 'Arial', sans-serif;
+                font-family: 'MinecraftFont', Arial, sans-serif;
                 border-radius: 30px;
                 position: relative;
                 overflow: hidden;
@@ -1093,13 +1093,13 @@ class VibeSurvivor {
                 margin-bottom: 25px;
                 text-shadow: 0 0 20px rgba(255, 0, 102, 0.8),
                             0 0 40px rgba(255, 0, 102, 0.5);
-                font-family: 'Arial Black', sans-serif;
+                font-family: 'MinecraftFont', 'Arial Black', sans-serif;
                 animation: neonPulse 2s ease-in-out infinite;
             }
 
             .final-stats {
                 margin: 20px 0 30px;
-                font-family: 'Courier New', monospace;
+                font-family: 'MinecraftFont', 'Courier New', monospace;
             }
 
             .stat-row {
@@ -2826,20 +2826,37 @@ class VibeSurvivor {
     }
     
     setupDashButton(dashBtn) {
+        // Touch events for mobile
         dashBtn.addEventListener('touchstart', (e) => {
             e.preventDefault();
             e.stopPropagation(); // Prevent event from bubbling to modal
             this.touchControls.dashButton.pressed = true;
         }, { passive: false });
         
-        const endDash = (e) => {
+        const endDashTouch = (e) => {
             e.preventDefault();
             e.stopPropagation(); // Prevent event from bubbling to modal
             this.touchControls.dashButton.pressed = false;
         };
         
-        dashBtn.addEventListener('touchend', endDash, { passive: false });
-        dashBtn.addEventListener('touchcancel', endDash, { passive: false });
+        dashBtn.addEventListener('touchend', endDashTouch, { passive: false });
+        dashBtn.addEventListener('touchcancel', endDashTouch, { passive: false });
+        
+        // Mouse events for desktop
+        dashBtn.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            e.stopPropagation(); // Prevent event from bubbling to modal
+            this.touchControls.dashButton.pressed = true;
+        });
+        
+        const endDashMouse = (e) => {
+            e.preventDefault();
+            e.stopPropagation(); // Prevent event from bubbling to modal
+            this.touchControls.dashButton.pressed = false;
+        };
+        
+        dashBtn.addEventListener('mouseup', endDashMouse);
+        dashBtn.addEventListener('mouseleave', endDashMouse);
     }
     
     fireWeapon(weapon) {
@@ -4941,7 +4958,7 @@ class VibeSurvivor {
                 border: none !important;
                 padding: 15px !important;
                 color: #ffffff !important;
-                font-family: Arial, sans-serif !important;
+                font-family: 'MinecraftFont', Arial, sans-serif !important;
                 text-align: center !important;
                 display: block !important;
                 pointer-events: auto !important;
@@ -8479,7 +8496,7 @@ class VibeSurvivor {
                 color: white !important;
                 max-width: 400px !important;
                 box-shadow: 0 0 30px rgba(0, 255, 255, 0.5) !important;
-                font-family: Arial, sans-serif !important;
+                font-family: 'MinecraftFont', Arial, sans-serif !important;
             ">
                 <div style="
                     color: #ff0066 !important;
@@ -8695,7 +8712,7 @@ class VibeSurvivor {
                 color: white !important;
                 max-width: 400px !important;
                 box-shadow: 0 0 30px rgba(0, 255, 0, 0.5) !important;
-                font-family: Arial, sans-serif !important;
+                font-family: 'MinecraftFont', Arial, sans-serif !important;
             ">
                 <div style="
                     color: #00ff00 !important;
