@@ -1,0 +1,88 @@
+/**
+ * Pixel Hover Effect CSS - SVG-based random pixel fill
+ * Creates individual pixel elements that appear randomly like the maze system
+ */
+
+.pixel-hover-enabled {
+    position: relative;
+    border: 1px solid rgba(0, 255, 255, 0.3);
+    transition: border 0.5s ease;
+    overflow: hidden;
+}
+
+.pixel-hover-enabled:hover {
+    border: 1px solid rgba(0, 255, 255, 0.6);
+}
+
+/* Container for pixel SVG */
+.pixel-hover-enabled .pixel-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Individual pixel styles */
+.pixel-hover-enabled .pixel-rect {
+    opacity: 0;
+    fill: rgba(0, 255, 255, 0.15);
+    transition: opacity 0.1s ease;
+}
+
+.pixel-hover-enabled .pixel-rect.active {
+    opacity: 1;
+}
+
+/* Theme variations */
+.theme-synthwave .pixel-hover-enabled {
+    border-color: rgba(255, 0, 255, 0.3);
+}
+
+.theme-synthwave .pixel-hover-enabled .pixel-rect {
+    fill: rgba(255, 0, 255, 0.15);
+}
+
+.theme-matrix .pixel-hover-enabled {
+    border-color: rgba(0, 255, 65, 0.3);
+}
+
+.theme-matrix .pixel-hover-enabled .pixel-rect {
+    fill: rgba(0, 255, 65, 0.15);
+}
+
+.theme-ghost .pixel-hover-enabled {
+    border-color: rgba(184, 184, 255, 0.3);
+}
+
+.theme-ghost .pixel-hover-enabled .pixel-rect {
+    fill: rgba(184, 184, 255, 0.15);
+}
+
+/* Text visibility */
+.pixel-hover-enabled:hover * {
+    color: #ffffff;
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 0 6px rgba(0, 0, 0, 0.9);
+}
+
+/* Mobile optimization */
+@media (hover: none) {
+    .pixel-hover-enabled .pixel-svg {
+        display: none;
+    }
+    .pixel-hover-enabled:hover {
+        background: rgba(0, 255, 255, 0.2);
+    }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .pixel-hover-enabled .pixel-rect {
+        transition: none !important;
+        opacity: 0.3;
+    }
+}

@@ -104,56 +104,10 @@
     <link rel="stylesheet" href="styles/animations.css">
     <link rel="stylesheet" href="styles/components.css">
     <link rel="stylesheet" href="styles/responsive.css">
-    <link rel="stylesheet" href="styles/electric-border.css">
-
+    <link rel="stylesheet" href="styles/pixel-hover.css">
 </head>
 <body>
-    <!-- SVG Electric Border Filter Definition - Exact ReactBits Implementation -->
-    <svg width="0" height="0" style="position: absolute;">
-        <defs>
-            <filter id="electric-turbulence" colorInterpolationFilters="sRGB" x="-200%" y="-200%" width="500%" height="500%">
-                <!-- First turbulence with vertical offset animation -->
-                <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="10" result="noise1" seed="1" />
-                <feOffset in="noise1" dx="0" dy="0" result="offsetNoise1">
-                    <animate attributeName="dy" values="700; 0" dur="6s" repeatCount="indefinite" calcMode="linear" />
-                </feOffset>
-
-                <!-- Second turbulence with opposite vertical offset -->
-                <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="10" result="noise2" seed="1" />
-                <feOffset in="noise2" dx="0" dy="0" result="offsetNoise2">
-                    <animate attributeName="dy" values="0; -700" dur="6s" repeatCount="indefinite" calcMode="linear" />
-                </feOffset>
-
-                <!-- Third turbulence with horizontal offset -->
-                <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="10" result="noise3" seed="2" />
-                <feOffset in="noise3" dx="0" dy="0" result="offsetNoise3">
-                    <animate attributeName="dx" values="490; 0" dur="6s" repeatCount="indefinite" calcMode="linear" />
-                </feOffset>
-
-                <!-- Fourth turbulence with opposite horizontal offset -->
-                <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="10" result="noise4" seed="2" />
-                <feOffset in="noise4" dx="0" dy="0" result="offsetNoise4">
-                    <animate attributeName="dx" values="0; -490" dur="6s" repeatCount="indefinite" calcMode="linear" />
-                </feOffset>
-
-                <!-- Combine the traveling noise patterns -->
-                <feComposite in="offsetNoise1" in2="offsetNoise2" result="part1" />
-                <feComposite in="offsetNoise3" in2="offsetNoise4" result="part2" />
-                <feBlend in="part1" in2="part2" mode="color-dodge" result="combinedNoise" />
-                
-                <!-- Apply the combined noise as displacement - Maximum scale for extreme electric effect -->
-                <feDisplacementMap
-                    in="SourceGraphic"
-                    in2="combinedNoise"
-                    scale="90"
-                    xChannelSelector="R"
-                    yChannelSelector="B"
-                />
-            </filter>
-        </defs>
-    </svg>
-    
-    <!-- IMMEDIATE SCROLL RESET - Execute before any content loads -->
+<!-- IMMEDIATE SCROLL RESET - Execute before any content loads -->
     <script>
         // Force immediate scroll to top - this runs before DOM elements load
         window.scrollTo(0, 0);
@@ -182,6 +136,7 @@
 
     <!-- Pixel Maze Background System -->
     <script src="js/pixel-maze-background.js"></script>
+    <script src="js/pixel-hover.js"></script>
 
     <!-- Header -->
     <header>
@@ -255,21 +210,21 @@
             <h2 class="section-title fade-in">MEET THE CREATOR</h2>
             <p class="section-subtitle fade-in">How a complete coding beginner is building the future with AI</p>
             <div class="about-grid">
-                <div class="about-card fade-in perspective-container electric-border-enabled">
+                <div class="about-card fade-in perspective-container pixel-hover-enabled">
                     <div class="card-3d">
                         <div class="about-icon" style="background: transparent;"><img src="images/Samson_pixel.png" alt="Samson" style="width: 4.5rem; height: 4.5rem; border-radius: 50%; background: transparent; backdrop-filter: contrast(1.2) brightness(1.1);"></div>
                         <h3>SOLO DEVELOPER</h3>
                         <p>Hi! I'm Samson, founder of VibeCreAI. I have a full-time job and zero coding background, but I always dreamed of creating apps and games. Traditional programming seemed impossible to learn... until AI changed everything. Now I'm living proof that anyone with imagination can build amazing things!</p>
                     </div>
                 </div>
-                <div class="about-card fade-in perspective-container electric-border-enabled">
+                <div class="about-card fade-in perspective-container pixel-hover-enabled">
                     <div class="card-3d">
                         <div class="about-icon" style="background: transparent;"><img src="images/AI_collaboration.png" alt="AI Collaboration" style="width: 4.5rem; height: 4.5rem; border-radius: 50%; background: transparent; backdrop-filter: contrast(1.2) brightness(1.1);"></div>
                         <h3>AI COLLABORATION</h3>
                         <p>With AI as my coding partner, I went from complete beginner to app creator. No computer science degree, no years of study - just curiosity, passion, and AI assistance. Together, we're turning ideas into reality and showing that the future of creation is accessible to everyone.</p>
                     </div>
                 </div>
-                <div class="about-card fade-in perspective-container electric-border-enabled">
+                <div class="about-card fade-in perspective-container pixel-hover-enabled">
                     <div class="card-3d">
                         <div class="about-icon" style="background: transparent;"><img src="images/fun_first.png" alt="Fun First" style="width: 4.5rem; height: 4.5rem; border-radius: 50%; background: transparent; backdrop-filter: contrast(1.2) brightness(1.1);"></div>
                         <h3>FUN FIRST</h3>
@@ -286,7 +241,7 @@
             <h2 class="section-title fade-in">MY AI CREATIONS</h2>
             <p class="section-subtitle fade-in">From zero code to real apps - here's what I've built with AI!</p>
             <div class="app-showcase">
-                <div class="app-card fade-in electric-border-enabled">
+                <div class="app-card fade-in pixel-hover-enabled">
                     <div class="app-icon-wrapper" style="background: transparent;">
                         <img src="images/spin2pick_icon.png" alt="Spin2Pick" style="width: 4.5rem; height: 4.5rem; border-radius: 50%; background: transparent; backdrop-filter: contrast(1.2) brightness(1.1);">
                     </div>
@@ -298,7 +253,7 @@
                     </div>
                     <p class="ios-note"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" style="display: inline-block; vertical-align: middle; margin-right: 0.5rem;"><!-- Icon from Grommet Icons by Grommet - https://www.apache.org/licenses/LICENSE-2.0 --><path fill="currentColor" fill-rule="evenodd" d="M15.3 3.832c.84-1.014 1.404-2.427 1.25-3.832c-1.208.049-2.67.805-3.535 1.819c-.777.898-1.457 2.335-1.273 3.712c1.346.105 2.722-.684 3.56-1.699m3.02 8.918c.034 3.632 3.186 4.841 3.22 4.857c-.025.085-.502 1.722-1.66 3.413c-1 1.462-2.038 2.919-3.674 2.949c-1.607.029-2.123-.953-3.961-.953c-1.836 0-2.41.923-3.932.982c-1.578.06-2.78-1.581-3.79-3.037c-2.06-2.98-3.635-8.42-1.52-12.092C4.054 7.045 5.932 5.89 7.97 5.861c1.55-.03 3.013 1.043 3.96 1.043s2.726-1.29 4.595-1.101c.783.033 2.979.316 4.39 2.381c-.114.07-2.621 1.53-2.594 4.566"/></svg>iOS version in the works!</p>
                 </div>
-                <div class="app-card fade-in electric-border-enabled">
+                <div class="app-card fade-in pixel-hover-enabled">
                     <div class="app-icon-wrapper" style="background: transparent;">
                         <img src="images/Vibe_Runner.png" alt="Vibe Runner" style="width: 4.5rem; height: 4.5rem; border-radius: 50%; background: transparent; backdrop-filter: contrast(1.2) brightness(1.1);">
                     </div>
@@ -306,7 +261,7 @@
                     <p class="app-description">Experience fast-paced endless running in a neon cyber world! Jump, slide, and navigate through geometric obstacles in this thrilling runner game. How far can you go? 🏃‍♂️</p>
                     <button class="app-button game-button" id="vibe-runner-btn">PLAY VIBE RUNNER</button>
                 </div>
-                <div class="app-card fade-in electric-border-enabled">
+                <div class="app-card fade-in pixel-hover-enabled">
                     <div class="app-icon-wrapper" style="background: transparent;">
                         <img src="images/Vibe_Survivor.png" alt="Vibe Survivor" style="width: 4.5rem; height: 4.5rem; border-radius: 50%; background: transparent; backdrop-filter: contrast(1.2) brightness(1.1);">
                     </div>
