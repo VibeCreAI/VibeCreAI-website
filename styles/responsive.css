@@ -210,13 +210,13 @@
     
     .app-showcase {
         grid-template-columns: 1fr;
-        gap: 20px;
-        padding: 0 10px;
+        gap: 30px;
+        padding: 0;
     }
     
     .app-card {
         padding: 15px;
-        margin: 0 5px;
+        margin: 0;
     }
     
     .form-group {
