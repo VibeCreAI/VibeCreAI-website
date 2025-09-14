@@ -7,10 +7,15 @@ class VibeCreAIApp {
     constructor() {
         this.isInitialized = false;
         this.elements = {};
-        this.animations = {
-            taglineScramble: null,
-            taglineTimeout: null,
-            chunkFocusInterval: null
+        this.animations = {};
+        
+        // Focus bracket system variables
+        this.focusBracket = {
+            chunkElements: [],
+            chunkPositions: [],
+            focusFrame: null,
+            cachePositions: null,
+            currentIndex: 0
         };
 
         this.init();
@@ -325,6 +330,34 @@ class VibeCreAIApp {
 
         // Refresh DOM cache for dynamic elements
         window.VibePerf.dom.refresh('navLinksItems');
+        
+        // Recalculate focus bracket positions on resize
+        this.recalculateFocusBracket();
+    }
+
+    recalculateFocusBracket() {
+        // Only recalculate if focus bracket system is active
+        if (!this.focusBracket.cachePositions || this.focusBracket.chunkElements.length === 0) {
+            return;
+        }
+        
+        // Recalculate positions
+        this.focusBracket.cachePositions();
+        
+        // Update current focus frame position immediately
+        const currentIndex = this.focusBracket.currentIndex;
+        const chunkPositions = this.focusBracket.chunkPositions;
+        const focusFrame = this.focusBracket.focusFrame;
+        
+        if (chunkPositions[currentIndex] && focusFrame) {
+            const pos = chunkPositions[currentIndex];
+            Object.assign(focusFrame.style, {
+                left: (pos.left - 8) + 'px',
+                top: (pos.top - 8) + 'px',
+                width: (pos.width + 16) + 'px',
+                height: (pos.height + 16) + 'px'
+            });
+        }
     }
 
     updateButtonTextForMobile() {
@@ -373,14 +406,18 @@ class VibeCreAIApp {
         element.innerHTML = '';
         element.className += ' focus-container';
 
-        const chunkElements = [];
+        // Clear previous focus bracket data
+        this.focusBracket.chunkElements = [];
+        this.focusBracket.chunkPositions = [];
+        this.focusBracket.currentIndex = 0;
+
         wordChunks.forEach((chunk, index) => {
             const chunkSpan = document.createElement('span');
             chunkSpan.className = 'focus-word';
             chunkSpan.textContent = chunk;
             chunkSpan.style.marginRight = '1em';
             element.appendChild(chunkSpan);
-            chunkElements.push(chunkSpan);
+            this.focusBracket.chunkElements.push(chunkSpan);
 
             if (index < wordChunks.length - 1) {
                 element.appendChild(document.createTextNode(' '));
@@ -390,6 +427,7 @@ class VibeCreAIApp {
         // Create focus frame
         const focusFrame = document.createElement('div');
         focusFrame.className = 'focus-frame';
+        this.focusBracket.focusFrame = focusFrame;
 
         const corners = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
         corners.forEach(corner => {
@@ -400,12 +438,9 @@ class VibeCreAIApp {
 
         element.appendChild(focusFrame);
 
-        // Animation logic
-        let currentIndex = 0;
-        let chunkPositions = [];
-
-        const cacheChunkPositions = () => {
-            chunkPositions = chunkElements.map(chunk => ({
+        // Create position caching function and store reference
+        this.focusBracket.cachePositions = () => {
+            this.focusBracket.chunkPositions = this.focusBracket.chunkElements.map(chunk => ({
                 left: chunk.offsetLeft,
                 top: chunk.offsetTop,
                 width: chunk.offsetWidth,
@@ -416,11 +451,11 @@ class VibeCreAIApp {
         const focusChunk = (index) => {
             if (window.PerformanceManager?.neuralNetworkPaused) return;
 
-            chunkElements.forEach(chunk => chunk.classList.remove('focused'));
+            this.focusBracket.chunkElements.forEach(chunk => chunk.classList.remove('focused'));
 
-            if (chunkElements[index] && chunkPositions[index]) {
-                const currentChunk = chunkElements[index];
-                const pos = chunkPositions[index];
+            if (this.focusBracket.chunkElements[index] && this.focusBracket.chunkPositions[index]) {
+                const currentChunk = this.focusBracket.chunkElements[index];
+                const pos = this.focusBracket.chunkPositions[index];
                 currentChunk.classList.add('focused');
 
                 Object.assign(focusFrame.style, {
@@ -434,13 +469,13 @@ class VibeCreAIApp {
         };
 
         const cycleFocus = () => {
-            focusChunk(currentIndex);
-            currentIndex = (currentIndex + 1) % chunkElements.length;
+            focusChunk(this.focusBracket.currentIndex);
+            this.focusBracket.currentIndex = (this.focusBracket.currentIndex + 1) % this.focusBracket.chunkElements.length;
         };
 
         // Initialize focus animation
         window.VibePerf.memory.setTimeout(() => {
-            cacheChunkPositions();
+            this.focusBracket.cachePositions();
             cycleFocus();
             this.animations.chunkFocusInterval = window.VibePerf.memory.setInterval(cycleFocus, 2000);
         }, 500);
