@@ -8,27 +8,48 @@
 let svg, g;
 let WIDTH, COLS, ROWS, TOTAL, CENTERX, CENTERY;
 let mazeActive = false;
+let activeColorElements = 0;
+let mazeLastWidth = 0;
+let mazeLastHeight = 0;
+let mazeIsMobile = false;
+let mazeResizeTimeout = null;
 
 // Initialize maze system
 function initPixelMaze() {
     cleanup();
+    detectMobileDevice();
     createSVGContainer();
     setWindowValues();
     buildGrid();
-    
+
     // Start maze generation
     setTimeout(() => {
         maze();
     }, 500);
 }
 
+// Mobile device detection
+function detectMobileDevice() {
+    mazeIsMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+                   (window.innerWidth <= 768) ||
+                   ('ontouchstart' in window) ||
+                   (navigator.maxTouchPoints > 0);
+}
+
 // Set responsive window values
 function setWindowValues() {
-    const minFactor = Math.min(window.innerWidth, window.innerHeight);
+    const currentWidth = window.innerWidth;
+    const currentHeight = window.innerHeight;
+
+    // Store current dimensions for resize detection
+    mazeLastWidth = currentWidth;
+    mazeLastHeight = currentHeight;
+
+    const minFactor = Math.min(currentWidth, currentHeight);
     // Optimized cell sizes for performance
     WIDTH = minFactor > 1200 ? 60 : minFactor > 950 ? 50 : minFactor > 750 ? 40 : 35;
-    COLS = Math.floor(window.innerWidth / WIDTH);
-    ROWS = Math.floor(window.innerHeight / WIDTH);
+    COLS = Math.floor(currentWidth / WIDTH);
+    ROWS = Math.floor(currentHeight / WIDTH);
     TOTAL = (COLS + 1) * (ROWS + 1);
     CENTERX = Math.floor(COLS / 2);
     CENTERY = Math.floor(ROWS / 2);
@@ -152,6 +173,9 @@ async function maze() {
         mazeActive = true;
     }
 
+    // Reset color elements counter
+    activeColorElements = 0;
+
     const blockFactor = 0.4; // Balanced density for subtle background
     const time = TOTAL > 500 ? 25 : TOTAL > 250 ? 35 : TOTAL > 150 ? 45 : 55;
 
@@ -165,19 +189,31 @@ async function maze() {
     }
 
     await delay(1500);
-    
-    // Start moving elements with reasonable speeds
-    const rp1 = getRandomPoint();
-    lostSquare(getTarget(rp1.row, rp1.col), TOTAL > 1000 ? 90 : 110, getRandomDirection(), "solid1");
-    
-    const rp2 = getRandomPoint();
-    lostSquare(getTarget(rp2.row, rp2.col), TOTAL > 1000 ? 75 : 95, getRandomDirection(), "solid2");
-    
-    const rp3 = getRandomPoint();
-    lostSquare(getTarget(rp3.row, rp3.col), TOTAL > 1000 ? 60 : 80, getRandomDirection(), "solid3");
-    
-    const rp4 = getRandomPoint();
-    lostSquare(getTarget(rp4.row, rp4.col), TOTAL > 1000 ? 55 : 75, getRandomDirection(), "solid4");
+
+    // Start moving elements with reasonable speeds - maximum 4 elements
+    if (activeColorElements < 4) {
+        const rp1 = getRandomPoint();
+        lostSquare(getTarget(rp1.row, rp1.col), TOTAL > 1000 ? 90 : 110, getRandomDirection(), "solid1");
+        activeColorElements++;
+    }
+
+    if (activeColorElements < 4) {
+        const rp2 = getRandomPoint();
+        lostSquare(getTarget(rp2.row, rp2.col), TOTAL > 1000 ? 75 : 95, getRandomDirection(), "solid2");
+        activeColorElements++;
+    }
+
+    if (activeColorElements < 4) {
+        const rp3 = getRandomPoint();
+        lostSquare(getTarget(rp3.row, rp3.col), TOTAL > 1000 ? 60 : 80, getRandomDirection(), "solid3");
+        activeColorElements++;
+    }
+
+    if (activeColorElements < 4) {
+        const rp4 = getRandomPoint();
+        lostSquare(getTarget(rp4.row, rp4.col), TOTAL > 1000 ? 55 : 75, getRandomDirection(), "solid4");
+        activeColorElements++;
+    }
 }
 
 // Maze builder function
@@ -201,8 +237,12 @@ async function mazer(row, col, time) {
 
 // Moving element function
 async function lostSquare(target, time, direction, className) {
-    if (!mazeActive || !target) return false;
-    
+    if (!mazeActive || !target) {
+        // Decrease counter when element stops
+        if (activeColorElements > 0) activeColorElements--;
+        return false;
+    }
+
     target.setAttribute("class", `maze-cell ${className}`);
     const row = parseInt(target.getAttribute("row"));
     const col = parseInt(target.getAttribute("col"));
@@ -210,9 +250,13 @@ async function lostSquare(target, time, direction, className) {
     const nextTarget = getTarget(nextPoint.row, nextPoint.col);
 
     await delay(time);
-    
-    if (!mazeActive) return false;
-    
+
+    if (!mazeActive) {
+        // Decrease counter when element stops
+        if (activeColorElements > 0) activeColorElements--;
+        return false;
+    }
+
     target.setAttribute("class", "maze-cell base");
 
     if (!nextTarget || nextTarget.classList.contains("blocker")) {
@@ -232,7 +276,8 @@ async function lostSquare(target, time, direction, className) {
 // Cleanup function
 function cleanup() {
     mazeActive = false;
-    
+    activeColorElements = 0; // Reset counter
+
     if (svg) {
         svg.remove();
         svg = null;
@@ -240,14 +285,52 @@ function cleanup() {
     }
 }
 
-// Resize handler
+// Smart resize detection to prevent unnecessary maze resets
+function shouldResizeMaze() {
+    const currentWidth = window.innerWidth;
+    const currentHeight = window.innerHeight;
+
+    // Calculate percentage changes
+    const widthChangePercent = Math.abs(currentWidth - mazeLastWidth) / mazeLastWidth;
+    const heightChangePercent = Math.abs(currentHeight - mazeLastHeight) / mazeLastHeight;
+
+    // Different thresholds for mobile vs desktop
+    if (mazeIsMobile) {
+        // Mobile: Only reset on significant width changes or very large height changes
+        // This ignores typical address bar show/hide (usually 5-15% height change)
+        const significantWidthChange = widthChangePercent > 0.1; // 10% width change
+        const significantHeightChange = heightChangePercent > 0.2; // 20% height change (orientation)
+
+        return significantWidthChange || significantHeightChange;
+    } else {
+        // Desktop: Reset on any significant change (old behavior for desktop)
+        const significantChange = widthChangePercent > 0.1 || heightChangePercent > 0.1;
+        return significantChange;
+    }
+}
+
+// Enhanced resize handler with smart detection
 function handleResize() {
-    let resizeTimeout;
-    clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(() => {
-        cleanup();
-        initPixelMaze();
-    }, 250);
+    // Clear any existing timeout
+    if (mazeResizeTimeout) {
+        clearTimeout(mazeResizeTimeout);
+    }
+
+    // Use longer debounce for mobile to handle rapid address bar changes
+    const debounceTime = mazeIsMobile ? 500 : 250;
+
+    mazeResizeTimeout = setTimeout(() => {
+        // Re-detect mobile state in case of viewport changes
+        detectMobileDevice();
+
+        // Only reset maze if significant resize is detected
+        if (shouldResizeMaze()) {
+            cleanup();
+            initPixelMaze();
+        }
+
+        mazeResizeTimeout = null;
+    }, debounceTime);
 }
 
 // Initialize when DOM is ready
@@ -257,9 +340,20 @@ function startMaze() {
     } else {
         initPixelMaze();
     }
-    
-    // Setup resize handler
+
+    // Setup smart resize handler
     window.addEventListener('resize', handleResize);
+
+    // Also listen for orientation changes on mobile
+    if ('onorientationchange' in window) {
+        window.addEventListener('orientationchange', () => {
+            // Force reset on orientation change after a delay
+            setTimeout(() => {
+                cleanup();
+                initPixelMaze();
+            }, 500);
+        });
+    }
 }
 
 // Auto-start
