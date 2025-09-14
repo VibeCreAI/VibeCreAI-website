@@ -14,7 +14,7 @@ class PixelHover {
         this.pixels = [];
         this.animationId = null;
         this.isAnimating = false;
-        this.pixelSize = 48; // Size of each pixel (4x bigger: 12 * 4 = 48)
+        this.pixelSize = 36; // Size of each pixel (4x bigger: 12 * 4 = 48)
         this.cols = 0;
         this.rows = 0;
 
