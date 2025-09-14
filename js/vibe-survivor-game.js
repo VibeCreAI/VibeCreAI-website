@@ -156,7 +156,8 @@ class VibeSurvivor {
             active: false,
             selectedIndex: 0,
             menuType: null, // 'levelup', 'gameover', 'pause'
-            menuButtons: []
+            menuButtons: [],
+            keyboardUsed: false
         };
         
         // Screen effects
@@ -1525,25 +1526,30 @@ class VibeSurvivor {
                     case 'arrowup':
                     case 'w':
                         e.preventDefault();
+                        this.menuNavigationState.keyboardUsed = true;
                         this.navigateMenu('up');
                         break;
                     case 'arrowdown':
                     case 's':
                         e.preventDefault();
+                        this.menuNavigationState.keyboardUsed = true;
                         this.navigateMenu('down');
                         break;
                     case 'arrowleft':
                     case 'a':
                         e.preventDefault();
+                        this.menuNavigationState.keyboardUsed = true;
                         this.navigateMenu('left');
                         break;
                     case 'arrowright':
                     case 'd':
                         e.preventDefault();
+                        this.menuNavigationState.keyboardUsed = true;
                         this.navigateMenu('right');
                         break;
                     case 'enter':
                         e.preventDefault();
+                        this.menuNavigationState.keyboardUsed = true;
                         this.selectCurrentMenuItem();
                         break;
                     case 'escape':
@@ -2341,6 +2347,7 @@ class VibeSurvivor {
                 this.menuNavigationState.menuType = 'pause';
                 this.menuNavigationState.selectedIndex = 0;
                 this.menuNavigationState.menuButtons = pauseButtons;
+                this.menuNavigationState.keyboardUsed = false;
                 this.updateMenuSelection();
             }
             
@@ -2382,6 +2389,7 @@ class VibeSurvivor {
                 this.menuNavigationState.menuType = 'help';
                 this.menuNavigationState.selectedIndex = 0;
                 this.menuNavigationState.menuButtons = [closeBtn];
+                this.menuNavigationState.keyboardUsed = false;
                 this.updateMenuSelection();
             }
         } else {
@@ -2409,6 +2417,7 @@ class VibeSurvivor {
         this.menuNavigationState.selectedIndex = 0;
         this.menuNavigationState.menuType = menuType;
         this.menuNavigationState.menuButtons = buttons;
+        this.menuNavigationState.keyboardUsed = false;
         this.updateMenuSelection();
     }
     
@@ -2422,12 +2431,15 @@ class VibeSurvivor {
             button.style.borderColor = '';
         });
         
-        // Add current selection styling
-        const selectedButton = this.menuNavigationState.menuButtons[this.menuNavigationState.selectedIndex];
-        if (selectedButton) {
-            selectedButton.classList.add('menu-selected');
-            selectedButton.style.boxShadow = '0 0 15px rgba(0, 255, 255, 0.8)';
-            selectedButton.style.borderColor = '#00ffff';
+        // Only show visual selection if keyboard has been used
+        if (this.menuNavigationState.keyboardUsed) {
+            // Add current selection styling
+            const selectedButton = this.menuNavigationState.menuButtons[this.menuNavigationState.selectedIndex];
+            if (selectedButton) {
+                selectedButton.classList.add('menu-selected');
+                selectedButton.style.boxShadow = '0 0 15px rgba(0, 255, 255, 0.8)';
+                selectedButton.style.borderColor = '#00ffff';
+            }
         }
     }
     
@@ -2463,6 +2475,7 @@ class VibeSurvivor {
         this.menuNavigationState.selectedIndex = 0;
         this.menuNavigationState.menuType = null;
         this.menuNavigationState.menuButtons = [];
+        this.menuNavigationState.keyboardUsed = false;
     }
     
     exitToMenu() {
