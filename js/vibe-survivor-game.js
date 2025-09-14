@@ -2368,10 +2368,13 @@ class VibeSurvivor {
     toggleHelp() {
         this.isHelpOpen = !this.isHelpOpen;
         const helpMenu = document.getElementById('help-menu');
-        
+
         if (this.isHelpOpen) {
+            // Pause the game when help is open
+            this.isPaused = true;
+            this.timePaused = true;
             helpMenu.style.display = 'flex';
-            
+
             // Initialize keyboard navigation for help menu
             const closeBtn = document.getElementById('close-help-btn');
             if (closeBtn) {
@@ -2382,8 +2385,11 @@ class VibeSurvivor {
                 this.updateMenuSelection();
             }
         } else {
+            // Resume the game when help is closed
+            this.isPaused = false;
+            this.timePaused = false;
             helpMenu.style.display = 'none';
-            
+
             // Deactivate keyboard navigation
             this.resetMenuNavigation();
         }
