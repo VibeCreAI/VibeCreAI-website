@@ -339,7 +339,7 @@ body.terminal-active .cta-container {
 
 /* About Section */
 .about {
-    padding: 160px 40px;
+    padding: 160px 30px;
     position: relative;
     z-index: 10;
     background: linear-gradient(180deg, transparent, rgba(0, 255, 255, 0.02), transparent);
