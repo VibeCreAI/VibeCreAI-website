@@ -316,7 +316,7 @@ class VibeSurvivor {
                                     <div class="help-recipes">
                                         <div class="merge-recipe">
                                             <h3>⚡ Homing Laser</h3>
-                                            <p>Laser lvl 3 + Missiles lvl 3</p>
+                                            <p>Laser lvl 3 + Homing Missiles lvl 3</p>
                                             <span class="recipe-desc">Heat-seeking laser beams</span>
                                         </div>
                                         <div class="merge-recipe">
@@ -4814,7 +4814,7 @@ class VibeSurvivor {
             width: auto !important;
             height: auto !important;
             position: fixed !important;
-            top: 50% !important;
+            top: 56% !important;
             left: 50% !important;
             transform: translate(-50%, -50%) !important;
             overflow: visible !important;
