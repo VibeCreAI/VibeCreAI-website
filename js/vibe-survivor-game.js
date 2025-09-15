@@ -2218,6 +2218,13 @@ class VibeSurvivor {
             moveY += this.touchControls.joystick.moveY;
         }
         
+        // Normalize movement vector to prevent faster diagonal movement
+        const magnitude = Math.sqrt(moveX * moveX + moveY * moveY);
+        if (magnitude > 0) {
+            moveX /= magnitude;
+            moveY /= magnitude;
+        }
+        
         // Apply movement
         this.player.x += moveX * speed;
         this.player.y += moveY * speed;
