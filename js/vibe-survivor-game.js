@@ -1555,7 +1555,7 @@ class VibeSurvivor {
             e.preventDefault();
             e.stopPropagation();
             this.toggleHelp();
-        });
+        }, { passive: false });
         
         // Pause menu event listeners
         document.getElementById('resume-btn').addEventListener('click', () => {
@@ -1585,7 +1585,7 @@ class VibeSurvivor {
             e.preventDefault();
             e.stopPropagation();
             this.toggleHelp();
-        });
+        }, { passive: false });
         
         // Keyboard controls
         document.addEventListener('keydown', (e) => {
