@@ -4164,7 +4164,11 @@ class VibeSurvivor {
                         enemy.dashState.targetY = playerY;
                         enemy.dashState.duration = 0;
                         enemy.dashState.originalSpeed = enemy.speed;
-                        enemy.specialCooldown = 120; // Shorter dash cooldown for more aggressive
+                        // Decrease dash cooldown by 3 per boss stage, minimum 30 frames
+                        const baseCooldown = 90;
+                        const cooldownReduction = (this.bossesKilled || 0) * 3;
+                        const minCooldown = 36;
+                        enemy.specialCooldown = Math.max(minCooldown, baseCooldown - cooldownReduction);
                     } else {
                         // Faster normal movement while dash is on cooldown
                         enemy.x += dirX * enemy.speed * 2.0;
