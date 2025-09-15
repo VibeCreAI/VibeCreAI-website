@@ -218,9 +218,9 @@ body.terminal-active .cta-container {
     color: var(--primary-color);
     font-size: 6rem;
     text-shadow: 
-        0 0 10px rgba(0, 255, 255, 0.6),
-        0 0 20px rgba(0, 255, 255, 0.4),
-        0 0 30px rgba(0, 255, 255, 0.3);
+        0 0 10px color-mix(in srgb, var(--primary-color) 60%, transparent),
+        0 0 20px color-mix(in srgb, var(--primary-color) 40%, transparent),
+        0 0 30px color-mix(in srgb, var(--primary-color) 30%, transparent);
 }
 
 .hero-subtitle {
