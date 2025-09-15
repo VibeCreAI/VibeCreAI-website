@@ -4773,7 +4773,7 @@ class VibeSurvivor {
                 choices.push({
                     type: 'weapon_upgrade',
                     weaponIndex: index,
-                    name: `${this.getWeaponName(weapon.type)} LV.${weapon.level + 1}`,
+                    name: `${this.getWeaponNameAfterUpgrade(weapon)} LV.${weapon.level + 1}`,
                     description: description,
                     icon: '⚡'
                 });
@@ -4843,6 +4843,20 @@ class VibeSurvivor {
             'gatling_gun': 'Gatling Gun'
         };
         return names[type] || 'Unknown Weapon';
+    }
+
+    getWeaponNameAfterUpgrade(weapon) {
+        let type = weapon.type;
+        let level = weapon.level + 1;
+        
+        // Check if weapon type will change after upgrade
+        if (level === 5 && type === 'basic') {
+            type = 'rapid';
+        } else if (level === 8 && type === 'spread_shot') {
+            type = 'spread';
+        }
+        
+        return this.getWeaponName(type);
     }
     
     getWeaponDescription(type) {
