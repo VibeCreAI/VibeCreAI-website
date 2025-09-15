@@ -1,4 +1,65 @@
 // Enhanced Vibe Survivor Game with Multiple Weapons and Choice System
+// Vector2 utility class for optimized vector operations
+class Vector2 {
+    // Normalize a vector to unit length, returns [x, y]
+    static normalize(x, y) {
+        const mag = Math.sqrt(x * x + y * y);
+        return mag > 0 ? [x / mag, y / mag] : [0, 0];
+    }
+    
+    // Calculate distance between two points (expensive - use sparingly)
+    static distance(x1, y1, x2, y2) {
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+    
+    // Calculate squared distance (fast - no sqrt, good for comparisons)
+    static distanceSquared(x1, y1, x2, y2) {
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        return dx * dx + dy * dy;
+    }
+    
+    // Get direction vector from point A to point B (normalized)
+    static direction(x1, y1, x2, y2) {
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        return Vector2.normalize(dx, dy);
+    }
+    
+    // Linear interpolation between two vectors
+    static lerp(x1, y1, x2, y2, t) {
+        return [
+            x1 + (x2 - x1) * t,
+            y1 + (y2 - y1) * t
+        ];
+    }
+    
+    // Reflect a vector across a normal
+    static reflect(vx, vy, nx, ny) {
+        const dot = 2 * (vx * nx + vy * ny);
+        return [vx - dot * nx, vy - dot * ny];
+    }
+    
+    // Rotate a vector by angle (in radians)
+    static rotate(x, y, angle) {
+        const cos = Math.cos(angle);
+        const sin = Math.sin(angle);
+        return [x * cos - y * sin, x * sin + y * cos];
+    }
+    
+    // Add two vectors
+    static add(x1, y1, x2, y2) {
+        return [x1 + x2, y1 + y2];
+    }
+    
+    // Scale a vector by a scalar
+    static scale(x, y, scalar) {
+        return [x * scalar, y * scalar];
+    }
+}
+
 class VibeSurvivor {
     constructor() {
         this.canvas = null;
@@ -29,6 +90,15 @@ class VibeSurvivor {
         
         // Game properties
         this.enemies = [];
+        // Enemy grouping for batch processing optimization
+        this.enemiesByBehavior = {
+            chase: [],
+            dodge: [],
+            tank: [],
+            fly: [],
+            teleport: [],
+            boss: []
+        };
         this.projectiles = [];
         this.projectilePool = []; // Object pool for reusing projectile objects
         this.particles = [];
@@ -3887,8 +3957,221 @@ class VibeSurvivor {
         return configs[type] || configs.basic;
     }
     
+    // Update enemy groupings for batch processing
+    updateEnemyGroupings() {
+        // Clear existing groupings
+        for (const behavior in this.enemiesByBehavior) {
+            this.enemiesByBehavior[behavior].length = 0;
+        }
+        
+        // Re-group enemies by behavior
+        for (const enemy of this.enemies) {
+            if (this.enemiesByBehavior[enemy.behavior]) {
+                this.enemiesByBehavior[enemy.behavior].push(enemy);
+            }
+        }
+    }
+
+    // Batch process enemies by behavior type for optimal performance
+    processBatchedEnemies() {
+        // Process each behavior type in batches
+        this.processBatchChase();
+        this.processBatchDodge();
+        this.processBatchTank();
+        this.processBatchFly();
+        this.processBatchTeleport();
+        this.processBatchBoss();
+    }
+    
+    processBatchChase() {
+        const chaseEnemies = this.enemiesByBehavior.chase;
+        if (chaseEnemies.length === 0) return;
+        
+        // Pre-calculate player position for all chase enemies
+        const playerX = this.player.x;
+        const playerY = this.player.y;
+        
+        for (const enemy of chaseEnemies) {
+            const [dirX, dirY] = Vector2.direction(enemy.x, enemy.y, playerX, playerY);
+            enemy.x += dirX * enemy.speed;
+            enemy.y += dirY * enemy.speed;
+        }
+    }
+    
+    processBatchDodge() {
+        const dodgeEnemies = this.enemiesByBehavior.dodge;
+        if (dodgeEnemies.length === 0) return;
+        
+        const playerX = this.player.x;
+        const playerY = this.player.y;
+        const dodgeRadius = 50;
+        const dodgeRadiusSq = dodgeRadius * dodgeRadius;
+        
+        for (const enemy of dodgeEnemies) {
+            let dodgeX = 0, dodgeY = 0;
+            
+            // Check nearby projectiles for dodge behavior
+            for (const projectile of this.projectiles) {
+                const pDistSq = Vector2.distanceSquared(enemy.x, enemy.y, projectile.x, projectile.y);
+                if (pDistSq < dodgeRadiusSq && pDistSq > 0) {
+                    const [dodgeDirX, dodgeDirY] = Vector2.direction(projectile.x, projectile.y, enemy.x, enemy.y);
+                    const influence = 1 - (pDistSq / dodgeRadiusSq);
+                    dodgeX += dodgeDirX * influence;
+                    dodgeY += dodgeDirY * influence;
+                }
+            }
+            
+            // Apply movement
+            const [dirX, dirY] = Vector2.direction(enemy.x, enemy.y, playerX, playerY);
+            if (dodgeX !== 0 || dodgeY !== 0) {
+                const [normDodgeX, normDodgeY] = Vector2.normalize(dodgeX, dodgeY);
+                const [blendX, blendY] = Vector2.add(
+                    normDodgeX * 0.7, normDodgeY * 0.7,
+                    dirX * 0.3, dirY * 0.3
+                );
+                const [finalDirX, finalDirY] = Vector2.normalize(blendX, blendY);
+                enemy.x += finalDirX * enemy.speed;
+                enemy.y += finalDirY * enemy.speed;
+            } else {
+                enemy.x += dirX * enemy.speed;
+                enemy.y += dirY * enemy.speed;
+            }
+        }
+    }
+    
+    processBatchTank() {
+        const tankEnemies = this.enemiesByBehavior.tank;
+        if (tankEnemies.length === 0) return;
+        
+        const playerX = this.player.x;
+        const playerY = this.player.y;
+        
+        for (const enemy of tankEnemies) {
+            const [dirX, dirY] = Vector2.direction(enemy.x, enemy.y, playerX, playerY);
+            enemy.x += dirX * enemy.speed;
+            enemy.y += dirY * enemy.speed;
+            
+            // Check for minion spawning
+            if (enemy.health < enemy.maxHealth * 0.25 && !enemy.spawnedMinions) {
+                this.spawnMinions(enemy.x, enemy.y, 3);
+                enemy.spawnedMinions = true;
+            }
+        }
+    }
+    
+    processBatchFly() {
+        const flyEnemies = this.enemiesByBehavior.fly;
+        if (flyEnemies.length === 0) return;
+        
+        const playerX = this.player.x;
+        const playerY = this.player.y;
+        const orbitRadius = 100;
+        const orbitRadiusSq = orbitRadius * orbitRadius;
+        
+        for (const enemy of flyEnemies) {
+            const [dirX, dirY] = Vector2.direction(enemy.x, enemy.y, playerX, playerY);
+            const distanceSquared = Vector2.distanceSquared(enemy.x, enemy.y, playerX, playerY);
+            
+            if (distanceSquared > orbitRadiusSq) {
+                // Move towards player when far
+                enemy.x += dirX * enemy.speed;
+                enemy.y += dirY * enemy.speed;
+            } else {
+                // Orbital movement when close
+                const [orbitX, orbitY] = Vector2.rotate(dirX, dirY, Math.PI / 2);
+                enemy.x += orbitX * enemy.speed;
+                enemy.y += orbitY * enemy.speed;
+            }
+        }
+    }
+    
+    processBatchTeleport() {
+        const teleportEnemies = this.enemiesByBehavior.teleport;
+        if (teleportEnemies.length === 0) return;
+        
+        const playerX = this.player.x;
+        const playerY = this.player.y;
+        const teleportRange = 50;
+        const teleportRangeSq = teleportRange * teleportRange;
+        
+        for (const enemy of teleportEnemies) {
+            const distanceSquared = Vector2.distanceSquared(enemy.x, enemy.y, playerX, playerY);
+            
+            if (enemy.specialCooldown <= 0 && distanceSquared > teleportRangeSq) {
+                this.createTeleportParticles(enemy.x, enemy.y);
+                const teleportDistance = 80;
+                const angle = Math.random() * Math.PI * 2;
+                const [teleportX, teleportY] = Vector2.rotate(teleportDistance, 0, angle);
+                enemy.x = playerX + teleportX;
+                enemy.y = playerY + teleportY;
+                this.createTeleportParticles(enemy.x, enemy.y);
+                enemy.specialCooldown = 180;
+            } else {
+                const [dirX, dirY] = Vector2.direction(enemy.x, enemy.y, playerX, playerY);
+                enemy.x += dirX * enemy.speed * 0.5;
+                enemy.y += dirY * enemy.speed * 0.5;
+            }
+        }
+    }
+
+    
+    processBatchBoss() {
+        const bossEnemies = this.enemiesByBehavior.boss;
+        if (bossEnemies.length === 0) return;
+        
+        const playerX = this.player.x;
+        const playerY = this.player.y;
+        
+        for (const enemy of bossEnemies) {
+            // Skip if boss is already dead/dying
+            if (enemy.health <= 0) {
+                continue;
+            }
+            
+            // Enhanced boss AI with phases based on health
+            const bossHealthPercent = enemy.health / enemy.maxHealth;
+            const [dirX, dirY] = Vector2.direction(enemy.x, enemy.y, playerX, playerY);
+            const distanceSquared = Vector2.distanceSquared(enemy.x, enemy.y, playerX, playerY);
+            
+            // Phase 1: Direct chase (above 70% health)
+            if (bossHealthPercent > 0.7) {
+                enemy.x += dirX * enemy.speed;
+                enemy.y += dirY * enemy.speed;
+            }
+            // Phase 2: Erratic movement (30-70% health)
+            else if (bossHealthPercent > 0.3) {
+                const erraticAngle = this.frameCount * 0.02;
+                const [erraticX, erraticY] = Vector2.rotate(dirX, dirY, erraticAngle);
+                enemy.x += erraticX * enemy.speed * 1.2;
+                enemy.y += erraticY * enemy.speed * 1.2;
+            }
+            // Phase 3: Desperate teleporting (below 30% health)
+            else {
+                if (enemy.specialCooldown <= 0) {
+                    this.createTeleportParticles(enemy.x, enemy.y);
+                    const teleportDistance = 120;
+                    const angle = Math.random() * Math.PI * 2;
+                    const [teleportX, teleportY] = Vector2.rotate(teleportDistance, 0, angle);
+                    enemy.x = playerX + teleportX;
+                    enemy.y = playerY + teleportY;
+                    this.createTeleportParticles(enemy.x, enemy.y);
+                    enemy.specialCooldown = 120;
+                } else {
+                    enemy.x += dirX * enemy.speed * 0.8;
+                    enemy.y += dirY * enemy.speed * 0.8;
+                }
+            }
+        }
+    }
+
     updateEnemies() {
-        // Use reverse iteration for safe and efficient removal
+        // Update enemy groupings for optimized batch processing
+        this.updateEnemyGroupings();
+        
+        // Process all enemy movements in optimized batches
+        this.processBatchedEnemies();
+        
+        // Use reverse iteration for safe and efficient removal (health, effects, cleanup)
         for (let i = this.enemies.length - 1; i >= 0; i--) {
             const enemy = this.enemies[i];
             // Handle burning damage over time
@@ -3899,189 +4182,6 @@ class VibeSurvivor {
                     enemy.health -= enemy.burning.damage;
                     this.createHitParticles(enemy.x, enemy.y, '#ff6348');
                 }
-            }
-            
-            const dx = this.player.x - enemy.x;
-            const dy = this.player.y - enemy.y;
-            const distance = this.cachedSqrt(dx * dx + dy * dy);
-            
-            // Enemy behavior
-            switch (enemy.behavior) {
-                case 'chase':
-                    enemy.x += (dx / distance) * enemy.speed;
-                    enemy.y += (dy / distance) * enemy.speed;
-                    break;
-                    
-                case 'dodge':
-                    // Check for incoming projectiles and try to dodge
-                    let dodgeX = 0, dodgeY = 0;
-                    this.projectiles.forEach(projectile => {
-                        const pDx = projectile.x - enemy.x;
-                        const pDy = projectile.y - enemy.y;
-                        const pDistance = Math.sqrt(pDx * pDx + pDy * pDy);
-                        if (pDistance < 50) {
-                            dodgeX -= pDx / pDistance;
-                            dodgeY -= pDy / pDistance;
-                        }
-                    });
-                    
-                    if (dodgeX === 0 && dodgeY === 0) {
-                        enemy.x += (dx / distance) * enemy.speed;
-                        enemy.y += (dy / distance) * enemy.speed;
-                    } else {
-                        enemy.x += dodgeX * enemy.speed * 0.5 + (dx / distance) * enemy.speed * 0.5;
-                        enemy.y += dodgeY * enemy.speed * 0.5 + (dy / distance) * enemy.speed * 0.5;
-                    }
-                    break;
-                    
-                case 'tank':
-                    enemy.x += (dx / distance) * enemy.speed;
-                    enemy.y += (dy / distance) * enemy.speed;
-                    
-                    if (enemy.health < enemy.maxHealth * 0.25 && !enemy.spawnedMinions) {
-                        this.spawnMinions(enemy.x, enemy.y, 3);
-                        enemy.spawnedMinions = true;
-                    }
-                    break;
-                    
-                case 'fly':
-                    // Orbital movement
-                    if (distance > 100) {
-                        enemy.x += (dx / distance) * enemy.speed;
-                        enemy.y += (dy / distance) * enemy.speed;
-                    } else {
-                        const orbitAngle = Math.atan2(dy, dx) + Math.PI / 2;
-                        enemy.x += this.fastCos(orbitAngle) * enemy.speed;
-                        enemy.y += this.fastSin(orbitAngle) * enemy.speed;
-                    }
-                    break;
-                    
-                case 'teleport':
-                    if (enemy.specialCooldown <= 0 && distance > 50) {
-                        this.createTeleportParticles(enemy.x, enemy.y);
-                        enemy.x = this.player.x + (Math.random() - 0.5) * 100;
-                        enemy.y = this.player.y + (Math.random() - 0.5) * 100;
-                        this.createTeleportParticles(enemy.x, enemy.y);
-                        enemy.specialCooldown = 180;
-                    } else {
-                        enemy.x += (dx / distance) * enemy.speed * 0.5;
-                        enemy.y += (dy / distance) * enemy.speed * 0.5;
-                    }
-                    break;
-                
-                case 'boss':
-                    // Skip if boss is already dead/dying
-                    if (enemy.health <= 0) {
-                        break;
-                    }
-                    // Enhanced boss AI with phases based on health
-                    const bossHealthPercent = enemy.health / enemy.maxHealth;
-                    
-                    // Phase 1: Direct chase (above 70% health)
-                    if (bossHealthPercent > 0.7) {
-                        const dx = this.player.x - enemy.x;
-                        const dy = this.player.y - enemy.y;
-                        const distance = this.cachedSqrt(dx * dx + dy * dy);
-                        
-                        if (distance > 0) {
-                            enemy.x += (dx / distance) * enemy.speed * 1.2;
-                            enemy.y += (dy / distance) * enemy.speed * 1.2;
-                        }
-                        // Boss can move freely in infinite world (no canvas bounds constraint)
-                    }
-                    // Phase 2: Circle strafe (30-70% health)
-                    else if (bossHealthPercent > 0.3) {
-                        const dx = this.player.x - enemy.x;
-                        const dy = this.player.y - enemy.y;
-                        const distance = this.cachedSqrt(dx * dx + dy * dy);
-                        
-                        // Maintain distance around 150-200 pixels
-                        const idealDistance = 175;
-                        if (distance > idealDistance + 50) {
-                            // Move closer
-                            enemy.x += (dx / distance) * enemy.speed * 1.5;
-                            enemy.y += (dy / distance) * enemy.speed * 1.5;
-                        } else if (distance < idealDistance - 50) {
-                            // Move away
-                            enemy.x -= (dx / distance) * enemy.speed;
-                            enemy.y -= (dy / distance) * enemy.speed;
-                        } else {
-                            // Circle strafe
-                            const perpX = -dy / distance;
-                            const perpY = dx / distance;
-                            enemy.x += perpX * enemy.speed * 2;
-                            enemy.y += perpY * enemy.speed * 2;
-                        }
-                        // Boss can move freely in infinite world (no canvas bounds constraint)
-                    }
-                    // Phase 3: Aggressive and dash (below 30% health)
-                    else {
-                        const dx = this.player.x - enemy.x;
-                        const dy = this.player.y - enemy.y;
-                        const distance = this.cachedSqrt(dx * dx + dy * dy);
-                        
-                        // Handle dash state
-                        if (enemy.dashState.active) {
-                            // Continue dash movement
-                            const dashDx = enemy.dashState.targetX - enemy.x;
-                            const dashDy = enemy.dashState.targetY - enemy.y;
-                            const dashDistance = Math.sqrt(dashDx * dashDx + dashDy * dashDy);
-                            
-                            if (dashDistance > 5 && enemy.dashState.duration > 0) {
-                                // Move toward dash target at high speed
-                                const dashSpeed = enemy.speed * 6; // 6x normal speed for dash
-                                enemy.x += (dashDx / dashDistance) * dashSpeed;
-                                enemy.y += (dashDy / dashDistance) * dashSpeed;
-                                enemy.dashState.duration--;
-                            } else {
-                                // End dash
-                                enemy.dashState.active = false;
-                                enemy.speed = enemy.dashState.originalSpeed; // Restore original speed
-                            }
-                        } else {
-                            // Random chance to start dash toward player
-                            if (Math.random() < 0.02 && distance > 100) { // 2% chance per frame, only if far enough
-                                // Start dash
-                                enemy.dashState.active = true;
-                                enemy.dashState.targetX = this.player.x + (Math.random() - 0.5) * 60; // Slight randomness
-                                enemy.dashState.targetY = this.player.y + (Math.random() - 0.5) * 60;
-                                enemy.dashState.duration = enemy.dashState.maxDuration;
-                                enemy.dashState.originalSpeed = enemy.speed;
-                            } else {
-                                // Aggressive chase
-                                if (distance > 0) {
-                                    enemy.x += (dx / distance) * enemy.speed * 2;
-                                    enemy.y += (dy / distance) * enemy.speed * 2;
-                                }
-                            }
-                        }
-                    }
-                    
-                    // Boss missile attack with different patterns based on health phase
-                    let missileInterval;
-                    
-                    // Scale missile firing rate based on boss level (faster for higher levels)
-                    const bossLevel = enemy.bossLevel || 1;
-                    const fireRateMultiplier = this.fastPow(0.95, bossLevel - 1); // 5% faster per level
-                    
-                    // Phase 1: Slow missiles (above 70% health) - every 4 seconds
-                    if (bossHealthPercent > 0.7) {
-                        missileInterval = Math.floor(240 * fireRateMultiplier); // 4 seconds at 60fps
-                    }
-                    // Phase 2: Moderate missiles (30-70% health) - every 2.5 seconds  
-                    else if (bossHealthPercent > 0.3) {
-                        missileInterval = Math.floor(150 * fireRateMultiplier); // 2.5 seconds at 60fps
-                    }
-                    // Phase 3: Rapid missiles (below 30% health) - every 1.5 seconds
-                    else {
-                        missileInterval = Math.floor(90 * fireRateMultiplier); // 1.5 seconds at 60fps
-                    }
-                    
-                    if (!enemy.lastMissileFrame || this.frameCount - enemy.lastMissileFrame > missileInterval) {
-                        enemy.lastMissileFrame = this.frameCount;
-                        this.createBossMissile(enemy, bossHealthPercent);
-                    }
-                    break;
             }
             
             if (enemy.specialCooldown > 0) {
