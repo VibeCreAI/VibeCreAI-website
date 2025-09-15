@@ -4142,9 +4142,10 @@ class VibeSurvivor {
             
             // Phase 1: Direct chase (above 70% health)
             if (bossHealthPercent > 0.7) {
-                // Faster base speed for better challenge
-                enemy.x += dirX * enemy.speed * 1.5;
-                enemy.y += dirY * enemy.speed * 1.5;
+                // Base movement - enemy.speed already includes boss level scaling!
+                const phaseMultiplier = 1.5; // Phase 1 multiplier
+                enemy.x += dirX * enemy.speed * phaseMultiplier;
+                enemy.y += dirY * enemy.speed * phaseMultiplier;
             }
             // Phase 2: Increased aggression - faster movement (30-70% health)
             else if (bossHealthPercent > 0.3) {
