@@ -50,9 +50,9 @@ class VibeCreAIApp {
 
             // Hero elements
             heroTitle: document.querySelector('.hero-title'),
-            logoContainer: dom.get('logoContainer'),
+            logoContainer: document.getElementById('logo-text-container'),
             heroSubtitle: dom.get('heroSubtitle'),
-            tagline: dom.get('tagline'),
+            tagline: document.getElementById('tagline'),
 
             // Form elements
             newsletterForm: dom.get('newsletterForm'),
@@ -139,10 +139,7 @@ class VibeCreAIApp {
             });
         }
 
-        // Logo shuffle animation
-        if (this.elements.logoContainer) {
-            this.initLogoShuffle();
-        }
+        // Logo shuffle animation - moved to loading screen completion
 
         // Hero subtitle with focus effect
         if (this.elements.heroSubtitle) {
@@ -161,10 +158,7 @@ class VibeCreAIApp {
             });
         }
 
-        // Text scramble animation for tagline
-        if (this.elements.tagline) {
-            this.initTaglineScramble();
-        }
+        // Text scramble animation for tagline - moved to loading screen completion
 
         // Scroll animations
         this.initScrollAnimations();
@@ -175,7 +169,7 @@ class VibeCreAIApp {
 
     initLogoShuffle() {
         const logoShuffle = new LogoShuffle(this.elements.logoContainer);
-        logoShuffle.shuffle();
+        return logoShuffle.shuffle();
     }
 
     initHeroSubtitle() {
@@ -367,6 +361,23 @@ class VibeCreAIApp {
         }
     }
 
+    startHeroAnimations() {
+        // Start logo shuffle animation first
+        if (this.elements.logoContainer) {
+            this.initLogoShuffle().then(() => {
+                // After logo is complete, start tagline scramble with a slight delay
+                setTimeout(() => {
+                    if (this.elements.tagline) {
+                        this.initTaglineScramble();
+                    }
+                }, 300);
+            });
+        } else if (this.elements.tagline) {
+            // If no logo container, just start tagline
+            this.initTaglineScramble();
+        }
+    }
+
     setupLoadingScreen() {
         window.addEventListener('load', () => {
             const loadingProgress = document.querySelector('.loading-progress');
@@ -392,6 +403,9 @@ class VibeCreAIApp {
                             if (window.PerformanceManager) {
                                 window.PerformanceManager.applyBrowserOptimizations();
                             }
+
+                            // Trigger hero animations after loading screen disappears
+                            this.startHeroAnimations();
                         }
                     });
                 }
