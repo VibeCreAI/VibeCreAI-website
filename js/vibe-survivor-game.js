@@ -4133,32 +4133,58 @@ class VibeSurvivor {
             const [dirX, dirY] = Vector2.direction(enemy.x, enemy.y, playerX, playerY);
             const distanceSquared = Vector2.distanceSquared(enemy.x, enemy.y, playerX, playerY);
             
+            // Boss missile firing logic
+            const missileInterval = 200; // Fire every 1.5 seconds at 60fps
+            if (this.frameCount - enemy.lastMissileFrame >= missileInterval) {
+                this.createBossMissile(enemy, bossHealthPercent);
+                enemy.lastMissileFrame = this.frameCount;
+            }
+            
             // Phase 1: Direct chase (above 70% health)
             if (bossHealthPercent > 0.7) {
-                enemy.x += dirX * enemy.speed;
-                enemy.y += dirY * enemy.speed;
+                // Faster base speed for better challenge
+                enemy.x += dirX * enemy.speed * 1.5;
+                enemy.y += dirY * enemy.speed * 1.5;
             }
-            // Phase 2: Erratic movement (30-70% health)
+            // Phase 2: Increased aggression - faster movement (30-70% health)
             else if (bossHealthPercent > 0.3) {
-                const erraticAngle = this.frameCount * 0.02;
-                const [erraticX, erraticY] = Vector2.rotate(dirX, dirY, erraticAngle);
-                enemy.x += erraticX * enemy.speed * 1.2;
-                enemy.y += erraticY * enemy.speed * 1.2;
+                // Phase 2: Even faster for escalating difficulty
+                enemy.x += dirX * enemy.speed * 1.8;
+                enemy.y += dirY * enemy.speed * 1.8;
             }
-            // Phase 3: Desperate teleporting (below 30% health)
+            // Phase 3: Dash movement towards player (below 30% health)
             else {
-                if (enemy.specialCooldown <= 0) {
-                    this.createTeleportParticles(enemy.x, enemy.y);
-                    const teleportDistance = 120;
-                    const angle = Math.random() * Math.PI * 2;
-                    const [teleportX, teleportY] = Vector2.rotate(teleportDistance, 0, angle);
-                    enemy.x = playerX + teleportX;
-                    enemy.y = playerY + teleportY;
-                    this.createTeleportParticles(enemy.x, enemy.y);
-                    enemy.specialCooldown = 120;
+                // Dash state management for aggressive Phase 3 behavior
+                if (!enemy.dashState.active) {
+                    // Start new dash towards player
+                    if (enemy.specialCooldown <= 0) {
+                        enemy.dashState.active = true;
+                        enemy.dashState.targetX = playerX;
+                        enemy.dashState.targetY = playerY;
+                        enemy.dashState.duration = 0;
+                        enemy.dashState.originalSpeed = enemy.speed;
+                        enemy.specialCooldown = 120; // Shorter dash cooldown for more aggressive
+                    } else {
+                        // Faster normal movement while dash is on cooldown
+                        enemy.x += dirX * enemy.speed * 2.0;
+                        enemy.y += dirY * enemy.speed * 2.0;
+                    }
                 } else {
-                    enemy.x += dirX * enemy.speed * 0.8;
-                    enemy.y += dirY * enemy.speed * 0.8;
+                    // Execute dash movement with much higher speed
+                    const [dashDirX, dashDirY] = Vector2.direction(enemy.x, enemy.y, enemy.dashState.targetX, enemy.dashState.targetY);
+                    const dashSpeed = enemy.speed * 6; // 8x speed during dash (much faster!)
+                    
+                    enemy.x += dashDirX * dashSpeed;
+                    enemy.y += dashDirY * dashSpeed;
+                    
+                    enemy.dashState.duration++;
+                    
+                    // Longer dash distance with faster speed
+                    const distToTarget = Vector2.distanceSquared(enemy.x, enemy.y, enemy.dashState.targetX, enemy.dashState.targetY);
+                    if (enemy.dashState.duration >= enemy.dashState.maxDuration || distToTarget < 100) {
+                        enemy.dashState.active = false;
+                        enemy.dashState.duration = 0;
+                    }
                 }
             }
         }
