@@ -28,7 +28,7 @@
     --secondary-color: #39ff14;
     --accent-color: #00cc33;
     --dark-bg: #000000;
-    --text-color: #00ff41;
+    --text-color: #ffffff;
     --neon-glow: 
         0 0 10px rgba(0, 255, 65, 0.8),
         0 0 20px rgba(0, 255, 65, 0.6),
@@ -50,7 +50,7 @@
     --secondary-color: #e6e6fa;
     --accent-color: #9370db;
     --dark-bg: #1e1e2e;
-    --text-color: #e0e0e0;
+    --text-color: #ffffff;
     --neon-glow: 
         0 0 10px rgba(184, 184, 255, 0.8),
         0 0 20px rgba(184, 184, 255, 0.6),

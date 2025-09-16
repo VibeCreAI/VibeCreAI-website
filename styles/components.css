@@ -160,6 +160,7 @@ nav {
 .hero {
     height: 100vh;
     display: flex;
+    background-color: #00000075;
     align-items: center;
     justify-content: center;
     position: relative;
@@ -343,6 +344,7 @@ body.terminal-active .cta-container {
     position: relative;
     z-index: 10;
     background: linear-gradient(180deg, transparent, rgba(0, 255, 255, 0.02), transparent);
+    background-color: #00000075;
 }
 
 .about-grid {
@@ -406,6 +408,7 @@ body.terminal-active .cta-container {
 .apps {
     padding: 160px 30px;
     position: relative;
+    background-color: #00000075;
     z-index: 10;
 }
 
@@ -524,9 +527,7 @@ body.terminal-active .cta-container {
 .app-button:hover {
     background: var(--primary-color);
     color: var(--dark-bg);
-    box-shadow: 
-        0 0 20px rgba(0, 0, 0, 0.3),
-        var(--neon-glow);
+    box-shadow: var(--neon-glow);
 }
 
 .app-buttons-container {
@@ -614,6 +615,7 @@ body.terminal-active .cta-container {
     position: relative;
     z-index: 10;
     background: linear-gradient(180deg, transparent, rgba(255, 0, 255, 0.02), transparent);
+    background-color: #00000075;
 }
 
 .contact-container {
