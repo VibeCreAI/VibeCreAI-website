@@ -354,7 +354,7 @@ body.terminal-active .cta-container {
 }
 
 .about-card {
-    background: color-mix(in srgb, var(--primary-color) 5%, transparent);
+    background: #0000007d;
     border: 1px solid var(--primary-color);
     padding: 40px;
     position: relative;
@@ -398,7 +398,7 @@ body.terminal-active .cta-container {
     font-family: 'Born2bSportyFont', monospace;
     font-size: 1.5rem;
     margin-bottom: 15px;
-    color: var(--primary-color);
+    color: #ffffff;
     letter-spacing: 0.05em;
 }
 
@@ -422,7 +422,7 @@ body.terminal-active .cta-container {
 }
 
 .app-card {
-    background: color-mix(in srgb, var(--primary-color) 5%, transparent);
+    background: #0000007d;
     border: 1px solid var(--primary-color);
     padding: 30px;
     text-align: center;
@@ -494,7 +494,7 @@ body.terminal-active .cta-container {
     font-family: 'Born2bSportyFont', monospace;
     font-size: 1.5rem;
     margin-bottom: 10px;
-    color: var(--primary-color);
+    color: #ffffff;
     letter-spacing: 0.05em;
 }
 
@@ -698,11 +698,11 @@ body.terminal-active .cta-container {
     display: flex;
     align-items: center;
     gap: 10px;
-    color: var(--primary-color);
+    color: #ffffff;
 }
 
 .contact-item a {
-    color: var(--primary-color);
+    color: #ffffff;
     text-decoration: none;
     transition: all 0.3s ease;
 }
@@ -714,8 +714,9 @@ body.terminal-active .cta-container {
 /* Footer */
 footer {
     font-family: 'Born2bSportyFont', monospace;
-    padding: 30px 50px;
+    padding: 30px 20px;
     background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
     text-align: center;
     border-top: 1px solid var(--primary-color);
     position: relative;
