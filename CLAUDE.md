@@ -6,12 +6,33 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 VibeCreAI Website is a stunning personal portfolio showcasing AI-human collaboration in web development. Built as a single-page application demonstrating creative possibilities when combining human imagination with AI tools (Claude and Cursor IDE). Features interactive themes, hidden games, neural network animations, and progressive content discovery through a terminal interface.
 
+## Recent Updates & Improvements
+
+### Latest Changes (2025)
+- **Modular CSS Architecture**: Transitioned from single-file CSS to organized modules
+- **UI/UX Improvements**: 
+  - Changed "PROJECTS" to "APPS" for better clarity
+  - Standardized button widths for visual consistency
+  - Removed black text shadows from game buttons for cleaner appearance
+  - Updated loading screen font color to white for better contrast
+- **Enhanced Performance**: Multi-phase optimization system in Vibe Survivor game
+- **Better Organization**: Separated JavaScript modules for improved maintainability
+- **Code Quality**: Improved code structure and documentation
+
+### Current Status
+- ✅ Fully functional with all games operational
+- ✅ Mobile-optimized with touch controls
+- ✅ Cross-browser compatible (Chrome, Firefox, Safari, Edge)
+- ✅ SEO optimized with complete meta tags
+- ✅ Performance optimized with 60fps target
+- ✅ Accessible with keyboard navigation support
+
 ## Tech Stack & Architecture
 
 - **Frontend**: HTML5, CSS3, Vanilla JavaScript (ES6+)
 - **Animations**: Anime.js library via CDN
 - **Graphics**: Canvas API for neural network effects and games
-- **Architecture**: Single-file application (index.html) with modular game components
+- **Architecture**: Main HTML entry point with modular CSS and JavaScript components
 - **Deployment**: Vercel with custom domain (vibecreai.com)
 - **No Build Process**: Static files, no compilation required
 
@@ -40,14 +61,29 @@ git push origin main  # Auto-deploys via Vercel
 ## File Structure
 
 ```
-├── index.html              # Main application (all HTML, CSS, core JS)
-├── js/
+├── index.html              # Main application entry point
+├── js/                     # JavaScript modules (modular architecture)
 │   ├── game-manager.js     # Game coordination system
+│   ├── main.js             # Core application logic and animations
+│   ├── menu-handler.js     # Navigation and menu interactions
+│   ├── performance-utils.js # Performance monitoring utilities
+│   ├── pixel-hover.js      # Pixel art hover effects
+│   ├── pixel-maze-background.js # Dynamic maze background
+│   ├── terminal.js         # Terminal interface functionality
+│   ├── theme-switcher.js   # Theme system management
 │   ├── vibe-runner-game.js # Side-scrolling runner game
-│   └── vibe-survivor-game.js # Survival/defense game
+│   ├── vibe-survivor-game.js # Advanced survival/defense game
+│   └── components/         # Reusable component modules
+├── styles/                 # Modular CSS architecture
+│   ├── base.css           # Base styles and layout
+│   ├── themes.css         # Theme color definitions
+│   ├── animations.css     # Animation definitions
+│   ├── components.css     # Component-specific styles
+│   ├── responsive.css     # Mobile and responsive styles
+│   └── pixel-hover.css    # Pixel art hover effects
 ├── images/                 # Static assets (favicon, social previews)
 ├── fonts/                  # Custom typography (Born2bSportyFS.otf)
-└── sound/                  # Audio assets
+└── sound/                  # Audio assets (prepared for future audio features)
 ```
 
 ## Code Architecture
@@ -78,7 +114,7 @@ git push origin main  # Auto-deploys via Vercel
 - CSS custom properties for theming
 - Mobile-first responsive design
 - Animation-heavy with smooth transitions
-- Embedded in HTML head for single-file architecture
+- Modular CSS architecture with organized stylesheets
 
 ### HTML Structure
 - Semantic HTML5 elements
