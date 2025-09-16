@@ -140,7 +140,7 @@ body {
 .loading-text {
     font-family: 'Born2bSportyFont', monospace;
     font-size: 3rem;
-    color: var(--primary-color);
+    color: #ffffff;
     text-shadow: var(--neon-glow);
     letter-spacing: 0.2em;
 }
