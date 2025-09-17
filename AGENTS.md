@@ -46,17 +46,13 @@
 
 ### Example `config.toml` Snippet
 ```toml
-[mcp.example-service]
-path = "/usr/local/bin/example-service"
-api_key = "REPLACE_WITH_REAL_KEY"
-env = { EXAMPLE_MODE = "production", TIMEOUT = "30s" }
+[mcp_servers.brightData]
+command = "npx"
+args = ["-y", "@brightdata/mcp"]
+env = { 
+  API_TOKEN = "bd_your_api_key_here"  
+}
 
-[mcp.another-service]
-path = "C:\\Tools\\another-service.exe"
-token = "DUMMY_TOKEN" # Replace with actual token
-```
-
-This structure ensures each MCP entry declares:
-- The executable path (`path`) suitable for the current OS.
-- Any required secrets (`api_key`, `token`) as placeholders until replaced by the user.
-- Optional environment variables under `env` for runtime configuration.
+[mcp_servers.playwright]
+command = "npx"
+args = ["@playwright/mcp@latest"]
