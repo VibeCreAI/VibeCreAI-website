@@ -223,7 +223,9 @@ class VibeSurvivor {
         this.bossesKilled = 0;
         this.bossLevel = 1;
         this.bossDefeating = false; // Animation state for boss defeat
-        
+        this.nextBossSpawnTime = null;     // Game-time schedule for upcoming boss spawns
+        this.bossRespawnDelay = 30;        // Seconds between scaled boss encounters
+
         // Level up and timing state management
         this.pendingLevelUps = 0;           // Count of deferred level ups
         this.bossVictoryInProgress = false; // Victory screen active
@@ -2097,6 +2099,7 @@ class VibeSurvivor {
         this.bossSpawned = false;
         this.bossLevel = 1;
         this.bossesKilled = 0;
+        this.nextBossSpawnTime = null;
         this.isPaused = false; // Ensure pause state is reset
         
         // Reset player - start at world center
@@ -2298,11 +2301,13 @@ class VibeSurvivor {
         this.updateHPOrbs();
         this.spawnMagnetOrbs();
         this.updateMagnetOrbs();
-        
+
+        this.checkScheduledBossSpawn();
+
         this.checkCollisions();
         this.checkLevelUp();
         this.updateCamera();
-        
+
         // Update adaptive quality scaling
         this.updateAdaptiveQuality();
     }
@@ -3705,8 +3710,8 @@ class VibeSurvivor {
             return; // Don't spawn more if at limit
         }
         
-        // Check for exact boss spawn at 5 minutes (300 seconds)
-        if (this.gameTime >= 300 && !this.bossSpawned && !this.enemies.some(enemy => enemy.behavior === 'boss')) {
+        // Check for first boss spawn at 5 minutes (300 seconds)
+        if (this.gameTime >= 300 && this.bossesKilled === 0 && !this.bossSpawned && !this.enemies.some(enemy => enemy.behavior === 'boss')) {
             this.spawnBoss();
             this.bossSpawned = true;
             return; // Don't spawn regular enemies this frame
@@ -9177,10 +9182,9 @@ class VibeSurvivor {
         this.bossesKilled++;
         this.bossLevel++;
         
-        // Spawn the next scaled boss after 10-second delay
-        setTimeout(() => {
-            this.spawnScaledBoss();
-        }, 30000); // 10 seconds
+        // Reset boss tracking and schedule the next encounter using game time
+        this.bossSpawned = false;
+        this.scheduleNextBossSpawn(this.bossRespawnDelay);
         
         // Increase general game difficulty
         this.waveNumber = Math.max(1, this.waveNumber + 1);
@@ -9197,7 +9201,31 @@ class VibeSurvivor {
         // Resume game loop
         this.startAnimationLoop();
     }
-    
+
+    scheduleNextBossSpawn(delaySeconds = this.bossRespawnDelay) {
+        const clampedDelay = Math.max(0, Number(delaySeconds) || 0);
+        this.nextBossSpawnTime = this.gameTime + clampedDelay;
+    }
+
+    checkScheduledBossSpawn() {
+        if (this.nextBossSpawnTime === null) {
+            return;
+        }
+
+        if (this.timePaused || this.playerDead || this.bossDefeating || this.bossVictoryInProgress) {
+            return;
+        }
+
+        if (this.enemies.some(enemy => enemy.behavior === 'boss')) {
+            return;
+        }
+
+        if (this.gameTime >= this.nextBossSpawnTime) {
+            this.spawnScaledBoss();
+            this.nextBossSpawnTime = null;
+        }
+    }
+
     restartGame() {
         this.startGame();
     }

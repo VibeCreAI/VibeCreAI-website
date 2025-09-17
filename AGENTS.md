@@ -30,3 +30,33 @@
 ## Deployment & Configuration Tips
 - Route overrides live in `vercel.json`; keep new redirects additive and document the target service.
 - Production deploys trigger on `main` pushes. Re-verify `robots.txt`, `sitemap.xml`, and analytics IDs whenever metadata or routing changes.
+
+## MCP Auto-Installation
+- Always verify the user’s environment before installation; if unclear, ask them directly.
+- Identify the OS (Windows, Linux, macOS) and shell/runtime (WSL, PowerShell, Command Prompt, etc.) and adjust the setup accordingly. Confirm with the user when in doubt.
+- Do not install an MCP blindly. Check the official site, confirm OS/environment compatibility, and follow the documented installation method first.
+- After installation, confirm success by running:
+  ```powershell
+  $env:RUST_LOG="codex=debug"; codex "/mcp"
+  ```
+  Inspect the logs to ensure the MCP is detected.
+- If an API key is required, set a dummy key by default, then clearly notify the user to replace it with a valid key.
+- Only install the MCPs the user explicitly requested. Ignore errors from other preinstalled MCPs.
+- Once an MCP runs successfully in the terminal, capture the arguments and environment variables used. Add the configuration directly to the correct `config.toml` file so the system persists the setup.
+
+### Example `config.toml` Snippet
+```toml
+[mcp.example-service]
+path = "/usr/local/bin/example-service"
+api_key = "REPLACE_WITH_REAL_KEY"
+env = { EXAMPLE_MODE = "production", TIMEOUT = "30s" }
+
+[mcp.another-service]
+path = "C:\\Tools\\another-service.exe"
+token = "DUMMY_TOKEN" # Replace with actual token
+```
+
+This structure ensures each MCP entry declares:
+- The executable path (`path`) suitable for the current OS.
+- Any required secrets (`api_key`, `token`) as placeholders until replaced by the user.
+- Optional environment variables under `env` for runtime configuration.
