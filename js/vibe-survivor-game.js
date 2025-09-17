@@ -196,6 +196,14 @@ class VibeSurvivor {
         this.lastSpawn = 0;
         this.notifications = [];
         this.camera = { x: 0, y: 0 };
+        
+        // Game loop timing control
+        this.gameLoopId = null;
+        this.lastTimestamp = null;
+        this.accumulator = 0;
+        this.frameInterval = 1000 / 60;
+        this.maxAccumulatedTime = this.frameInterval * 5;
+        
         this.spawnRate = 120; // frames between spawns
         this.waveMultiplier = 1;
         
@@ -2075,13 +2083,15 @@ class VibeSurvivor {
         }
         
         // Game loop started
-        this.gameLoop();
+        this.startAnimationLoop();
     }
     
     resetGame() {
         this.gameTime = 0;
         this.frameCount = 0;
         this.lastSpawn = 0;
+        this.lastTimestamp = null;
+        this.accumulator = 0;
         this.spawnRate = 120;
         this.waveMultiplier = 1;
         this.bossSpawned = false;
@@ -2198,24 +2208,58 @@ class VibeSurvivor {
         this.camera = { x: 0, y: 0 };
     }
     
-    gameLoop() {
-        if (!this.gameRunning || !this.canvas || !this.ctx) return;
-        
+    // Start or resume the main animation loop with normalized timing
+    startAnimationLoop() {
+        if (!this.gameRunning || !this.canvas || !this.ctx) {
+            return;
+        }
+
+        if (this.gameLoopId) {
+            cancelAnimationFrame(this.gameLoopId);
+            this.gameLoopId = null;
+        }
+
+        this.lastTimestamp = null;
+        this.accumulator = 0;
+        this.gameLoop(performance.now());
+    }
+
+    gameLoop(timestamp) {
+        if (!this.gameRunning || !this.canvas || !this.ctx) {
+            this.gameLoopId = null;
+            this.lastTimestamp = null;
+            this.accumulator = 0;
+            return;
+        }
+
+        if (typeof timestamp !== 'number') {
+            timestamp = performance.now();
+        }
+
         // Update frame rate monitoring
         this.updateFrameRate();
-        
-        // Performance optimization: Visual quality scaling handles performance instead of frame skipping
-        
-        // Only update game state if not paused, but always draw current state
+
+        const previousTimestamp = this.lastTimestamp === null ? timestamp : this.lastTimestamp;
+        const delta = Math.max(0, timestamp - previousTimestamp);
+        this.lastTimestamp = timestamp;
+
         if (!this.isPaused) {
-            this.update();
+            this.accumulator = Math.min(this.accumulator + delta, this.maxAccumulatedTime);
+            const epsilon = 0.0001;
+            while (this.accumulator + epsilon >= this.frameInterval) {
+                this.update();
+                this.accumulator -= this.frameInterval;
+            }
+        } else {
+            this.accumulator = 0;
         }
+
         this.draw();
         this.updateUI();
-        
-        this.gameLoopId = requestAnimationFrame(() => this.gameLoop());
+
+        this.gameLoopId = requestAnimationFrame(nextTimestamp => this.gameLoop(nextTimestamp));
     }
-    
+
     update() {
         // Always update effects even if player is dead
         this.updateScreenShake();
@@ -4934,7 +4978,7 @@ class VibeSurvivor {
                 // If no more pending level ups, start game loop
                 if (this.pendingLevelUps === 0 && this.gameRunning) {
                     
-                    this.gameLoop();
+                    this.startAnimationLoop();
                 }
             });
         });
@@ -9151,7 +9195,7 @@ class VibeSurvivor {
         // Boss defeat notification already shown during animation
         
         // Resume game loop
-        this.gameLoop();
+        this.startAnimationLoop();
     }
     
     restartGame() {
