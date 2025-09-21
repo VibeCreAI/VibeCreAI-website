@@ -1,10 +1,9 @@
-// Game Manager - Central coordinator for Vibe Runner and Vibe Survivor
+// Game Manager - Central coordinator for Vibe Runner
 class GameManager {
     constructor() {
         this.currentGame = null;
         this.vibeRunner = null;
-        this.vibeSurvivor = null;
-        
+
         this.initializeManager();
     }
     
@@ -24,21 +23,12 @@ class GameManager {
     setupEventListeners() {
         // Set up event listeners for game buttons
         const vibeRunnerBtn = document.getElementById('vibe-runner-btn');
-        const vibeSurvivorBtn = document.getElementById('vibe-survivor-btn');
-        
+
         if (vibeRunnerBtn) {
             vibeRunnerBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 this.launchVibeRunner();
-            });
-        }
-        
-        if (vibeSurvivorBtn) {
-            vibeSurvivorBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                this.launchVibeSurvivor();
             });
         }
     }
@@ -66,70 +56,6 @@ class GameManager {
         }
     }
     
-    launchVibeSurvivor() {
-        console.log('🎮 LAUNCHING VIBE SURVIVOR - Pausing background animations...');
-        
-        // Close any existing game first
-        this.closeCurrentGame();
-        
-        // Pause background animations for performance
-        this.pauseBackgroundAnimations();
-        
-        // Add body class to prevent terminal height changes
-        document.body.classList.add('game-modal-open');
-        
-        // Check if Vibe Survivor is loaded, if not load it
-        if (window.vibeSurvivor) {
-            this.vibeSurvivor = window.vibeSurvivor;
-            this.currentGame = 'vibe-survivor';
-            this.vibeSurvivor.launchGame();
-        } else {
-            // Load Vibe Survivor game if not already loaded
-            this.loadVibeSurvivor();
-        }
-    }
-    
-    loadVibeSurvivor() {
-        // Check if script is already loading or loaded
-        if (document.querySelector('script[src="js/vibe-survivor-game.js"]')) {
-            // Script is already loaded or loading, wait for it
-            const checkInterval = setInterval(() => {
-                if (window.vibeSurvivor) {
-                    clearInterval(checkInterval);
-                    this.vibeSurvivor = window.vibeSurvivor;
-                    this.currentGame = 'vibe-survivor';
-                    this.vibeSurvivor.launchGame();
-                }
-            }, 100);
-            return;
-        }
-        
-        const script = document.createElement('script');
-        script.src = 'js/vibe-survivor-game.js';
-        script.defer = true;
-        
-        script.onload = () => {
-            // Vibe Survivor loaded
-            // Give it a moment to initialize
-            setTimeout(() => {
-                if (window.vibeSurvivor) {
-                    this.vibeSurvivor = window.vibeSurvivor;
-                    this.currentGame = 'vibe-survivor';
-                    this.vibeSurvivor.launchGame();
-                } else {
-                    // Show loading screen instead of error message
-                    this.showLoadingScreen('Vibe Survivor');
-                }
-            }, 100);
-        };
-        
-        script.onerror = () => {
-            // Show loading screen for network issues
-            this.showLoadingScreen('Vibe Survivor');
-        };
-        
-        document.head.appendChild(script);
-    }
     
     closeCurrentGame() {
         // Remove game modal class to restore normal terminal behavior
@@ -146,14 +72,7 @@ class GameManager {
                 this.vibeRunner.backgroundMusic.currentTime = 0;
             }
         }
-        
-        if (this.currentGame === 'vibe-survivor' && this.vibeSurvivor) {
-            // Close Vibe Survivor if it has a close method
-            if (this.vibeSurvivor.closeGame) {
-                this.vibeSurvivor.closeGame();
-            }
-        }
-        
+
         this.currentGame = null;
     }
     

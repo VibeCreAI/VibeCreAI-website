@@ -9,6 +9,16 @@
       "source": "/spin2pick/(.*)",
       "destination": "https://spin2pick-app.vercel.app//$1",
       "permanent": false
+    },
+    {
+      "source": "/vibe-survivor",
+      "destination": "https://vibe-survivor.vercel.app/",
+      "permanent": false
+    },
+    {
+      "source": "/vibe-survivor/(.*)",
+      "destination": "https://vibe-survivor.vercel.app/$1",
+      "permanent": false
     }
   ]
 }
