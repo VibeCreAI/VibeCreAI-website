@@ -546,14 +546,14 @@ body.terminal-active .cta-container {
 }
 
 .web-button {
-    border-color: var(--primary-color) !important;
-    color: var(--primary-color) !important;
+    border-color: #FF9500 !important;
+    color: #FF9500 !important;
 }
 
 .web-button:hover {
-    background: var(--primary-color) !important;
+    background: #FF9500 !important;
     color: var(--dark-bg) !important;
-    box-shadow: 0 0 20px rgba(0, 255, 255, 0.5) !important;
+    box-shadow: 0 0 20px rgba(255, 149, 0, 0.5) !important;
 }
 
 .android-button {
