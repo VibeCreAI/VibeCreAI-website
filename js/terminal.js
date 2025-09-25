@@ -211,6 +211,18 @@ Email: contact@vibecreai.com`
 
         if (e.touches && e.touches.length > 1) return;
 
+        const { sourceTerminal } = this.elements;
+        const target = e.target;
+        const interactiveTarget = target instanceof Element ? target : target?.parentElement;
+
+        if (sourceTerminal && interactiveTarget instanceof Element && interactiveTarget.closest('.source-code-terminal') === sourceTerminal) {
+            this.touchData.startX = 0;
+            this.touchData.startY = 0;
+            this.touchData.moved = false;
+            this.touchData.active = false;
+            return;
+        }
+
         const touch = e.touches ? e.touches[0] : e;
 
         this.touchData.startX = touch.clientX;
