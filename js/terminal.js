@@ -10,6 +10,10 @@ class Terminal {
         this.keyBuffer = '';
         this.elements = {};
         this.isAnimating = false;
+        this.ignoreNextClick = false;
+        this.touchCooldownId = null;
+
+        this.handleTaglineTouch = this.handleTaglineTouch.bind(this);
 
         // Terminal content sections
         this.storyContent = [
@@ -119,8 +123,14 @@ Email: contact@vibecreai.com`
         // Tagline container click handler
         taglineContainer.addEventListener('click', (e) => {
             e.preventDefault();
+            if (this.ignoreNextClick) {
+                return;
+            }
             this.toggleTerminal();
         });
+
+        // Mobile touch handler to avoid double-trigger flashes
+        taglineContainer.addEventListener('touchstart', this.handleTaglineTouch, { passive: false });
 
         // Close button handler
         if (closeTerminal) {
@@ -183,6 +193,37 @@ Email: contact@vibecreai.com`
         } else {
             this.openTerminal();
         }
+    }
+
+    handleTaglineTouch(e) {
+        if (this.isAnimating) return;
+
+        if (e.touches && e.touches.length > 1) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        this.ignoreNextClick = true;
+
+        const memory = window.VibePerf?.memory;
+        if (this.touchCooldownId) {
+            if (memory) {
+                memory.clear(this.touchCooldownId, 'timeout');
+            } else {
+                clearTimeout(this.touchCooldownId);
+            }
+        }
+
+        const releaseClickBlock = () => {
+            this.ignoreNextClick = false;
+            this.touchCooldownId = null;
+        };
+
+        this.touchCooldownId = memory
+            ? memory.setTimeout(releaseClickBlock, 350)
+            : setTimeout(releaseClickBlock, 350);
+
+        this.toggleTerminal();
     }
 
     openTerminal() {
@@ -406,6 +447,21 @@ Email: contact@vibecreai.com`
                 events.cleanup(element);
             }
         });
+
+        if (this.elements.taglineContainer) {
+            this.elements.taglineContainer.removeEventListener('touchstart', this.handleTaglineTouch);
+        }
+
+        if (this.touchCooldownId) {
+            if (window.VibePerf?.memory) {
+                window.VibePerf.memory.clear(this.touchCooldownId, 'timeout');
+            } else {
+                clearTimeout(this.touchCooldownId);
+            }
+        }
+
+        this.touchCooldownId = null;
+        this.ignoreNextClick = false;
 
         // Reset state
         this.isOpen = false;
