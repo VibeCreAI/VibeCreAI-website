@@ -12,8 +12,16 @@ class Terminal {
         this.isAnimating = false;
         this.ignoreNextClick = false;
         this.touchCooldownId = null;
+        this.touchData = {
+            startX: 0,
+            startY: 0,
+            moved: false,
+            active: false
+        };
 
         this.handleTaglineTouch = this.handleTaglineTouch.bind(this);
+        this.handleTaglineTouchMove = this.handleTaglineTouchMove.bind(this);
+        this.handleTaglineTouchEnd = this.handleTaglineTouchEnd.bind(this);
 
         // Terminal content sections
         this.storyContent = [
@@ -131,6 +139,9 @@ Email: contact@vibecreai.com`
 
         // Mobile touch handler to avoid double-trigger flashes
         taglineContainer.addEventListener('touchstart', this.handleTaglineTouch, { passive: false });
+        taglineContainer.addEventListener('touchmove', this.handleTaglineTouchMove, { passive: true });
+        taglineContainer.addEventListener('touchend', this.handleTaglineTouchEnd, { passive: false });
+        taglineContainer.addEventListener('touchcancel', this.handleTaglineTouchEnd, { passive: false });
 
         // Close button handler
         if (closeTerminal) {
@@ -200,7 +211,13 @@ Email: contact@vibecreai.com`
 
         if (e.touches && e.touches.length > 1) return;
 
-        e.preventDefault();
+        const touch = e.touches ? e.touches[0] : e;
+
+        this.touchData.startX = touch.clientX;
+        this.touchData.startY = touch.clientY;
+        this.touchData.moved = false;
+        this.touchData.active = true;
+
         e.stopPropagation();
 
         this.ignoreNextClick = true;
@@ -222,6 +239,42 @@ Email: contact@vibecreai.com`
         this.touchCooldownId = memory
             ? memory.setTimeout(releaseClickBlock, 350)
             : setTimeout(releaseClickBlock, 350);
+    }
+
+    handleTaglineTouchMove(e) {
+        if (!this.touchData.active) return;
+
+        if (e.touches && e.touches.length > 1) {
+            this.touchData.moved = true;
+            return;
+        }
+
+        const touch = e.touches ? e.touches[0] : e;
+        const deltaX = Math.abs(touch.clientX - this.touchData.startX);
+        const deltaY = Math.abs(touch.clientY - this.touchData.startY);
+
+        if (deltaX > 6 || deltaY > 6) {
+            this.touchData.moved = true;
+        }
+    }
+
+    handleTaglineTouchEnd(e) {
+        if (!this.touchData.active) return;
+
+        if (e.type === 'touchcancel') {
+            this.touchData.active = false;
+            return;
+        }
+
+        const wasTap = !this.touchData.moved;
+        this.touchData.active = false;
+
+        if (!wasTap) {
+            return;
+        }
+
+        e.preventDefault();
+        e.stopPropagation();
 
         this.toggleTerminal();
     }
@@ -450,6 +503,9 @@ Email: contact@vibecreai.com`
 
         if (this.elements.taglineContainer) {
             this.elements.taglineContainer.removeEventListener('touchstart', this.handleTaglineTouch);
+            this.elements.taglineContainer.removeEventListener('touchmove', this.handleTaglineTouchMove);
+            this.elements.taglineContainer.removeEventListener('touchend', this.handleTaglineTouchEnd);
+            this.elements.taglineContainer.removeEventListener('touchcancel', this.handleTaglineTouchEnd);
         }
 
         if (this.touchCooldownId) {
@@ -462,6 +518,12 @@ Email: contact@vibecreai.com`
 
         this.touchCooldownId = null;
         this.ignoreNextClick = false;
+        this.touchData = {
+            startX: 0,
+            startY: 0,
+            moved: false,
+            active: false
+        };
 
         // Reset state
         this.isOpen = false;
