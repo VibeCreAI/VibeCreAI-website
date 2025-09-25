@@ -13,7 +13,7 @@
     }
     
     .source-code-terminal.active {
-        max-height: 520px;
+        max-height: 600px;
         padding: 0 15px 15px 15px;
     }
     
@@ -273,7 +273,7 @@
     
     .tagline {
         font-size: 1.14rem; /* 95% of 1.2rem */
-        /* min-height removed to maintain consistent dinosaur positioning across all window sizes */
+        /* min-height removed to maintain consistent programmer character positioning across all window sizes */
     }
     
     .cta-button {

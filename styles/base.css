@@ -242,7 +242,6 @@ body {
     font-family: 'Born2bSportyFont', monospace;
     font-size: 1.2rem;
     color: var(--primary-color);
-    margin-bottom: 40px;
     min-height: 2.5rem;
     line-height: 1.4;
     letter-spacing: 0.05em;
@@ -318,142 +317,242 @@ body {
 }
 
 /* Dinosaur Animation Styles */
-.dino-container {
+.programmer-container {
     position: relative;
-    height: 25px;
-    margin: 2px;
+    height: 100px;
+    margin: 2px auto;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    animation: walkLeftRight 8s linear infinite;
+    width: 192px;
+    overflow: visible;
 }
 
-/* Adjust dinosaur position for desktop to compensate for layout shift */
-@media (min-width: 769px) {
-    .dino-container {
-        margin-bottom: 7px; /* Move dinosaur 5px higher on desktop */
-    }
-}
-
-.dino-container:hover {
-    animation-play-state: paused;
-}
-
-.dino-scene {
-    position: relative;
-    font-size: 3px;
-}
-
-.dino-scene > * {
-    background: #e0e0e0;
-    height: 0.5em;
+/* Screen flicker background */
+.programmer-container::before {
+    content: '';
     position: absolute;
-    left: 0;
-    top: 0;
-    width: 0.5em;
+    top: -20px;
+    left: -20px;
+    right: -20px;
+    bottom: -20px;
+    background: linear-gradient(45deg, rgba(0, 255, 255, 0.1), rgba(0, 255, 255, 0.05));
+    border-radius: 10px;
+    animation: screenFlicker 3s ease-in-out infinite;
+    z-index: -1;
+}
+
+/* Glow effect behind character */
+.programmer-container::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 180px;
+    height: 180px;
+    background: radial-gradient(circle, rgba(0, 255, 255, 0.3) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: typingGlow 4s ease-in-out infinite;
+    z-index: -1;
+}
+
+/* Adjust programmer character position for desktop */
+@media (min-width: 769px) {
+    .programmer-container {
+        margin-bottom: 10px;
+    }
+}
+
+.programmer-character {
+    width: 150px;
+    height: 150px;
+    margin-bottom: -40px;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    animation: breathingAnimation 1s steps(4) infinite, typingGesture 2.5s ease-in-out infinite;
+    transition: filter 0.3s ease;
+    position: relative;
+    z-index: 2;
+}
+
+/* Programmer character breathing animation */
+@keyframes breathingAnimation {
+    0% { opacity: 1; }
+    25% { opacity: 0.9; }
+    50% { opacity: 0.8; }
+    75% { opacity: 0.9; }
+    100% { opacity: 1; }
+}
+
+/* Screen flicker animation */
+@keyframes screenFlicker {
+    0%, 100% { 
+        opacity: 0.1;
+        transform: scale(1);
+    }
+    20% { 
+        opacity: 0.2;
+        transform: scale(1.02);
+    }
+    40% { 
+        opacity: 0.15;
+        transform: scale(0.98);
+    }
+    60% { 
+        opacity: 0.25;
+        transform: scale(1.01);
+    }
+    80% { 
+        opacity: 0.1;
+        transform: scale(1);
+    }
+}
+
+/* Typing glow effect */
+@keyframes typingGlow {
+    0%, 100% { 
+        opacity: 0.2;
+        transform: translate(-50%, -50%) scale(1);
+    }
+    25% { 
+        opacity: 0.4;
+        transform: translate(-50%, -50%) scale(1.1);
+    }
+    50% { 
+        opacity: 0.3;
+        transform: translate(-50%, -50%) scale(0.95);
+    }
+    75% { 
+        opacity: 0.5;
+        transform: translate(-50%, -50%) scale(1.05);
+    }
+}
+
+/* Typing gesture animation */
+@keyframes typingGesture {
+    0%, 100% { 
+        transform: translateX(0) scale(1) rotate(0deg);
+    }
+    15% { 
+        transform: translateX(-0.3px) scale(0.99) rotate(-0.2deg);
+    }
+    30% { 
+        transform: translateX(0.3px) scale(1.01) rotate(0.2deg);
+    }
+    45% { 
+        transform: translateX(-0.15px) scale(0.995) rotate(-0.1deg);
+    }
+    60% { 
+        transform: translateX(0.15px) scale(1.005) rotate(0.1deg);
+    }
+    75% { 
+        transform: translateX(-0.1px) scale(0.998) rotate(-0.05deg);
+    }
+    90% { 
+        transform: translateX(0.1px) scale(1.002) rotate(0.05deg);
+    }
+}
+
+/* Matrix rain code symbols */
+.programmer-container .code-symbol {
+    position: absolute;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: rgba(0, 255, 255, 0.7);
     pointer-events: none;
+    z-index: 1;
+    text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+    opacity: 0;
+    animation-fill-mode: both;
 }
 
-.dino {
-    animation: dino 0.25s both steps(1) infinite;
-    width: 1em;
-    height: 1em;
+.programmer-container .code-symbol:nth-child(1) {
+    bottom: -20px;
+    left: 30px;
+    animation: matrixRise 3s linear infinite;
+    animation-delay: 0s;
 }
 
-.eye {
-    animation: eye 4s both steps(1) infinite;
-    width: 1em;
-    height: 1em;
+.programmer-container .code-symbol:nth-child(2) {
+    bottom: -20px;
+    right: 40px;
+    animation: matrixRise 4s linear infinite;
+    animation-delay: 0.8s;
 }
 
-.mouth {
-    animation: mouth 4s both steps(1) infinite;
-    width: 1em;
-    height: 1em;
+.programmer-container .code-symbol:nth-child(3) {
+    bottom: -20px;
+    left: 60px;
+    animation: matrixRise 3.5s linear infinite;
+    animation-delay: 1.5s;
 }
 
-
-
-/* Walking animation */
-@keyframes walkLeftRight {
-    0% { transform: translateX(-150px) scaleX(1); }
-    50% { transform: translateX(150px) scaleX(1); }
-    50.1% { transform: translateX(150px) scaleX(-1); }
-    100% { transform: translateX(-150px) scaleX(-1); }
+.programmer-container .code-symbol:nth-child(4) {
+    bottom: -20px;
+    right: 70px;
+    animation: matrixRise 2.8s linear infinite;
+    animation-delay: 2.2s;
 }
 
-/* Dinosaur pixel art keyframes */
-@keyframes eye {
-    0% {
-        box-shadow: 3em -9em 0 0 #e0e0e0;
+.programmer-container .code-symbol:nth-child(5) {
+    bottom: -32px;
+    left: 15px;
+    animation: matrixRise 3.6s linear infinite;
+    animation-delay: 2.8s;
+}
+
+.programmer-container .code-symbol:nth-child(6) {
+    bottom: -34px;
+    right: 25px;
+    animation: matrixRise 3.2s linear infinite;
+    animation-delay: 1.2s;
+}
+
+.programmer-container .code-symbol:nth-child(7) {
+    bottom: -38px;
+    left: 85px;
+    animation: matrixRise 3.9s linear infinite;
+    animation-delay: 3.4s;
+}
+
+.programmer-container .code-symbol:nth-child(8) {
+    bottom: -42px;
+    right: 60px;
+    animation: matrixRise 3.3s linear infinite;
+    animation-delay: 1.9s;
+}
+
+.programmer-container .code-symbol:nth-child(9) {
+    bottom: -48px;
+    left: 45px;
+    animation: matrixRise 3.7s linear infinite;
+    animation-delay: 0.6s;
+}
+
+.programmer-container .code-symbol:nth-child(10) {
+    bottom: -50px;
+    right: 100px;
+    animation: matrixRise 4.1s linear infinite;
+    animation-delay: 2.5s;
+}
+
+/* Matrix rain falling animation */
+@keyframes matrixRise {
+    0% { 
+        transform: translateY(0);
+        opacity: 0;
     }
-    5% {
-        box-shadow: 0 0 0 0 #e0e0e0;
+    10% { 
+        opacity: 0.8;
     }
-    50% {
-        box-shadow: 0em 0em 0 0 #e0e0e0;
+    90% { 
+        opacity: 0.4;
     }
-}
-
-@keyframes mouth {
-    0% {
-        box-shadow: 6em -4em 0 0 #e0e0e0, 7em -4em 0 0 #e0e0e0, 8em -4em 0 0 #e0e0e0;
-    }
-    50% {
-        box-shadow: 5em -3em 0 0 #e0e0e0, 6em -3em 0 0 #e0e0e0, 7em -3em 0 0 #e0e0e0, 8em -3em 0 0 #e0e0e0;
-    }
-}
-
-
-
-
-
-@keyframes dino {
-    0% {
-        box-shadow: 
-        2em -10em 0 0 #e0e0e0, 3em -10em 0 0 #e0e0e0, 4em -10em 0 0 #e0e0e0, 5em -10em 0 0 #e0e0e0, 6em -10em 0 0 #e0e0e0, 7em -10em 0 0 #e0e0e0, 8em -10em 0 0 #e0e0e0, 9em -10em 0 0 #e0e0e0,
-        1em -9em 0 0 #e0e0e0, 2em -9em 0 0 #e0e0e0, 4em -9em 0 0 #e0e0e0, 5em -9em 0 0 #e0e0e0, 6em -9em 0 0 #e0e0e0, 7em -9em 0 0 #e0e0e0, 8em -9em 0 0 #e0e0e0, 9em -9em 0 0 #e0e0e0, 10em -9em 0 0 #e0e0e0,
-        1em -8em 0 0 #e0e0e0, 2em -8em 0 0 #e0e0e0, 3em -8em 0 0 #e0e0e0, 4em -8em 0 0 #e0e0e0, 5em -8em 0 0 #e0e0e0, 6em -8em 0 0 #e0e0e0, 7em -8em 0 0 #e0e0e0, 8em -8em 0 0 #e0e0e0, 9em -8em 0 0 #e0e0e0, 10em -8em 0 0 #e0e0e0,
-        1em -7em 0 0 #e0e0e0, 2em -7em 0 0 #e0e0e0, 3em -7em 0 0 #e0e0e0, 4em -7em 0 0 #e0e0e0, 5em -7em 0 0 #e0e0e0, 6em -7em 0 0 #e0e0e0, 7em -7em 0 0 #e0e0e0, 8em -7em 0 0 #e0e0e0, 9em -7em 0 0 #e0e0e0, 10em -7em 0 0 #e0e0e0,
-        1em -6em 0 0 #e0e0e0, 2em -6em 0 0 #e0e0e0, 3em -6em 0 0 #e0e0e0, 4em -6em 0 0 #e0e0e0, 5em -6em 0 0 #e0e0e0, 6em -6em 0 0 #e0e0e0, 7em -6em 0 0 #e0e0e0, 8em -6em 0 0 #e0e0e0, 9em -6em 0 0 #e0e0e0, 10em -6em 0 0 #e0e0e0,
-        1em -5em 0 0 #e0e0e0, 2em -5em 0 0 #e0e0e0, 3em -5em 0 0 #e0e0e0, 4em -5em 0 0 #e0e0e0, 5em -5em 0 0 #e0e0e0,
-        0em -4em 0 0 #e0e0e0, 1em -4em 0 0 #e0e0e0, 2em -4em 0 0 #e0e0e0, 3em -4em 0 0 #e0e0e0, 4em -4em 0 0 #e0e0e0, 5em -4em 0 0 #e0e0e0,
-        -9em -3em 0 0 #e0e0e0, -3em -3em 0 0 #e0e0e0, -2em -3em 0 0 #e0e0e0, -1em -3em 0 0 #e0e0e0, 0em -3em 0 0 #e0e0e0, 1em -3em 0 0 #e0e0e0, 2em -3em 0 0 #e0e0e0, 3em -3em 0 0 #e0e0e0, 4em -3em 0 0 #e0e0e0,
-        -9em -2em 0 0 #e0e0e0, -2em -2em 0 0 #e0e0e0, -1em -2em 0 0 #e0e0e0, 0em -2em 0 0 #e0e0e0, 1em -2em 0 0 #e0e0e0, 2em -2em 0 0 #e0e0e0, 3em -2em 0 0 #e0e0e0, 4em -2em 0 0 #e0e0e0,
-        -9em -1em 0 0 #e0e0e0, -8em -1em 0 0 #e0e0e0, -3em -1em 0 0 #e0e0e0, -2em -1em 0 0 #e0e0e0, -1em -1em 0 0 #e0e0e0, 0em -1em 0 0 #e0e0e0, 1em -1em 0 0 #e0e0e0, 2em -1em 0 0 #e0e0e0, 3em -1em 0 0 #e0e0e0, 4em -1em 0 0 #e0e0e0, 5em -1em 0 0 #e0e0e0, 6em -1em 0 0 #e0e0e0,
-        -9em 0em 0 0 #e0e0e0, -8em 0em 0 0 #e0e0e0, -7em 0em 0 0 #e0e0e0, -4em 0em 0 0 #e0e0e0, -3em 0em 0 0 #e0e0e0, -2em 0em 0 0 #e0e0e0, -1em 0em 0 0 #e0e0e0, 0em 0em 0 0 #e0e0e0, 1em 0em 0 0 #e0e0e0, 2em 0em 0 0 #e0e0e0, 3em 0em 0 0 #e0e0e0, 4em 0em 0 0 #e0e0e0, 6em 0em 0 0 #e0e0e0,
-        -9em 1em 0 0 #e0e0e0, -8em 1em 0 0 #e0e0e0, -7em 1em 0 0 #e0e0e0, -6em 1em 0 0 #e0e0e0, -5em 1em 0 0 #e0e0e0, -4em 1em 0 0 #e0e0e0, -3em 1em 0 0 #e0e0e0, -2em 1em 0 0 #e0e0e0, -1em 1em 0 0 #e0e0e0, 0em 1em 0 0 #e0e0e0, 1em 1em 0 0 #e0e0e0, 2em 1em 0 0 #e0e0e0, 3em 1em 0 0 #e0e0e0, 4em 1em 0 0 #e0e0e0,
-        -8em 2em 0 0 #e0e0e0, -7em 2em 0 0 #e0e0e0, -6em 2em 0 0 #e0e0e0, -5em 2em 0 0 #e0e0e0, -4em 2em 0 0 #e0e0e0, -3em 2em 0 0 #e0e0e0, -2em 2em 0 0 #e0e0e0, -1em 2em 0 0 #e0e0e0, 0em 2em 0 0 #e0e0e0, 1em 2em 0 0 #e0e0e0, 2em 2em 0 0 #e0e0e0, 3em 2em 0 0 #e0e0e0, 4em 2em 0 0 #e0e0e0,
-        -7em 3em 0 0 #e0e0e0, -6em 3em 0 0 #e0e0e0, -5em 3em 0 0 #e0e0e0, -4em 3em 0 0 #e0e0e0, -3em 3em 0 0 #e0e0e0, -2em 3em 0 0 #e0e0e0, -1em 3em 0 0 #e0e0e0, 0em 3em 0 0 #e0e0e0, 1em 3em 0 0 #e0e0e0, 2em 3em 0 0 #e0e0e0, 3em 3em 0 0 #e0e0e0,
-        -6em 4em 0 0 #e0e0e0, -5em 4em 0 0 #e0e0e0, -4em 4em 0 0 #e0e0e0, -3em 4em 0 0 #e0e0e0, -2em 4em 0 0 #e0e0e0, -1em 4em 0 0 #e0e0e0, 0em 4em 0 0 #e0e0e0, 1em 4em 0 0 #e0e0e0, 2em 4em 0 0 #e0e0e0,
-        -5em 5em 0 0 #e0e0e0, -4em 5em 0 0 #e0e0e0, -3em 5em 0 0 #e0e0e0, -2em 5em 0 0 #e0e0e0, -1em 5em 0 0 #e0e0e0, 0em 5em 0 0 #e0e0e0, 1em 5em 0 0 #e0e0e0,
-        -4em 6em 0 0 #e0e0e0, -3em 6em 0 0 #e0e0e0, 0em 6em 0 0 #e0e0e0, 1em 6em 0 0 #e0e0e0,
-        -3em 7em 0 0 #e0e0e0, -2em 7em 0 0 #e0e0e0, 1em 7em 0 0 #e0e0e0,
-        1em 8em 0 0 #e0e0e0,
-        1em 9em 0 0 #e0e0e0, 2em 9em 0 0 #e0e0e0;
-    }
-    50% {
-        box-shadow:
-        2em -10em 0 0 #e0e0e0, 3em -10em 0 0 #e0e0e0, 4em -10em 0 0 #e0e0e0, 5em -10em 0 0 #e0e0e0, 6em -10em 0 0 #e0e0e0, 7em -10em 0 0 #e0e0e0, 8em -10em 0 0 #e0e0e0, 9em -10em 0 0 #e0e0e0,
-        1em -9em 0 0 #e0e0e0, 2em -9em 0 0 #e0e0e0, 4em -9em 0 0 #e0e0e0, 5em -9em 0 0 #e0e0e0, 6em -9em 0 0 #e0e0e0, 7em -9em 0 0 #e0e0e0, 8em -9em 0 0 #e0e0e0, 9em -9em 0 0 #e0e0e0, 10em -9em 0 0 #e0e0e0,
-        1em -8em 0 0 #e0e0e0, 2em -8em 0 0 #e0e0e0, 3em -8em 0 0 #e0e0e0, 4em -8em 0 0 #e0e0e0, 5em -8em 0 0 #e0e0e0, 6em -8em 0 0 #e0e0e0, 7em -8em 0 0 #e0e0e0, 8em -8em 0 0 #e0e0e0, 9em -8em 0 0 #e0e0e0, 10em -8em 0 0 #e0e0e0,
-        1em -7em 0 0 #e0e0e0, 2em -7em 0 0 #e0e0e0, 3em -7em 0 0 #e0e0e0, 4em -7em 0 0 #e0e0e0, 5em -7em 0 0 #e0e0e0, 6em -7em 0 0 #e0e0e0, 7em -7em 0 0 #e0e0e0, 8em -7em 0 0 #e0e0e0, 9em -7em 0 0 #e0e0e0, 10em -7em 0 0 #e0e0e0,
-        1em -6em 0 0 #e0e0e0, 2em -6em 0 0 #e0e0e0, 3em -6em 0 0 #e0e0e0, 4em -6em 0 0 #e0e0e0, 5em -6em 0 0 #e0e0e0, 6em -6em 0 0 #e0e0e0, 7em -6em 0 0 #e0e0e0, 8em -6em 0 0 #e0e0e0, 9em -6em 0 0 #e0e0e0, 10em -6em 0 0 #e0e0e0,
-        1em -5em 0 0 #e0e0e0, 2em -5em 0 0 #e0e0e0, 3em -5em 0 0 #e0e0e0, 4em -5em 0 0 #e0e0e0, 5em -5em 0 0 #e0e0e0,
-        -3em -4em 0 0 #e0e0e0, -2em -4em 0 0 #e0e0e0, 0em -4em 0 0 #e0e0e0, 1em -4em 0 0 #e0e0e0, 2em -4em 0 0 #e0e0e0, 3em -4em 0 0 #e0e0e0, 4em -4em 0 0 #e0e0e0, 5em -4em 0 0 #e0e0e0,
-        -9em -3em 0 0 #e0e0e0, -2em -3em 0 0 #e0e0e0, -1em -3em 0 0 #e0e0e0, 0em -3em 0 0 #e0e0e0, 1em -3em 0 0 #e0e0e0, 2em -3em 0 0 #e0e0e0, 3em -3em 0 0 #e0e0e0, 4em -3em 0 0 #e0e0e0,
-        -9em -2em 0 0 #e0e0e0, -2em -2em 0 0 #e0e0e0, -1em -2em 0 0 #e0e0e0, 0em -2em 0 0 #e0e0e0, 1em -2em 0 0 #e0e0e0, 2em -2em 0 0 #e0e0e0, 3em -2em 0 0 #e0e0e0, 4em -2em 0 0 #e0e0e0,
-        -9em -1em 0 0 #e0e0e0, -8em -1em 0 0 #e0e0e0, -3em -1em 0 0 #e0e0e0, -2em -1em 0 0 #e0e0e0, -1em -1em 0 0 #e0e0e0, 0em -1em 0 0 #e0e0e0, 1em -1em 0 0 #e0e0e0, 2em -1em 0 0 #e0e0e0, 3em -1em 0 0 #e0e0e0, 4em -1em 0 0 #e0e0e0,
-        -9em 0em 0 0 #e0e0e0, -8em 0em 0 0 #e0e0e0, -7em 0em 0 0 #e0e0e0, -4em 0em 0 0 #e0e0e0, -3em 0em 0 0 #e0e0e0, -2em 0em 0 0 #e0e0e0, -1em 0em 0 0 #e0e0e0, 0em 0em 0 0 #e0e0e0, 1em 0em 0 0 #e0e0e0, 2em 0em 0 0 #e0e0e0, 3em 0em 0 0 #e0e0e0, 4em 0em 0 0 #e0e0e0, 5em 0em 0 0 #e0e0e0, 6em 0em 0 0 #e0e0e0,
-        -9em 1em 0 0 #e0e0e0, -8em 1em 0 0 #e0e0e0, -7em 1em 0 0 #e0e0e0, -6em 1em 0 0 #e0e0e0, -5em 1em 0 0 #e0e0e0, -4em 1em 0 0 #e0e0e0, -3em 1em 0 0 #e0e0e0, -2em 1em 0 0 #e0e0e0, -1em 1em 0 0 #e0e0e0, 0em 1em 0 0 #e0e0e0, 1em 1em 0 0 #e0e0e0, 2em 1em 0 0 #e0e0e0, 3em 1em 0 0 #e0e0e0, 4em 1em 0 0 #e0e0e0, 6em 1em 0 0 #e0e0e0,
-        -8em 2em 0 0 #e0e0e0, -7em 2em 0 0 #e0e0e0, -6em 2em 0 0 #e0e0e0, -5em 2em 0 0 #e0e0e0, -4em 2em 0 0 #e0e0e0, -3em 2em 0 0 #e0e0e0, -2em 2em 0 0 #e0e0e0, -1em 2em 0 0 #e0e0e0, 0em 2em 0 0 #e0e0e0, 1em 2em 0 0 #e0e0e0, 2em 2em 0 0 #e0e0e0, 3em 2em 0 0 #e0e0e0, 4em 2em 0 0 #e0e0e0,
-        -7em 3em 0 0 #e0e0e0, -6em 3em 0 0 #e0e0e0, -5em 3em 0 0 #e0e0e0, -4em 3em 0 0 #e0e0e0, -3em 3em 0 0 #e0e0e0, -2em 3em 0 0 #e0e0e0, -1em 3em 0 0 #e0e0e0, 0em 3em 0 0 #e0e0e0, 1em 3em 0 0 #e0e0e0, 2em 3em 0 0 #e0e0e0, 3em 3em 0 0 #e0e0e0,
-        -6em 4em 0 0 #e0e0e0, -5em 4em 0 0 #e0e0e0, -4em 4em 0 0 #e0e0e0, -3em 4em 0 0 #e0e0e0, -2em 4em 0 0 #e0e0e0, -1em 4em 0 0 #e0e0e0, 0em 4em 0 0 #e0e0e0, 1em 4em 0 0 #e0e0e0, 2em 4em 0 0 #e0e0e0,
-        -5em 5em 0 0 #e0e0e0, -4em 5em 0 0 #e0e0e0, -3em 5em 0 0 #e0e0e0, -2em 5em 0 0 #e0e0e0, -1em 5em 0 0 #e0e0e0, 0em 5em 0 0 #e0e0e0, 1em 5em 0 0 #e0e0e0,
-        -4em 6em 0 0 #e0e0e0, -3em 6em 0 0 #e0e0e0, -2em 6em 0 0 #e0e0e0, 1em 6em 0 0 #e0e0e0, 2em 6em 0 0 #e0e0e0,
-        -4em 7em 0 0 #e0e0e0, -3em 7em 0 0 #e0e0e0,
-        -4em 8em 0 0 #e0e0e0,
-        -4em 9em 0 0 #e0e0e0, -3em 9em 0 0 #e0e0e0;
+    100% { 
+        transform: translateY(-140px);
+        opacity: 0;
     }
 }

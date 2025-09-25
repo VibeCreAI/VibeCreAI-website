@@ -33,6 +33,7 @@ class VibeCreAIApp {
             this.setupScrollBehavior();
             this.initializeAnimations();
             this.setupEventHandlers();
+            this.setupProgrammerAnimation();
             this.isInitialized = true;
             console.log('🎉 VibeCreAI App initialized');
         };
@@ -62,6 +63,27 @@ class VibeCreAIApp {
             fadeInElements: dom.get('fadeInElements'),
             anchors: dom.get('anchors')
         };
+    }
+
+    setupProgrammerAnimation() {
+        const programmerChar = document.getElementById('programmer-character');
+        if (!programmerChar) return;
+
+        const frames = [
+            'images/programmer-character/animations/breathing-idle/south/frame_000.png',
+            'images/programmer-character/animations/breathing-idle/south/frame_001.png',
+            'images/programmer-character/animations/breathing-idle/south/frame_002.png',
+            'images/programmer-character/animations/breathing-idle/south/frame_003.png'
+        ];
+
+        let currentFrame = 0;
+        const animateFrames = () => {
+            programmerChar.src = frames[currentFrame];
+            currentFrame = (currentFrame + 1) % frames.length;
+        };
+
+        // Start animation
+        setInterval(animateFrames, 250); // 250ms per frame = 4fps
     }
 
     initializeYear() {

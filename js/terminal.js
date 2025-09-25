@@ -143,16 +143,30 @@ Email: contact@vibecreai.com`
         });
 
         // Event delegation for /next clicks
-        events.addPassiveListener(document, 'click', (e) => {
-            if (e.target && e.target.classList.contains('terminal-next-text')) {
+        document.addEventListener('click', (e) => {
+            // Check direct target
+            if (e.target && e.target.classList && e.target.classList.contains('terminal-next-text')) {
                 e.preventDefault();
                 e.stopPropagation();
                 this.goToNextSection();
+                return;
+            }
+            
+            // Check if clicked inside /next element
+            let currentElement = e.target;
+            while (currentElement && currentElement !== document) {
+                if (currentElement.classList && currentElement.classList.contains('terminal-next-text')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.goToNextSection();
+                    return;
+                }
+                currentElement = currentElement.parentElement;
             }
         });
 
         // Touch events for mobile
-        events.addPassiveListener(document, 'touchstart', (e) => {
+        document.addEventListener('touchstart', (e) => {
             if (e.target && e.target.classList.contains('terminal-next-text')) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -289,9 +303,23 @@ Email: contact@vibecreai.com`
         // Create prompt element
         const promptElement = this.createElement('span', 'terminal-prompt', '$ ');
 
-        // Create /next element
-        const nextElement = this.createElement('span', 'terminal-next-text', '/next');
+        // Create /next element with enhanced debugging
+        const nextElement = this.createElement('span', 'terminal-next-text');
+        nextElement.textContent = '/next';
         nextElement.style.pointerEvents = 'auto';
+        nextElement.style.cursor = 'pointer';
+        nextElement.style.display = 'inline-block';
+        nextElement.style.zIndex = '1000';
+        
+        // Add data attribute for easier debugging
+        nextElement.setAttribute('data-clickable', 'true');
+        
+        // Add direct click handler as backup
+        nextElement.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.goToNextSection();
+        });
 
         // Create cursor element
         const cursorElement = this.createElement('span', 'terminal-cursor');
