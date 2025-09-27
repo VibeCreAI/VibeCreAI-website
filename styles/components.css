@@ -207,17 +207,17 @@ body.terminal-active .cta-container {
 
 .title-v, .title-c {
     color: #ffffff;
-    font-size: 6rem;
+    font-size: 7rem;
 }
 
 .title-small {
-    font-size: 4.8rem;
+    font-size: 5.8rem;
     color: #ffffff;
 }
 
 .title-ai {
     color: var(--primary-color);
-    font-size: 6rem;
+    font-size: 7rem;
     text-shadow: 
         0 0 10px color-mix(in srgb, var(--primary-color) 60%, transparent),
         0 0 20px color-mix(in srgb, var(--primary-color) 40%, transparent),
@@ -973,4 +973,85 @@ footer {
 /* Performance optimizations for SVG maze */
 #mazeGrid rect {
     will-change: fill;
+}
+
+/* ==============================================
+   AI BOT ANIMATION SYSTEM
+   ============================================== */
+
+.ai-bot-container {
+    position: absolute;
+    top: -90px;
+    left: 48%;
+    transform: translateX(-50%);
+    z-index: 10;
+    width: 120px;
+    height: 120px;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+    pointer-events: none;
+}
+
+.ai-bot-container canvas {
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    transition: filter 0.3s ease;
+}
+
+.ai-bot-container.loaded {
+    opacity: 1;
+}
+
+/* No default glow effects - only on hover like main logo */
+
+/* Hover effects for interactive elements near the bot - maintain theme color with glow */
+.hero-title:hover .ai-bot-container canvas {
+    transform: scale(1.05);
+    transition: all 0.3s ease;
+}
+
+/* Default theme hover glow - cyan like AI text (reduced) */
+.hero-title:hover .ai-bot-container canvas {
+    filter: brightness(0) saturate(100%) invert(89%) sepia(100%) saturate(3533%) hue-rotate(140deg) brightness(104%) contrast(105%)
+            drop-shadow(0 0 6px rgba(0, 255, 255, 0.8))
+            drop-shadow(0 0 12px rgba(0, 255, 255, 0.4))
+            drop-shadow(0 0 18px rgba(43, 180, 219, 0.2)) !important;
+}
+
+/* Matrix theme hover glow - green like AI text (reduced) */
+.theme-matrix .hero-title:hover .ai-bot-container canvas {
+    filter: brightness(0) saturate(100%) invert(50%) sepia(96%) saturate(2089%) hue-rotate(88deg) brightness(118%) contrast(119%)
+            drop-shadow(0 0 6px rgba(0, 255, 65, 0.8))
+            drop-shadow(0 0 12px rgba(0, 255, 65, 0.4))
+            drop-shadow(0 0 18px rgba(0, 204, 51, 0.2)) !important;
+}
+
+/* Synthwave theme hover glow - pink like AI text (reduced) */
+.theme-synthwave .hero-title:hover .ai-bot-container canvas {
+    filter: brightness(0) saturate(100%) invert(13%) sepia(79%) saturate(7439%) hue-rotate(295deg) brightness(104%) contrast(105%)
+            drop-shadow(0 0 6px rgba(255, 0, 255, 0.8))
+            drop-shadow(0 0 12px rgba(255, 0, 255, 0.4))
+            drop-shadow(0 0 18px rgba(255, 105, 180, 0.2)) !important;
+}
+
+/* Ghost theme hover glow - light blue like AI text (reduced) */
+.theme-ghost .hero-title:hover .ai-bot-container canvas {
+    filter: brightness(1.2) saturate(0.8)
+            drop-shadow(0 0 6px rgba(184, 184, 255, 0.8))
+            drop-shadow(0 0 12px rgba(184, 184, 255, 0.4))
+            drop-shadow(0 0 18px rgba(147, 112, 219, 0.2)) !important;
+}
+
+/* Animation performance optimizations */
+.ai-bot-container {
+    will-change: opacity;
+    backface-visibility: hidden;
+}
+
+.ai-bot-container canvas {
+    will-change: filter, transform;
+    backface-visibility: hidden;
 }

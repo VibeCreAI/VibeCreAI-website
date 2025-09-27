@@ -160,6 +160,15 @@ class ThemeSwitcher {
 
         // Show theme change notification
         this.showThemeNotification(theme.description);
+
+        // Dispatch theme change event for other components (like AI bot animation)
+        const themeChangeEvent = new CustomEvent('themeChanged', {
+            detail: {
+                theme: theme,
+                themeIndex: themeIndex
+            }
+        });
+        document.dispatchEvent(themeChangeEvent);
     }
 
     showThemeNotification(themeName) {

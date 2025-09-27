@@ -235,20 +235,28 @@
     }
 }
 
-/* Hero Section Scaling for Very Narrow Screens (420px and below) */
-@media (max-width: 420px) {
+/* Hero Section Scaling for Very Narrow Screens (540px and below) */
+@media (max-width: 540px) {
     .hero-content {
         transform: scale(0.95);
         transform-origin: center;
     }
     
+    /* AI Bot responsive scaling */
+    .ai-bot-container {
+        width: 100px !important; /* Scale down from 120px */
+        height: 100px !important;
+        top: -75px !important; /* Adjust position for smaller size */
+        transform: translateX(-50%) scale(0.95) !important;
+    }
+
     /* Prevent scaling from affecting game modals */
     .vibe-survivor-modal,
     .vibe-runner-modal,
     .runner-modal {
         transform: none !important;
     }
-    
+
     .vibe-survivor-modal *,
     .vibe-runner-modal *,
     .runner-modal * {
@@ -295,5 +303,13 @@
     .form-group button {
         font-size: 0.8rem;
         letter-spacing: 0.05em;
+    }
+
+    /* AI Bot ultra narrow scaling */
+    .ai-bot-container {
+        width: 80px !important; /* Further scale down for very small screens */
+        height: 80px !important;
+        top: -60px !important; /* Adjust position for smaller size */
+        transform: translateX(-50%) scale(0.95) !important;
     }
 }
