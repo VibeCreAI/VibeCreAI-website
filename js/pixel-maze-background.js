@@ -14,13 +14,33 @@ let mazeLastHeight = 0;
 let mazeIsMobile = false;
 let mazeResizeTimeout = null;
 
+// Canvas overlay for bot sprites
+let botCanvas, botCtx;
+let activeBots = []; // Track all active bot instances
+let botTrails = []; // Track trail effects for fading
+
+// Direction mapping cache for performance
+const directionMap = {
+    'north': 'up',
+    'south': 'down',
+    'east': 'right',
+    'west': 'left'
+};
+
 // Initialize maze system
-function initPixelMaze() {
+async function initPixelMaze() {
     cleanup();
     detectMobileDevice();
     createSVGContainer();
     setWindowValues();
     buildGrid();
+
+    // Wait for bot sprites to load before starting maze
+    if (window.mazeBotSprite && !window.mazeBotSprite.loaded) {
+        await Promise.all(window.mazeBotSprite.loadPromises).catch(() => {
+            console.warn('Bot sprites failed to load, maze will continue without them');
+        });
+    }
 
     // Start maze generation
     setTimeout(() => {
@@ -73,6 +93,38 @@ function createSVGContainer() {
     g = document.createElementNS("http://www.w3.org/2000/svg", "g");
     svg.appendChild(g);
     document.body.appendChild(svg);
+    
+    // Create canvas overlay for bot sprites
+    createBotCanvas();
+}
+
+// Create canvas overlay for animated bot sprites
+function createBotCanvas() {
+    botCanvas = document.createElement('canvas');
+    botCanvas.id = 'mazeBotCanvas';
+    botCanvas.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 0;
+        overflow: hidden;
+        pointer-events: none;
+        will-change: transform;
+        transform: translateZ(0);
+    `;
+    botCanvas.width = window.innerWidth;
+    botCanvas.height = window.innerHeight;
+    
+    botCtx = botCanvas.getContext('2d', { 
+        alpha: true,
+        desynchronized: true,  // Optimize for animations
+        willReadFrequently: false
+    });
+    botCtx.imageSmoothingEnabled = false;
+    
+    document.body.appendChild(botCanvas);
 }
 
 // Build SVG grid
@@ -193,25 +245,25 @@ async function maze() {
     // Start moving elements with reasonable speeds - maximum 4 elements
     if (activeColorElements < 4) {
         const rp1 = getRandomPoint();
-        lostSquare(getTarget(rp1.row, rp1.col), TOTAL > 1000 ? 90 : 110, getRandomDirection(), "solid1");
+        lostSquare(getTarget(rp1.row, rp1.col), TOTAL > 1000 ? 100 : 120, getRandomDirection(), "solid1");
         activeColorElements++;
     }
 
     if (activeColorElements < 4) {
         const rp2 = getRandomPoint();
-        lostSquare(getTarget(rp2.row, rp2.col), TOTAL > 1000 ? 75 : 95, getRandomDirection(), "solid2");
+        lostSquare(getTarget(rp2.row, rp2.col), TOTAL > 1000 ? 100 : 120, getRandomDirection(), "solid2");
         activeColorElements++;
     }
 
     if (activeColorElements < 4) {
         const rp3 = getRandomPoint();
-        lostSquare(getTarget(rp3.row, rp3.col), TOTAL > 1000 ? 60 : 80, getRandomDirection(), "solid3");
+        lostSquare(getTarget(rp3.row, rp3.col), TOTAL > 1000 ? 100 : 120, getRandomDirection(), "solid3");
         activeColorElements++;
     }
 
     if (activeColorElements < 4) {
         const rp4 = getRandomPoint();
-        lostSquare(getTarget(rp4.row, rp4.col), TOTAL > 1000 ? 55 : 75, getRandomDirection(), "solid4");
+        lostSquare(getTarget(rp4.row, rp4.col), TOTAL > 1000 ? 100 : 120, getRandomDirection(), "solid4");
         activeColorElements++;
     }
 }
@@ -235,7 +287,7 @@ async function mazer(row, col, time) {
     }
 }
 
-// Moving element function
+// Moving element function - now renders animated sprites
 async function lostSquare(target, time, direction, className) {
     if (!mazeActive || !target) {
         // Decrease counter when element stops
@@ -243,21 +295,108 @@ async function lostSquare(target, time, direction, className) {
         return false;
     }
 
-    target.setAttribute("class", `maze-cell ${className}`);
     const row = parseInt(target.getAttribute("row"));
     const col = parseInt(target.getAttribute("col"));
-    const nextPoint = getNextPointInDirection(new Point(row, col), direction);
-    const nextTarget = getTarget(nextPoint.row, nextPoint.col);
+    
+    // Create or update bot instance
+    const botId = `bot-${className}`;
+    let bot = activeBots.find(b => b.id === botId);
+    
+    if (!bot) {
+        bot = {
+            id: botId,
+            row: row,
+            col: col,
+            direction: direction,
+            className: className,
+            frameIndex: 0,
+            moveCounter: 0,
+            trailCount: 0,  // Track trails per bot
+            isIdle: false,
+            idleFramesRemaining: 0
+        };
+        activeBots.push(bot);
+    } else {
+        bot.row = row;
+        bot.col = col;
+        bot.direction = direction;
+    }
+    
+    // Check if bot should enter idle state (5% chance)
+    if (!bot.isIdle && Math.random() < 0.05) {
+        bot.isIdle = true;
+        bot.idleFramesRemaining = Math.floor(Math.random() * 3) + 2; // Idle for 2-4 moves
+        bot.frameIndex = 0; // Reset to first idle frame
+    }
+    
+    // Handle idle state
+    if (bot.isIdle) {
+        bot.idleFramesRemaining--;
+        // Animate idle frames slowly
+        bot.moveCounter++;
+        if (bot.moveCounter % 3 === 0) {
+            bot.frameIndex = (bot.frameIndex + 1) % 12;
+        }
+        
+        // Exit idle state when done
+        if (bot.idleFramesRemaining <= 0) {
+            bot.isIdle = false;
+            bot.frameIndex = 0;
+        }
+    } else {
+        // Normal movement - advance animation frame every 2 moves for smoother animation
+        bot.moveCounter++;
+        if (bot.moveCounter % 2 === 0) {
+            bot.frameIndex = (bot.frameIndex + 1) % 12;
+        }
+    }
+    
+    // Add trail effect - create trail every move but limit to 3 per bot
+    // Remove oldest trail for this bot if already at max
+    const botTrailsForThisBot = botTrails.filter(t => t.botId === botId);
+    if (botTrailsForThisBot.length >= 3) {
+        // Find and remove the oldest trail for this bot
+        const oldestTrailIndex = botTrails.findIndex(t => t.botId === botId);
+        if (oldestTrailIndex !== -1) {
+            botTrails.splice(oldestTrailIndex, 1);
+        }
+    }
+    
+    // Add new trail
+    botTrails.push({
+        botId: botId,
+        x: WIDTH * bot.col,
+        y: WIDTH * bot.row,
+        size: WIDTH - 1,
+        direction: bot.direction,
+        frameIndex: bot.frameIndex,
+        className: bot.className,
+        opacity: 0.6,
+        fadeSpeed: 0.02
+    });
+    
+    // Render all bots
+    renderBots();
 
     await delay(time);
+    
+    // If bot is idle, stay in same position and continue idle animation
+    if (bot.isIdle) {
+        lostSquare(target, time, direction, className);
+        return;
+    }
 
     if (!mazeActive) {
-        // Decrease counter when element stops
+        // Remove this bot and its trails
+        activeBots = activeBots.filter(b => b.id !== botId);
+        botTrails = botTrails.filter(t => t.botId !== botId);
         if (activeColorElements > 0) activeColorElements--;
+        renderBots(); // Clear the bot from canvas
         return false;
     }
 
-    target.setAttribute("class", "maze-cell base");
+    const nextPoint = getNextPointInDirection(new Point(row, col), direction);
+    const nextTarget = getTarget(nextPoint.row, nextPoint.col);
 
     if (!nextTarget || nextTarget.classList.contains("blocker")) {
         // Hit wall - change direction
@@ -273,15 +412,84 @@ async function lostSquare(target, time, direction, className) {
     }
 }
 
+// Render all active bots to canvas
+function renderBots() {
+    if (!botCtx || !window.mazeBotSprite || !window.mazeBotSprite.loaded) {
+        return;
+    }
+    
+    // Clear canvas efficiently
+    botCtx.clearRect(0, 0, botCanvas.width, botCanvas.height);
+    
+    // Early exit if nothing to render
+    if (activeBots.length === 0 && botTrails.length === 0) {
+        return;
+    }
+    
+    // Draw trails first (behind the bots)
+    botTrails.forEach((trail, index) => {
+        // Map maze directions to sprite directions (cached)
+        const spriteDirection = directionMap[trail.direction] || trail.direction;
+        
+        // Calculate fade based on position in bot's trail (newest = index 2, oldest = index 0)
+        const botTrailsForThisBot = botTrails.filter(t => t.botId === trail.botId);
+        const positionInTrail = botTrailsForThisBot.indexOf(trail);
+        const opacity = 0.3 + (positionInTrail * 0.2); // oldest: 0.3, middle: 0.5, newest: 0.7
+        
+        // Set global alpha for fading effect
+        botCtx.globalAlpha = opacity;
+        
+        window.mazeBotSprite.drawBot(
+            botCtx,
+            trail.x,
+            trail.y,
+            trail.size,
+            spriteDirection,
+            trail.frameIndex,
+            trail.className
+        );
+    });
+    
+    // Reset global alpha
+    botCtx.globalAlpha = 1.0;
+    
+    // Draw each active bot on top
+    activeBots.forEach(bot => {
+        const x = WIDTH * bot.col;
+        const y = WIDTH * bot.row;
+        
+        // Use idle sprite when bot is idle, otherwise use direction-based sprite
+        const spriteDirection = bot.isIdle ? 'idle' : (directionMap[bot.direction] || bot.direction);
+        
+        window.mazeBotSprite.drawBot(
+            botCtx,
+            x,
+            y,
+            WIDTH - 1, // Match grid cell size minus gutter
+            spriteDirection,
+            bot.frameIndex,
+            bot.className
+        );
+    });
+}
+
 // Cleanup function
 function cleanup() {
     mazeActive = false;
     activeColorElements = 0; // Reset counter
+    activeBots = []; // Clear all bots
+    botTrails = []; // Clear all trails
 
     if (svg) {
         svg.remove();
         svg = null;
         g = null;
+    }
+    
+    if (botCanvas) {
+        botCanvas.remove();
+        botCanvas = null;
+        botCtx = null;
     }
 }
 
