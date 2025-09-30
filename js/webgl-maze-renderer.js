@@ -29,7 +29,7 @@ class WebGLMazeRenderer {
         this.colorFilters = {
             'solid1': { r: 1.0, g: 0.42, b: 0.42 },  // Red #ff6b6b
             'solid2': { r: 0.31, g: 0.80, b: 0.77 }, // Teal #4ecdc4
-            'solid3': { r: 0.27, g: 0.72, b: 0.82 }, // Blue #45b7d1
+            'solid3': { r: 0.64, g: 0.61, b: 1.0 },  // Purple #a29bfe
             'solid4': { r: 1.0, g: 0.92, b: 0.65 }   // Yellow #ffeaa7
         };
 

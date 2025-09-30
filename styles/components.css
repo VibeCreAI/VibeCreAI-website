@@ -937,8 +937,8 @@ footer {
     fill: #4ecdc4 !important;
 }
 
-.maze-cell.solid3 { 
-    fill: #45b7d1 !important;
+.maze-cell.solid3 {
+    fill: #a29bfe !important; /* Purple for better distinction */
 }
 
 .maze-cell.solid4 { 

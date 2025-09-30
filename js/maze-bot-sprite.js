@@ -22,7 +22,7 @@ class MazeBotSprite {
         this.botColors = {
             solid1: { name: 'red', hex: '#ff6b6b' },
             solid2: { name: 'teal', hex: '#4ecdc4' },
-            solid3: { name: 'blue', hex: '#45b7d1' },
+            solid3: { name: 'purple', hex: '#a29bfe' },
             solid4: { name: 'yellow', hex: '#ffeaa7' }
         };
 
@@ -92,8 +92,8 @@ class MazeBotSprite {
                 return 'brightness(0) saturate(100%) invert(62%) sepia(89%) saturate(2799%) hue-rotate(324deg) brightness(102%) contrast(101%)';
             case 'solid2': // Teal #4ecdc4
                 return 'brightness(0) saturate(100%) invert(75%) sepia(14%) saturate(2487%) hue-rotate(131deg) brightness(92%) contrast(87%)';
-            case 'solid3': // Blue #45b7d1
-                return 'brightness(0) saturate(100%) invert(66%) sepia(51%) saturate(674%) hue-rotate(152deg) brightness(92%) contrast(86%)';
+            case 'solid3': // Purple #a29bfe
+                return 'brightness(0) saturate(100%) invert(74%) sepia(20%) saturate(1087%) hue-rotate(201deg) brightness(101%) contrast(98%)';
             case 'solid4': // Yellow #ffeaa7
                 return 'brightness(0) saturate(100%) invert(93%) sepia(18%) saturate(1008%) hue-rotate(316deg) brightness(104%) contrast(101%)';
             default:
