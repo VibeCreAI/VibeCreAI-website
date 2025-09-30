@@ -25,6 +25,7 @@ let renderLoopId = null; // RAF loop ID
 // Bot intelligence systems (simplified)
 let botPreviousCell = new Map(); // Track only last cell per bot (anti-oscillation)
 let botLastDirection = new Map(); // Track last direction per bot
+let botRecentCells = new Map(); // Track last 3 cells to prevent tight loops
 
 // Direction mapping cache for performance
 const directionMap = {
@@ -342,12 +343,13 @@ function getOppositeDirection(direction) {
     return opposites[direction] || direction;
 }
 
-// Get random valid direction (avoiding walls, previous cell, and backtracking)
+// Get random valid direction (avoiding walls, previous cells, and backtracking)
 function getRandomValidDirection(row, col, currentDirection, botId) {
     const directions = ['north', 'south', 'east', 'west'];
     const previousCell = botPreviousCell.get(botId);
     const lastDirection = botLastDirection.get(botId);
     const oppositeDir = getOppositeDirection(lastDirection || currentDirection);
+    const recentCells = botRecentCells.get(botId) || [];
 
     // Filter to valid directions
     let validDirs = directions.filter(dir => isPathClear(row, col, dir));
@@ -364,16 +366,16 @@ function getRandomValidDirection(row, col, currentDirection, botId) {
         }
     }
 
-    // Also avoid going back to previous cell if possible
-    if (previousCell && validDirs.length > 1) {
-        const nonPreviousDirs = validDirs.filter(dir => {
+    // Avoid going back to any recently visited cells (last 3 cells)
+    if (recentCells.length > 0 && validDirs.length > 1) {
+        const nonRecentDirs = validDirs.filter(dir => {
             const nextPoint = getNextPointInDirection(new Point(row, col), dir);
             const cellKey = `${nextPoint.row},${nextPoint.col}`;
-            return cellKey !== previousCell;
+            return !recentCells.includes(cellKey);
         });
 
-        if (nonPreviousDirs.length > 0) {
-            validDirs = nonPreviousDirs;
+        if (nonRecentDirs.length > 0) {
+            validDirs = nonRecentDirs;
         }
     }
 
@@ -382,6 +384,20 @@ function getRandomValidDirection(row, col, currentDirection, botId) {
 }
 
 // Ultra-simple next direction logic (4 rules only)
+// Get perpendicular directions to the given direction
+function getPerpendicularDirections(direction) {
+    switch (direction) {
+        case 'north':
+        case 'south':
+            return ['east', 'west'];
+        case 'east':
+        case 'west':
+            return ['north', 'south'];
+        default:
+            return ['north', 'south', 'east', 'west'];
+    }
+}
+
 function getNextDirection(row, col, currentDirection, botId) {
     const nearestBugInfo = findNearestBug(row, col);
 
@@ -394,7 +410,32 @@ function getNextDirection(row, col, currentDirection, botId) {
             return bugDirection;
         }
 
-        // If blocked, try a random valid direction toward bug
+        // If blocked, try to navigate around the obstacle
+        // Try perpendicular directions first (wall-hugging behavior)
+        const perpDirs = getPerpendicularDirections(bugDirection);
+        const validPerpDirs = perpDirs.filter(dir => isPathClear(row, col, dir));
+        
+        if (validPerpDirs.length > 0) {
+            // Prefer the perpendicular direction that gets us closer to bug
+            const bugRow = nearestBugInfo.bug.row;
+            const bugCol = nearestBugInfo.bug.col;
+            
+            let bestDir = validPerpDirs[0];
+            let bestDistance = Infinity;
+            
+            validPerpDirs.forEach(dir => {
+                const nextPoint = getNextPointInDirection(new Point(row, col), dir);
+                const distance = Math.abs(nextPoint.row - bugRow) + Math.abs(nextPoint.col - bugCol);
+                if (distance < bestDistance) {
+                    bestDistance = distance;
+                    bestDir = dir;
+                }
+            });
+            
+            return bestDir;
+        }
+
+        // If perpendicular directions blocked too, use random valid direction
         return getRandomValidDirection(row, col, currentDirection, botId);
     }
 
@@ -589,10 +630,18 @@ async function lostSquare(target, time, direction, className, botIndex = 0) {
         bot.direction = direction;
     }
 
-    // Update bot memory (track previous cell and direction)
+    // Update bot memory (track previous cell, direction, and recent cell history)
     const cellKey = `${row},${col}`;
     botPreviousCell.set(botId, cellKey);
     botLastDirection.set(botId, direction);
+    
+    // Maintain recent cells list (max 3 cells)
+    let recentCells = botRecentCells.get(botId) || [];
+    recentCells.push(cellKey);
+    if (recentCells.length > 3) {
+        recentCells.shift(); // Remove oldest cell
+    }
+    botRecentCells.set(botId, recentCells);
 
     // Check if bot should enter idle state (1% chance - reduced frequency)
     if (!bot.isIdle && Math.random() < 0.01) {
@@ -856,6 +905,7 @@ function cleanup() {
     fixedCells = []; // Clear all fixed cells
     botPreviousCell.clear(); // Clear bot memory
     botLastDirection.clear(); // Clear direction memory
+    botRecentCells.clear(); // Clear recent cells history
 
     // Stop render loop
     stopRenderLoop();
