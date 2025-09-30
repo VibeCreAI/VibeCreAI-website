@@ -27,6 +27,14 @@ const directionMap = {
     'west': 'left'
 };
 
+// Bug tracking system
+let bugCells = []; // Track bug locations {row, col, element}
+let fixedCells = []; // Track recently fixed cells for fade animation
+const MAX_BUGS = 8;
+const BUG_SPAWN_INTERVAL = 5000; // Spawn new bugs every 5 seconds
+const BUGS_PER_SPAWN = 2; // Number of bugs to spawn at once
+let bugSpawnTimer = null;
+
 // Initialize maze system
 async function initPixelMaze() {
     cleanup();
@@ -219,6 +227,91 @@ function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+// Spawn a bug at random location
+function spawnBug() {
+    if (bugCells.length >= MAX_BUGS) return;
+    
+    const row = Math.floor(Math.random() * (ROWS + 1));
+    const col = Math.floor(Math.random() * (COLS + 1));
+    const target = getTarget(row, col);
+    
+    // Don't spawn on walls or existing bugs
+    if (!target || target.classList.contains('blocker')) return;
+    if (bugCells.some(bug => bug.row === row && bug.col === col)) return;
+    
+    // Mark cell as bug
+    target.classList.add('bug-cell');
+    bugCells.push({ row, col, element: target });
+}
+
+// Remove bug from tracking
+function removeBug(row, col) {
+    const bugIndex = bugCells.findIndex(bug => bug.row === row && bug.col === col);
+    if (bugIndex !== -1) {
+        const bug = bugCells[bugIndex];
+        bug.element.classList.remove('bug-cell');
+        bugCells.splice(bugIndex, 1);
+        
+        // Add to fixed cells for visual transition
+        bug.element.classList.add('fixed-cell');
+        fixedCells.push({ element: bug.element, timestamp: Date.now() });
+    }
+}
+
+// Check if location has a bug
+function hasBug(row, col) {
+    return bugCells.some(bug => bug.row === row && bug.col === col);
+}
+
+// Find nearest bug to given position
+function findNearestBug(row, col) {
+    if (bugCells.length === 0) return null;
+    
+    let nearest = null;
+    let minDistance = Infinity;
+    
+    bugCells.forEach(bug => {
+        const distance = Math.abs(bug.row - row) + Math.abs(bug.col - col);
+        if (distance < minDistance) {
+            minDistance = distance;
+            nearest = bug;
+        }
+    });
+    
+    return { bug: nearest, distance: minDistance };
+}
+
+// Start bug spawning system
+function startBugSpawning() {
+    // Spawn initial bugs
+    for (let i = 0; i < 5; i++) {
+        spawnBug();
+    }
+    
+    // Set up periodic spawning
+    bugSpawnTimer = setInterval(() => {
+        if (mazeActive) {
+            // Spawn multiple bugs at once
+            for (let i = 0; i < BUGS_PER_SPAWN; i++) {
+                spawnBug();
+            }
+        }
+    }, BUG_SPAWN_INTERVAL);
+}
+
+// Update fixed cells (fade them back to normal)
+function updateFixedCells() {
+    const now = Date.now();
+    fixedCells = fixedCells.filter(fixed => {
+        const age = now - fixed.timestamp;
+        if (age > 2000) { // Remove "fixed" state after 2 seconds
+            fixed.element.classList.remove('fixed-cell');
+            return false;
+        }
+        return true;
+    });
+}
+
 // Main maze function
 async function maze() {
     if (!mazeActive) {
@@ -241,6 +334,9 @@ async function maze() {
     }
 
     await delay(1500);
+
+    // Start bug spawning system
+    startBugSpawning();
 
     // Start moving elements with reasonable speeds - maximum 4 elements
     if (activeColorElements < 4) {
@@ -301,6 +397,17 @@ async function lostSquare(target, time, direction, className) {
     // Create or update bot instance
     const botId = `bot-${className}`;
     let bot = activeBots.find(b => b.id === botId);
+    
+    // Check if bot is at a bug location - fix it!
+    if (hasBug(row, col)) {
+        removeBug(row, col);
+        // Enter extended idle state for "fixing"
+        if (bot) {
+            bot.isIdle = true;
+            bot.idleFramesRemaining = 5;
+            bot.frameIndex = 0;
+        }
+    }
     
     if (!bot) {
         bot = {
@@ -395,7 +502,25 @@ async function lostSquare(target, time, direction, className) {
         return false;
     }
 
-    const nextPoint = getNextPointInDirection(new Point(row, col), direction);
+    // Check for nearby bugs and steer toward them (within 5 cells)
+    const nearestBugInfo = findNearestBug(row, col);
+    let targetDirection = direction;
+    
+    if (nearestBugInfo && nearestBugInfo.distance <= 5) {
+        // Steer toward bug
+        const bug = nearestBugInfo.bug;
+        const rowDiff = bug.row - row;
+        const colDiff = bug.col - col;
+        
+        // Choose direction that gets closer to bug
+        if (Math.abs(rowDiff) > Math.abs(colDiff)) {
+            targetDirection = rowDiff > 0 ? 'south' : 'north';
+        } else if (colDiff !== 0) {
+            targetDirection = colDiff > 0 ? 'east' : 'west';
+        }
+    }
+    
+    const nextPoint = getNextPointInDirection(new Point(row, col), targetDirection);
     const nextTarget = getTarget(nextPoint.row, nextPoint.col);
 
     if (!nextTarget || nextTarget.classList.contains("blocker")) {
@@ -479,6 +604,14 @@ function cleanup() {
     activeColorElements = 0; // Reset counter
     activeBots = []; // Clear all bots
     botTrails = []; // Clear all trails
+    bugCells = []; // Clear all bugs
+    fixedCells = []; // Clear all fixed cells
+    
+    // Clear bug spawn timer
+    if (bugSpawnTimer) {
+        clearInterval(bugSpawnTimer);
+        bugSpawnTimer = null;
+    }
 
     if (svg) {
         svg.remove();

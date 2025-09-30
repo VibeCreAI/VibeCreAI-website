@@ -945,6 +945,46 @@ footer {
     fill: #ffeaa7 !important;
 }
 
+/* Bug cells - red glitchy appearance */
+.maze-cell.bug-cell {
+    fill: #ff0000 !important;
+    opacity: 0.8;
+    animation: bugPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes bugPulse {
+    0%, 100% { 
+        opacity: 0.8;
+        filter: brightness(1);
+    }
+    50% { 
+        opacity: 1;
+        filter: brightness(1.3);
+    }
+}
+
+/* Fixed cells - green glow that fades */
+.maze-cell.fixed-cell {
+    fill: #00ff00 !important;
+    opacity: 1;
+    animation: fixedFade 2s ease-out forwards;
+}
+
+@keyframes fixedFade {
+    0% {
+        fill: #00ff00;
+        opacity: 1;
+        filter: brightness(1.5) drop-shadow(0 0 10px #00ff00);
+    }
+    50% {
+        fill: #00ff88;
+        opacity: 0.8;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
 
 
 /* Subtle container animation for depth */
