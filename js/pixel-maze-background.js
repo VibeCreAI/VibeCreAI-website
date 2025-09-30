@@ -51,6 +51,10 @@ async function initPixelMaze() {
     setWindowValues();
     buildGrid();
 
+    // Align SVG and canvas to the finalized viewport on first paint
+    syncLayerViewport();
+    requestAnimationFrame(syncLayerViewport);
+
     // Wait for bot sprites to load before starting maze
     if (window.mazeBotSprite && !window.mazeBotSprite.loaded) {
         await Promise.all(window.mazeBotSprite.loadPromises).catch(() => {
@@ -159,8 +163,39 @@ function createBotCanvas() {
     }
     
     document.body.appendChild(botCanvas);
-    
+
     // Don't start render loop yet - wait for maze to activate
+}
+
+// Keep SVG and canvas aligned with the current visual viewport
+function syncLayerViewport() {
+    if (!svg || !botCanvas) {
+        return;
+    }
+
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    // Anchor SVG coordinate space to CSS pixels so rect positions remain accurate
+    svg.setAttribute('width', viewportWidth);
+    svg.setAttribute('height', viewportHeight);
+    svg.setAttribute('viewBox', `0 0 ${viewportWidth} ${viewportHeight}`);
+    svg.setAttribute('preserveAspectRatio', 'xMinYMin meet');
+
+    // Mirror dimensions on the bot canvas, both CSS size and backing store
+    botCanvas.style.width = `${viewportWidth}px`;
+    botCanvas.style.height = `${viewportHeight}px`;
+    botCanvas.style.transformOrigin = 'top left';
+    botCanvas.width = viewportWidth;
+    botCanvas.height = viewportHeight;
+
+    if (webglRenderer) {
+        webglRenderer.resize(viewportWidth, viewportHeight);
+    }
+
+    // Update last known viewport values so minor resize detection stays accurate
+    mazeLastWidth = viewportWidth;
+    mazeLastHeight = viewportHeight;
 }
 
 // Build SVG grid
@@ -1031,12 +1066,8 @@ function handleResize() {
             cleanup();
             initPixelMaze();
         } else if (botCanvas) {
-            // Just resize canvas without full reset
-            botCanvas.width = window.innerWidth;
-            botCanvas.height = window.innerHeight;
-            if (webglRenderer) {
-                webglRenderer.resize(window.innerWidth, window.innerHeight);
-            }
+            // Minor resize - keep SVG and canvas in sync without rebuilding the maze
+            syncLayerViewport();
         }
 
         mazeResizeTimeout = null;
