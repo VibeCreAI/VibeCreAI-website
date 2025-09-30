@@ -585,7 +585,7 @@ async function mazer(row, col, time) {
             return;
         }
 
-        const blockFactor = 0.25; // Subtle wall density
+        const blockFactor = 0.18; // Reduced wall density for better bot movement
         target.setAttribute("class", `maze-cell ${rando < blockFactor ? "blocker" : "base"}`);
         const next = getRandomMove(new Point(row, col), rando);
 
