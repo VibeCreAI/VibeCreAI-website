@@ -558,19 +558,34 @@ async function lostSquare(target, time, direction, className, botIndex = 0) {
             id: botId,
             row: row,
             col: col,
+            targetRow: row,      // Interpolation target
+            targetCol: col,      // Interpolation target
+            x: WIDTH * col,      // Visual position (pixels)
+            y: WIDTH * row,      // Visual position (pixels)
+            interpolation: 1.0,  // 0-1, progress to target
+            moveStartTime: Date.now(),
+            moveDelay: time,
             direction: direction,
             className: className,
             frameIndex: 0,
             moveCounter: 0,
-            trailCount: 0,  // Track trails per bot
+            trailCount: 0,
             isIdle: false,
             idleFramesRemaining: 0,
-            botIndex: botIndex // Store bot index for territory assignment
+            botIndex: botIndex
         };
         activeBots.push(bot);
     } else {
-        bot.row = row;
-        bot.col = col;
+        // Update current position to where bot actually is (previous target)
+        bot.row = bot.targetRow;
+        bot.col = bot.targetCol;
+        
+        // Set new target for interpolation
+        bot.targetRow = row;
+        bot.targetCol = col;
+        bot.interpolation = 0.0; // Start interpolating
+        bot.moveStartTime = Date.now();
+        bot.moveDelay = time;
         bot.direction = direction;
     }
 
@@ -608,10 +623,10 @@ async function lostSquare(target, time, direction, className, botIndex = 0) {
         }
     }
     
-    // Add trail effect - create trail every move but limit to 3 per bot
+    // Add trail effect - create trail every move but limit to 2 per bot (reduced from 3)
     // Remove oldest trail for this bot if already at max
     const botTrailsForThisBot = botTrails.filter(t => t.botId === botId);
-    if (botTrailsForThisBot.length >= 3) {
+    if (botTrailsForThisBot.length >= 2) {
         // Find and remove the oldest trail for this bot
         const oldestTrailIndex = botTrails.findIndex(t => t.botId === botId);
         if (oldestTrailIndex !== -1) {
@@ -619,17 +634,17 @@ async function lostSquare(target, time, direction, className, botIndex = 0) {
         }
     }
     
-    // Add new trail (30% less opacity: 0.6 -> 0.42)
+    // Add new trail using interpolated position (reduced opacity: 0.42 -> 0.25)
     botTrails.push({
         botId: botId,
-        x: WIDTH * bot.col,
-        y: WIDTH * bot.row,
+        x: bot.x || (WIDTH * bot.col),
+        y: bot.y || (WIDTH * bot.row),
         size: WIDTH - 1,
         direction: bot.isIdle ? 'idle' : bot.direction,
         frameIndex: bot.frameIndex,
         className: bot.className,
-        opacity: 0.42,
-        fadeSpeed: 0.02
+        opacity: 0.25,
+        fadeSpeed: 0.04  // Faster fade (doubled from 0.02)
     });
     
     // Render loop handles all rendering now
@@ -667,6 +682,36 @@ async function lostSquare(target, time, direction, className, botIndex = 0) {
     }
 }
 
+// Update bot positions with smooth interpolation
+function updateBotPositions() {
+    const now = Date.now();
+
+    activeBots.forEach(bot => {
+        // Calculate interpolation progress (0 to 1)
+        const elapsed = now - bot.moveStartTime;
+        bot.interpolation = Math.min(1.0, elapsed / bot.moveDelay);
+
+        // Smooth easing function (ease-out for more natural movement)
+        const t = bot.interpolation;
+        const eased = t * (2 - t); // Quadratic ease-out
+
+        // Interpolate position
+        const startX = WIDTH * bot.col;
+        const startY = WIDTH * bot.row;
+        const targetX = WIDTH * bot.targetCol;
+        const targetY = WIDTH * bot.targetRow;
+
+        bot.x = startX + (targetX - startX) * eased;
+        bot.y = startY + (targetY - startY) * eased;
+
+        // When interpolation complete, update logical position
+        if (bot.interpolation >= 1.0) {
+            bot.row = bot.targetRow;
+            bot.col = bot.targetCol;
+        }
+    });
+}
+
 // Start requestAnimationFrame render loop
 function startRenderLoop() {
     function renderFrame() {
@@ -674,11 +719,12 @@ function startRenderLoop() {
             renderLoopId = null;
             return;
         }
-        
+
+        updateBotPositions(); // Update interpolated positions
         renderBots();
         renderLoopId = requestAnimationFrame(renderFrame);
     }
-    
+
     if (!renderLoopId && mazeActive) {
         renderLoopId = requestAnimationFrame(renderFrame);
     }
@@ -720,18 +766,21 @@ function renderBots() {
     
     // Use WebGL renderer if available and ready
     if (useWebGL && webglRenderer && webglRenderer.isReady) {
-        // Prepare trail data with opacity (30% less: 0.3->0.21, 0.2->0.14)
+        // Prepare trail data with reduced opacity
         const trailsWithOpacity = botTrails.map((trail, index) => {
             const botTrailsForThisBot = botTrails.filter(t => t.botId === trail.botId);
             const positionInTrail = botTrailsForThisBot.indexOf(trail);
-            const opacity = 0.21 + (positionInTrail * 0.14);
+            const opacity = 0.10 + (positionInTrail * 0.15); // oldest: 0.10, newest: 0.25
             return { ...trail, opacity, size: WIDTH };
         });
         
-        // Prepare bot data with size
+        // Prepare bot data with size and interpolated positions
         const botsWithSize = activeBots.map(bot => ({
             ...bot,
-            size: WIDTH
+            size: WIDTH,
+            // Use interpolated position if available
+            row: bot.y !== undefined ? Math.floor(bot.y / WIDTH) : bot.row,
+            col: bot.x !== undefined ? Math.floor(bot.x / WIDTH) : bot.col
         }));
         
         webglRenderer.render(botsWithSize, trailsWithOpacity, directionMap);
@@ -754,10 +803,10 @@ function renderBots() {
         // Map maze directions to sprite directions (cached)
         const spriteDirection = directionMap[trail.direction] || trail.direction;
         
-        // Calculate fade based on position in bot's trail (30% less opacity)
+        // Calculate fade based on position in bot's trail (reduced further)
         const botTrailsForThisBot = botTrails.filter(t => t.botId === trail.botId);
         const positionInTrail = botTrailsForThisBot.indexOf(trail);
-        const opacity = 0.21 + (positionInTrail * 0.14); // oldest: 0.21, middle: 0.35, newest: 0.49
+        const opacity = 0.10 + (positionInTrail * 0.15); // oldest: 0.10, newest: 0.25
 
         // Set global alpha for fading effect
         botCtx.globalAlpha = opacity;
@@ -776,14 +825,15 @@ function renderBots() {
     // Reset global alpha
     botCtx.globalAlpha = 1.0;
     
-    // Draw each active bot on top
+    // Draw each active bot on top using interpolated positions
     activeBots.forEach(bot => {
-        const x = WIDTH * bot.col;
-        const y = WIDTH * bot.row;
-        
+        // Use interpolated position for smooth movement
+        const x = bot.x !== undefined ? bot.x : (WIDTH * bot.col);
+        const y = bot.y !== undefined ? bot.y : (WIDTH * bot.row);
+
         // Use idle sprite when bot is idle, otherwise use direction-based sprite
         const spriteDirection = bot.isIdle ? 'idle' : (directionMap[bot.direction] || bot.direction);
-        
+
         window.mazeBotSprite.drawBot(
             botCtx,
             x,
