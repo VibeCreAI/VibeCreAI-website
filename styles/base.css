@@ -366,13 +366,12 @@ body {
 }
 
 .programmer-character {
-    width: 150px;
-    height: 150px;
-    margin-bottom: -40px;
+    width: 120px;
+    height: 120px;
+    margin-bottom: -20px;
     image-rendering: pixelated;
     image-rendering: -moz-crisp-edges;
     image-rendering: crisp-edges;
-    animation: breathingAnimation 1s steps(4) infinite, typingGesture 2.5s ease-in-out infinite;
     transition: filter 0.3s ease;
     position: relative;
     z-index: 2;

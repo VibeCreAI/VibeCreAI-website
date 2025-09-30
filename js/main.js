@@ -66,24 +66,7 @@ class VibeCreAIApp {
     }
 
     setupProgrammerAnimation() {
-        const programmerChar = document.getElementById('programmer-character');
-        if (!programmerChar) return;
-
-        const frames = [
-            'images/programmer-character/animations/breathing-idle/south/frame_000.png',
-            'images/programmer-character/animations/breathing-idle/south/frame_001.png',
-            'images/programmer-character/animations/breathing-idle/south/frame_002.png',
-            'images/programmer-character/animations/breathing-idle/south/frame_003.png'
-        ];
-
-        let currentFrame = 0;
-        const animateFrames = () => {
-            programmerChar.src = frames[currentFrame];
-            currentFrame = (currentFrame + 1) % frames.length;
-        };
-
-        // Start animation
-        setInterval(animateFrames, 250); // 250ms per frame = 4fps
+        // GIF handles animation automatically, no JavaScript needed
     }
 
     initializeYear() {
