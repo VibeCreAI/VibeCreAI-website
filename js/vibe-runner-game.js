@@ -2442,45 +2442,80 @@ class VibeRunner {
     }
     
     drawNeonPlayer() {
+        // Check if bot sprite system is available
+        if (!window.mazeBotSprite || !window.mazeBotSprite.loaded) {
+            // Fallback to arrow if sprites not loaded
+            this.drawFallbackArrow();
+            return;
+        }
+
+        // Determine bot direction based on player angle
+        let botDirection = 'right'; // Default facing right (forward)
+        if (this.player.angle < -10) {
+            botDirection = 'up';
+        } else if (this.player.angle > 10) {
+            botDirection = 'down';
+        }
+
+        // Determine bot color based on gravity status
+        const isReverseGravity = this.gravityDirection === -1;
+        const botColor = isReverseGravity ? 'solid4' : 'solid2'; // Yellow for reverse, Cyan for normal
+
+        // Add glow effect
+        this.ctx.save();
+        const shadowColor = isReverseGravity ? '#ffff00' : '#00ffff';
+        this.ctx.shadowBlur = 20 + this.player.glow * 20;
+        this.ctx.shadowColor = shadowColor;
+
+        // Calculate bot size (match player size, bot sprite will be scaled)
+        const botSize = this.player.size * 2.5; // Scale up for visibility
+
+        // Animate bot (cycle through frames based on game time)
+        const frameIndex = Math.floor(this.frameCount / 3) % 12;
+
+        // Draw bot sprite
+        window.mazeBotSprite.drawBot(
+            this.ctx,
+            this.player.x - botSize / 2,
+            this.player.y - botSize / 2,
+            botSize,
+            botDirection,
+            frameIndex,
+            botColor
+        );
+
+        this.ctx.restore();
+    }
+
+    drawFallbackArrow() {
         this.ctx.save();
         this.ctx.translate(this.player.x, this.player.y);
         this.ctx.rotate(this.player.angle * Math.PI / 180);
-        
+
         // Determine arrow color based on gravity status
         const isReverseGravity = this.gravityDirection === -1;
-        const arrowColor = isReverseGravity ? '#ffff00' : '#00ffff'; // Yellow for reverse, cyan for normal
+        const arrowColor = isReverseGravity ? '#ffff00' : '#00ffff';
         const shadowColor = isReverseGravity ? '#ffff00' : '#00ffff';
-        
+
         // Glow effect
         this.ctx.shadowBlur = 20 + this.player.glow * 20;
         this.ctx.shadowColor = shadowColor;
-        
+
         // Draw arrow
         this.ctx.strokeStyle = arrowColor;
         this.ctx.fillStyle = isReverseGravity ? 'rgba(255, 255, 0, 0.2)' : 'rgba(0, 255, 255, 0.2)';
         this.ctx.lineWidth = 2;
-        
+
         this.ctx.beginPath();
         this.ctx.moveTo(this.player.size, 0);
         this.ctx.lineTo(-this.player.size, -this.player.size);
         this.ctx.lineTo(-this.player.size / 2, 0);
         this.ctx.lineTo(-this.player.size, this.player.size);
         this.ctx.closePath();
-        
+
         this.ctx.fill();
         this.ctx.stroke();
-        
-        // Inner glow
-        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-        this.ctx.lineWidth = 1;
-        this.ctx.beginPath();
-        this.ctx.moveTo(this.player.size / 2, 0);
-        this.ctx.lineTo(-this.player.size / 2, -this.player.size / 2);
-        this.ctx.lineTo(-this.player.size / 4, 0);
-        this.ctx.lineTo(-this.player.size / 2, this.player.size / 2);
-        this.ctx.closePath();
-        this.ctx.stroke();
-        
+
         this.ctx.restore();
     }
     
