@@ -413,7 +413,22 @@ function getNextDirection(row, col, currentDirection, botId) {
         // If blocked, try to navigate around the obstacle
         // Try perpendicular directions first (wall-hugging behavior)
         const perpDirs = getPerpendicularDirections(bugDirection);
-        const validPerpDirs = perpDirs.filter(dir => isPathClear(row, col, dir));
+        const recentCells = botRecentCells.get(botId) || [];
+        
+        // Filter perpendicular directions: must be clear AND not recently visited
+        let validPerpDirs = perpDirs.filter(dir => {
+            if (!isPathClear(row, col, dir)) return false;
+            
+            // Also check if this direction leads to a recently visited cell
+            const nextPoint = getNextPointInDirection(new Point(row, col), dir);
+            const cellKey = `${nextPoint.row},${nextPoint.col}`;
+            return !recentCells.includes(cellKey);
+        });
+        
+        // If all perpendicular directions are recent, allow them (escape hatch)
+        if (validPerpDirs.length === 0) {
+            validPerpDirs = perpDirs.filter(dir => isPathClear(row, col, dir));
+        }
         
         if (validPerpDirs.length > 0) {
             // Prefer the perpendicular direction that gets us closer to bug
@@ -435,7 +450,20 @@ function getNextDirection(row, col, currentDirection, botId) {
             return bestDir;
         }
 
-        // If perpendicular directions blocked too, use random valid direction
+        // If perpendicular directions blocked too, check if we're truly stuck
+        // Get all valid directions that aren't recently visited
+        const allValidDirs = ['north', 'south', 'east', 'west'].filter(dir => {
+            if (!isPathClear(row, col, dir)) return false;
+            const nextPoint = getNextPointInDirection(new Point(row, col), dir);
+            const cellKey = `${nextPoint.row},${nextPoint.col}`;
+            return !recentCells.includes(cellKey);
+        });
+        
+        // If no fresh directions available, bot is stuck - return null to signal idle
+        if (allValidDirs.length === 0) {
+            return null; // Signal to enter idle state
+        }
+        
         return getRandomValidDirection(row, col, currentDirection, botId);
     }
 
@@ -717,6 +745,30 @@ async function lostSquare(target, time, direction, className, botIndex = 0) {
 
     // ULTRA-SIMPLE AI - Use new minimal decision system
     const nextDirection = getNextDirection(row, col, direction, botId);
+
+    // If bot is stuck (null direction), enter idle state
+    if (nextDirection === null) {
+        // Stay in place and become idle
+        const botData = activeBots[botIndex];
+        if (botData) {
+            botData.isIdle = true;
+            botData.direction = 'idle';
+            botData.targetRow = row;
+            botData.targetCol = col;
+            botData.moveStartTime = time;
+            botData.interpolation = 1.0; // Fully "arrived" at current position
+        }
+        
+        // Schedule next check with idle duration
+        setTimeout(() => {
+            // Clear recent history to give bot a fresh start
+            botRecentCells.delete(botId);
+            // Try moving again
+            lostSquare(target, time, direction, className, botIndex);
+        }, 1000); // Wait 1 second before trying to move again
+        
+        return;
+    }
 
     // Get next position based on decision
     const nextPoint = getNextPointInDirection(new Point(row, col), nextDirection);
