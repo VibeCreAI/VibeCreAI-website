@@ -18,6 +18,9 @@ let mazeResizeTimeout = null;
 let botCanvas, botCtx;
 let activeBots = []; // Track all active bot instances
 let botTrails = []; // Track trail effects for fading
+let webglRenderer = null; // WebGL renderer instance
+let useWebGL = false; // Flag for renderer selection
+let renderLoopId = null; // RAF loop ID
 
 // Direction mapping cache for performance
 const directionMap = {
@@ -125,14 +128,34 @@ function createBotCanvas() {
     botCanvas.width = window.innerWidth;
     botCanvas.height = window.innerHeight;
     
-    botCtx = botCanvas.getContext('2d', { 
-        alpha: true,
-        desynchronized: true,  // Optimize for animations
-        willReadFrequently: false
-    });
-    botCtx.imageSmoothingEnabled = false;
+    // Try WebGL first, fallback to Canvas2D
+    // Temporarily disabled - WebGL sprite frames need debugging
+    useWebGL = false;
+    if (false && window.WebGLMazeRenderer && window.mazeBotSprite) {
+        webglRenderer = new WebGLMazeRenderer(botCanvas, window.mazeBotSprite);
+        useWebGL = webglRenderer.initialize();
+        
+        if (useWebGL) {
+            console.log('✅ WebGL renderer initialized');
+        } else {
+            console.log('⚠️ WebGL not available, using Canvas2D fallback');
+        }
+    }
+    
+    // Fallback to Canvas2D
+    if (!useWebGL) {
+        console.log('✅ Using Canvas2D renderer');
+        botCtx = botCanvas.getContext('2d', { 
+            alpha: true,
+            desynchronized: true,
+            willReadFrequently: false
+        });
+        botCtx.imageSmoothingEnabled = false;
+    }
     
     document.body.appendChild(botCanvas);
+    
+    // Don't start render loop yet - wait for maze to activate
 }
 
 // Build SVG grid
@@ -316,6 +339,8 @@ function updateFixedCells() {
 async function maze() {
     if (!mazeActive) {
         mazeActive = true;
+        // Start render loop now that maze is active
+        startRenderLoop();
     }
 
     // Reset color elements counter
@@ -429,8 +454,8 @@ async function lostSquare(target, time, direction, className) {
         bot.direction = direction;
     }
     
-    // Check if bot should enter idle state (5% chance)
-    if (!bot.isIdle && Math.random() < 0.05) {
+    // Check if bot should enter idle state (1% chance - reduced frequency)
+    if (!bot.isIdle && Math.random() < 0.01) {
         bot.isIdle = true;
         bot.idleFramesRemaining = Math.floor(Math.random() * 3) + 2; // Idle for 2-4 moves
         bot.frameIndex = 0; // Reset to first idle frame
@@ -475,15 +500,14 @@ async function lostSquare(target, time, direction, className) {
         x: WIDTH * bot.col,
         y: WIDTH * bot.row,
         size: WIDTH - 1,
-        direction: bot.direction,
+        direction: bot.isIdle ? 'idle' : bot.direction,
         frameIndex: bot.frameIndex,
         className: bot.className,
         opacity: 0.6,
         fadeSpeed: 0.02
     });
     
-    // Render all bots
-    renderBots();
+    // Render loop handles all rendering now
 
     await delay(time);
     
@@ -498,7 +522,7 @@ async function lostSquare(target, time, direction, className) {
         activeBots = activeBots.filter(b => b.id !== botId);
         botTrails = botTrails.filter(t => t.botId !== botId);
         if (activeColorElements > 0) activeColorElements--;
-        renderBots(); // Clear the bot from canvas
+        // Render loop will clear the bot automatically
         return false;
     }
 
@@ -506,7 +530,7 @@ async function lostSquare(target, time, direction, className) {
     const nearestBugInfo = findNearestBug(row, col);
     let targetDirection = direction;
     
-    if (nearestBugInfo && nearestBugInfo.distance <= 5) {
+    if (nearestBugInfo && nearestBugInfo.distance <= 10) {
         // Steer toward bug
         const bug = nearestBugInfo.bug;
         const rowDiff = bug.row - row;
@@ -524,7 +548,7 @@ async function lostSquare(target, time, direction, className) {
     const nextTarget = getTarget(nextPoint.row, nextPoint.col);
 
     if (!nextTarget || nextTarget.classList.contains("blocker")) {
-        // Hit wall - change direction
+        // Hit wall - just change direction (no idle to avoid getting stuck)
         const newDirection = getRandomDirection(direction);
         lostSquare(target, time, newDirection, className);
     } else {
@@ -537,11 +561,79 @@ async function lostSquare(target, time, direction, className) {
     }
 }
 
+// Start requestAnimationFrame render loop
+function startRenderLoop() {
+    function renderFrame() {
+        if (!mazeActive) {
+            renderLoopId = null;
+            return;
+        }
+        
+        renderBots();
+        renderLoopId = requestAnimationFrame(renderFrame);
+    }
+    
+    if (!renderLoopId && mazeActive) {
+        renderLoopId = requestAnimationFrame(renderFrame);
+    }
+}
+
+// Stop render loop
+function stopRenderLoop() {
+    if (renderLoopId) {
+        cancelAnimationFrame(renderLoopId);
+        renderLoopId = null;
+    }
+}
+
 // Render all active bots to canvas
 function renderBots() {
-    if (!botCtx || !window.mazeBotSprite || !window.mazeBotSprite.loaded) {
+    
+    // Early exit if nothing to render
+    if (activeBots.length === 0 && botTrails.length === 0) {
         return;
     }
+    
+    if (!window.mazeBotSprite || !window.mazeBotSprite.loaded) {
+        return;
+    }
+    
+    // Check if WebGL failed and fallback to Canvas2D
+    if (useWebGL && webglRenderer && !webglRenderer.gl) {
+        console.log('🔄 WebGL failed, switching to Canvas2D fallback');
+        useWebGL = false;
+        if (!botCtx) {
+            botCtx = botCanvas.getContext('2d', { 
+                alpha: true,
+                desynchronized: true,
+                willReadFrequently: false
+            });
+            botCtx.imageSmoothingEnabled = false;
+        }
+    }
+    
+    // Use WebGL renderer if available and ready
+    if (useWebGL && webglRenderer && webglRenderer.isReady) {
+        // Prepare trail data with opacity
+        const trailsWithOpacity = botTrails.map((trail, index) => {
+            const botTrailsForThisBot = botTrails.filter(t => t.botId === trail.botId);
+            const positionInTrail = botTrailsForThisBot.indexOf(trail);
+            const opacity = 0.3 + (positionInTrail * 0.2);
+            return { ...trail, opacity, size: WIDTH };
+        });
+        
+        // Prepare bot data with size
+        const botsWithSize = activeBots.map(bot => ({
+            ...bot,
+            size: WIDTH
+        }));
+        
+        webglRenderer.render(botsWithSize, trailsWithOpacity, directionMap);
+        return;
+    }
+    
+    // Fallback to Canvas2D
+    if (!botCtx) return;
     
     // Clear canvas efficiently
     botCtx.clearRect(0, 0, botCanvas.width, botCanvas.height);
@@ -607,11 +699,21 @@ function cleanup() {
     bugCells = []; // Clear all bugs
     fixedCells = []; // Clear all fixed cells
     
+    // Stop render loop
+    stopRenderLoop();
+    
     // Clear bug spawn timer
     if (bugSpawnTimer) {
         clearInterval(bugSpawnTimer);
         bugSpawnTimer = null;
     }
+    
+    // Destroy WebGL renderer
+    if (webglRenderer) {
+        webglRenderer.destroy();
+        webglRenderer = null;
+    }
+    useWebGL = false;
 
     if (svg) {
         svg.remove();
@@ -668,6 +770,13 @@ function handleResize() {
         if (shouldResizeMaze()) {
             cleanup();
             initPixelMaze();
+        } else if (botCanvas) {
+            // Just resize canvas without full reset
+            botCanvas.width = window.innerWidth;
+            botCanvas.height = window.innerHeight;
+            if (webglRenderer) {
+                webglRenderer.resize(window.innerWidth, window.innerHeight);
+            }
         }
 
         mazeResizeTimeout = null;

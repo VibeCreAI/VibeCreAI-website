@@ -39,6 +39,7 @@ class MazeBotSprite {
 
         directions.forEach(direction => {
             const img = new Image();
+            // Note: Don't set crossOrigin for local files (causes CORS errors on file://)
             const loadPromise = new Promise((resolve, reject) => {
                 img.onload = () => {
                     // Calculate frame dimensions from first loaded image
@@ -111,6 +112,8 @@ class MazeBotSprite {
      * @param {string} colorKey - Color identifier (solid1-4)
      */
     drawBot(ctx, x, y, size, direction, frameIndex, colorKey) {
+        
+        
         if (!this.loaded || !this.spriteSheets[direction]) return;
 
         const spriteSheet = this.spriteSheets[direction];
