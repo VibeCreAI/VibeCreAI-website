@@ -433,11 +433,78 @@ function getPerpendicularDirections(direction) {
     }
 }
 
+// Breadth-first search to find the first move toward a target while avoiding blockers
+function findDirectionWithShortestPath(startRow, startCol, targetRow, targetCol, maxDepth = 32) {
+    if (startRow === targetRow && startCol === targetCol) {
+        return null;
+    }
+
+    const visited = new Set();
+    const queue = [];
+    const dirVectors = [
+        { dir: 'north', dr: -1, dc: 0 },
+        { dir: 'south', dr: 1, dc: 0 },
+        { dir: 'east', dr: 0, dc: 1 },
+        { dir: 'west', dr: 0, dc: -1 }
+    ];
+
+    queue.push({ row: startRow, col: startCol, firstDir: null, depth: 0 });
+    visited.add(`${startRow},${startCol}`);
+
+    while (queue.length > 0) {
+        const current = queue.shift();
+
+        if (current.depth >= maxDepth) {
+            continue;
+        }
+
+        for (const vector of dirVectors) {
+            const nextRow = current.row + vector.dr;
+            const nextCol = current.col + vector.dc;
+            const key = `${nextRow},${nextCol}`;
+
+            if (visited.has(key)) {
+                continue;
+            }
+
+            const nextTarget = getTarget(nextRow, nextCol);
+
+            if (!nextTarget || nextTarget.classList.contains('blocker')) {
+                continue;
+            }
+
+            const firstDir = current.firstDir || vector.dir;
+
+            if (nextRow === targetRow && nextCol === targetCol) {
+                return firstDir;
+            }
+
+            visited.add(key);
+            queue.push({ row: nextRow, col: nextCol, firstDir, depth: current.depth + 1 });
+        }
+    }
+
+    return null;
+}
+
 function getNextDirection(row, col, currentDirection, botId) {
     const nearestBugInfo = findNearestBug(row, col);
 
     // Rule 1: Hunt bug if within 10 cells
     if (nearestBugInfo && nearestBugInfo.distance <= 10) {
+        // Try a shortest-path search to navigate around walls toward the bug
+        const pathDirection = findDirectionWithShortestPath(
+            row,
+            col,
+            nearestBugInfo.bug.row,
+            nearestBugInfo.bug.col,
+            40
+        );
+
+        if (pathDirection) {
+            return pathDirection;
+        }
+
         const bugDirection = getDirectionToward(row, col, nearestBugInfo.bug.row, nearestBugInfo.bug.col);
 
         // If bug direction is clear, go for it
