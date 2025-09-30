@@ -472,28 +472,28 @@ async function maze() {
     startBugSpawning();
 
     // Start moving elements with reasonable speeds - maximum 4 elements
-    // Bots start at random positions
+    // Bots start at random positions (30% slower: 100->130, 120->156)
     if (activeColorElements < 4) {
         const rp1 = getRandomPoint();
-        lostSquare(getTarget(rp1.row, rp1.col), TOTAL > 1000 ? 100 : 120, getRandomDirection(), "solid1", 0);
+        lostSquare(getTarget(rp1.row, rp1.col), TOTAL > 1000 ? 130 : 156, getRandomDirection(), "solid1", 0);
         activeColorElements++;
     }
 
     if (activeColorElements < 4) {
         const rp2 = getRandomPoint();
-        lostSquare(getTarget(rp2.row, rp2.col), TOTAL > 1000 ? 100 : 120, getRandomDirection(), "solid2", 1);
+        lostSquare(getTarget(rp2.row, rp2.col), TOTAL > 1000 ? 130 : 156, getRandomDirection(), "solid2", 1);
         activeColorElements++;
     }
 
     if (activeColorElements < 4) {
         const rp3 = getRandomPoint();
-        lostSquare(getTarget(rp3.row, rp3.col), TOTAL > 1000 ? 100 : 120, getRandomDirection(), "solid3", 2);
+        lostSquare(getTarget(rp3.row, rp3.col), TOTAL > 1000 ? 130 : 156, getRandomDirection(), "solid3", 2);
         activeColorElements++;
     }
 
     if (activeColorElements < 4) {
         const rp4 = getRandomPoint();
-        lostSquare(getTarget(rp4.row, rp4.col), TOTAL > 1000 ? 100 : 120, getRandomDirection(), "solid4", 3);
+        lostSquare(getTarget(rp4.row, rp4.col), TOTAL > 1000 ? 130 : 156, getRandomDirection(), "solid4", 3);
         activeColorElements++;
     }
 }
@@ -619,7 +619,7 @@ async function lostSquare(target, time, direction, className, botIndex = 0) {
         }
     }
     
-    // Add new trail
+    // Add new trail (30% less opacity: 0.6 -> 0.42)
     botTrails.push({
         botId: botId,
         x: WIDTH * bot.col,
@@ -628,7 +628,7 @@ async function lostSquare(target, time, direction, className, botIndex = 0) {
         direction: bot.isIdle ? 'idle' : bot.direction,
         frameIndex: bot.frameIndex,
         className: bot.className,
-        opacity: 0.6,
+        opacity: 0.42,
         fadeSpeed: 0.02
     });
     
@@ -720,11 +720,11 @@ function renderBots() {
     
     // Use WebGL renderer if available and ready
     if (useWebGL && webglRenderer && webglRenderer.isReady) {
-        // Prepare trail data with opacity
+        // Prepare trail data with opacity (30% less: 0.3->0.21, 0.2->0.14)
         const trailsWithOpacity = botTrails.map((trail, index) => {
             const botTrailsForThisBot = botTrails.filter(t => t.botId === trail.botId);
             const positionInTrail = botTrailsForThisBot.indexOf(trail);
-            const opacity = 0.3 + (positionInTrail * 0.2);
+            const opacity = 0.21 + (positionInTrail * 0.14);
             return { ...trail, opacity, size: WIDTH };
         });
         
@@ -754,11 +754,11 @@ function renderBots() {
         // Map maze directions to sprite directions (cached)
         const spriteDirection = directionMap[trail.direction] || trail.direction;
         
-        // Calculate fade based on position in bot's trail (newest = index 2, oldest = index 0)
+        // Calculate fade based on position in bot's trail (30% less opacity)
         const botTrailsForThisBot = botTrails.filter(t => t.botId === trail.botId);
         const positionInTrail = botTrailsForThisBot.indexOf(trail);
-        const opacity = 0.3 + (positionInTrail * 0.2); // oldest: 0.3, middle: 0.5, newest: 0.7
-        
+        const opacity = 0.21 + (positionInTrail * 0.14); // oldest: 0.21, middle: 0.35, newest: 0.49
+
         // Set global alpha for fading effect
         botCtx.globalAlpha = opacity;
         
