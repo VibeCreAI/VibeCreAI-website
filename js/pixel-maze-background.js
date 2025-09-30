@@ -22,6 +22,10 @@ let webglRenderer = null; // WebGL renderer instance
 let useWebGL = false; // Flag for renderer selection
 let renderLoopId = null; // RAF loop ID
 
+// Bot intelligence systems (simplified)
+let botPreviousCell = new Map(); // Track only last cell per bot (anti-oscillation)
+let botLastDirection = new Map(); // Track last direction per bot
+
 // Direction mapping cache for performance
 const directionMap = {
     'north': 'up',
@@ -289,10 +293,10 @@ function hasBug(row, col) {
 // Find nearest bug to given position
 function findNearestBug(row, col) {
     if (bugCells.length === 0) return null;
-    
+
     let nearest = null;
     let minDistance = Infinity;
-    
+
     bugCells.forEach(bug => {
         const distance = Math.abs(bug.row - row) + Math.abs(bug.col - col);
         if (distance < minDistance) {
@@ -300,8 +304,112 @@ function findNearestBug(row, col) {
             nearest = bug;
         }
     });
-    
+
     return { bug: nearest, distance: minDistance };
+}
+
+// Simple direction helpers for ultra-minimal AI
+function isPathClear(row, col, direction) {
+    const nextPoint = getNextPointInDirection(new Point(row, col), direction);
+    const nextTarget = getTarget(nextPoint.row, nextPoint.col);
+    return nextTarget && !nextTarget.classList.contains('blocker');
+}
+
+// Get direction toward a target (simple Manhattan pathfinding)
+function getDirectionToward(fromRow, fromCol, toRow, toCol) {
+    const rowDiff = toRow - fromRow;
+    const colDiff = toCol - fromCol;
+
+    // Move in the direction of largest difference
+    if (Math.abs(rowDiff) > Math.abs(colDiff)) {
+        return rowDiff > 0 ? 'south' : 'north';
+    } else if (colDiff !== 0) {
+        return colDiff > 0 ? 'east' : 'west';
+    }
+
+    // Same position, pick random
+    return ['north', 'south', 'east', 'west'][Math.floor(Math.random() * 4)];
+}
+
+// Get opposite direction helper
+function getOppositeDirection(direction) {
+    const opposites = {
+        'north': 'south',
+        'south': 'north',
+        'east': 'west',
+        'west': 'east'
+    };
+    return opposites[direction] || direction;
+}
+
+// Get random valid direction (avoiding walls, previous cell, and backtracking)
+function getRandomValidDirection(row, col, currentDirection, botId) {
+    const directions = ['north', 'south', 'east', 'west'];
+    const previousCell = botPreviousCell.get(botId);
+    const lastDirection = botLastDirection.get(botId);
+    const oppositeDir = getOppositeDirection(lastDirection || currentDirection);
+
+    // Filter to valid directions
+    let validDirs = directions.filter(dir => isPathClear(row, col, dir));
+
+    if (validDirs.length === 0) {
+        return currentDirection; // Stuck, keep trying current direction
+    }
+
+    // STRONG anti-oscillation: avoid opposite of last direction
+    if (validDirs.length > 1) {
+        const nonBacktrackDirs = validDirs.filter(dir => dir !== oppositeDir);
+        if (nonBacktrackDirs.length > 0) {
+            validDirs = nonBacktrackDirs;
+        }
+    }
+
+    // Also avoid going back to previous cell if possible
+    if (previousCell && validDirs.length > 1) {
+        const nonPreviousDirs = validDirs.filter(dir => {
+            const nextPoint = getNextPointInDirection(new Point(row, col), dir);
+            const cellKey = `${nextPoint.row},${nextPoint.col}`;
+            return cellKey !== previousCell;
+        });
+
+        if (nonPreviousDirs.length > 0) {
+            validDirs = nonPreviousDirs;
+        }
+    }
+
+    // Pick random from valid directions
+    return validDirs[Math.floor(Math.random() * validDirs.length)];
+}
+
+// Ultra-simple next direction logic (4 rules only)
+function getNextDirection(row, col, currentDirection, botId) {
+    const nearestBugInfo = findNearestBug(row, col);
+
+    // Rule 1: Hunt bug if within 10 cells
+    if (nearestBugInfo && nearestBugInfo.distance <= 10) {
+        const bugDirection = getDirectionToward(row, col, nearestBugInfo.bug.row, nearestBugInfo.bug.col);
+
+        // If bug direction is clear, go for it
+        if (isPathClear(row, col, bugDirection)) {
+            return bugDirection;
+        }
+
+        // If blocked, try a random valid direction toward bug
+        return getRandomValidDirection(row, col, currentDirection, botId);
+    }
+
+    // Rule 2: Random direction change (15% chance for exploration variety)
+    if (Math.random() < 0.15) {
+        return getRandomValidDirection(row, col, currentDirection, botId);
+    }
+
+    // Rule 3: Continue current direction if clear
+    if (isPathClear(row, col, currentDirection)) {
+        return currentDirection;
+    }
+
+    // Rule 4: Blocked, pick new random direction
+    return getRandomValidDirection(row, col, currentDirection, botId);
 }
 
 // Start bug spawning system
@@ -310,7 +418,7 @@ function startBugSpawning() {
     for (let i = 0; i < 5; i++) {
         spawnBug();
     }
-    
+
     // Set up periodic spawning
     bugSpawnTimer = setInterval(() => {
         if (mazeActive) {
@@ -364,27 +472,28 @@ async function maze() {
     startBugSpawning();
 
     // Start moving elements with reasonable speeds - maximum 4 elements
+    // Bots start at random positions
     if (activeColorElements < 4) {
         const rp1 = getRandomPoint();
-        lostSquare(getTarget(rp1.row, rp1.col), TOTAL > 1000 ? 100 : 120, getRandomDirection(), "solid1");
+        lostSquare(getTarget(rp1.row, rp1.col), TOTAL > 1000 ? 100 : 120, getRandomDirection(), "solid1", 0);
         activeColorElements++;
     }
 
     if (activeColorElements < 4) {
         const rp2 = getRandomPoint();
-        lostSquare(getTarget(rp2.row, rp2.col), TOTAL > 1000 ? 100 : 120, getRandomDirection(), "solid2");
+        lostSquare(getTarget(rp2.row, rp2.col), TOTAL > 1000 ? 100 : 120, getRandomDirection(), "solid2", 1);
         activeColorElements++;
     }
 
     if (activeColorElements < 4) {
         const rp3 = getRandomPoint();
-        lostSquare(getTarget(rp3.row, rp3.col), TOTAL > 1000 ? 100 : 120, getRandomDirection(), "solid3");
+        lostSquare(getTarget(rp3.row, rp3.col), TOTAL > 1000 ? 100 : 120, getRandomDirection(), "solid3", 2);
         activeColorElements++;
     }
 
     if (activeColorElements < 4) {
         const rp4 = getRandomPoint();
-        lostSquare(getTarget(rp4.row, rp4.col), TOTAL > 1000 ? 100 : 120, getRandomDirection(), "solid4");
+        lostSquare(getTarget(rp4.row, rp4.col), TOTAL > 1000 ? 100 : 120, getRandomDirection(), "solid4", 3);
         activeColorElements++;
     }
 }
@@ -395,8 +504,18 @@ async function mazer(row, col, time) {
 
     const rando = Math.random();
     const target = getTarget(row, col);
-    
+
     if (target) {
+        // Don't overwrite bug cells or fixed cells!
+        if (target.classList.contains('bug-cell') || target.classList.contains('fixed-cell')) {
+            const next = getRandomMove(new Point(row, col), rando);
+            await delay(time);
+            if (mazeActive) {
+                mazer(next.row, next.col, time);
+            }
+            return;
+        }
+
         const blockFactor = 0.25; // Subtle wall density
         target.setAttribute("class", `maze-cell ${rando < blockFactor ? "blocker" : "base"}`);
         const next = getRandomMove(new Point(row, col), rando);
@@ -408,8 +527,8 @@ async function mazer(row, col, time) {
     }
 }
 
-// Moving element function - now renders animated sprites
-async function lostSquare(target, time, direction, className) {
+// Moving element function - now renders animated sprites with smart AI
+async function lostSquare(target, time, direction, className, botIndex = 0) {
     if (!mazeActive || !target) {
         // Decrease counter when element stops
         if (activeColorElements > 0) activeColorElements--;
@@ -418,11 +537,11 @@ async function lostSquare(target, time, direction, className) {
 
     const row = parseInt(target.getAttribute("row"));
     const col = parseInt(target.getAttribute("col"));
-    
+
     // Create or update bot instance
     const botId = `bot-${className}`;
     let bot = activeBots.find(b => b.id === botId);
-    
+
     // Check if bot is at a bug location - fix it!
     if (hasBug(row, col)) {
         removeBug(row, col);
@@ -433,7 +552,7 @@ async function lostSquare(target, time, direction, className) {
             bot.frameIndex = 0;
         }
     }
-    
+
     if (!bot) {
         bot = {
             id: botId,
@@ -445,7 +564,8 @@ async function lostSquare(target, time, direction, className) {
             moveCounter: 0,
             trailCount: 0,  // Track trails per bot
             isIdle: false,
-            idleFramesRemaining: 0
+            idleFramesRemaining: 0,
+            botIndex: botIndex // Store bot index for territory assignment
         };
         activeBots.push(bot);
     } else {
@@ -453,14 +573,19 @@ async function lostSquare(target, time, direction, className) {
         bot.col = col;
         bot.direction = direction;
     }
-    
+
+    // Update bot memory (track previous cell and direction)
+    const cellKey = `${row},${col}`;
+    botPreviousCell.set(botId, cellKey);
+    botLastDirection.set(botId, direction);
+
     // Check if bot should enter idle state (1% chance - reduced frequency)
     if (!bot.isIdle && Math.random() < 0.01) {
         bot.isIdle = true;
         bot.idleFramesRemaining = Math.floor(Math.random() * 3) + 2; // Idle for 2-4 moves
         bot.frameIndex = 0; // Reset to first idle frame
     }
-    
+
     // Handle idle state
     if (bot.isIdle) {
         bot.idleFramesRemaining--;
@@ -469,7 +594,7 @@ async function lostSquare(target, time, direction, className) {
         if (bot.moveCounter % 3 === 0) {
             bot.frameIndex = (bot.frameIndex + 1) % 12;
         }
-        
+
         // Exit idle state when done
         if (bot.idleFramesRemaining <= 0) {
             bot.isIdle = false;
@@ -510,10 +635,10 @@ async function lostSquare(target, time, direction, className) {
     // Render loop handles all rendering now
 
     await delay(time);
-    
+
     // If bot is idle, stay in same position and continue idle animation
     if (bot.isIdle) {
-        lostSquare(target, time, direction, className);
+        lostSquare(target, time, direction, className, botIndex);
         return;
     }
 
@@ -526,38 +651,19 @@ async function lostSquare(target, time, direction, className) {
         return false;
     }
 
-    // Check for nearby bugs and steer toward them (within 5 cells)
-    const nearestBugInfo = findNearestBug(row, col);
-    let targetDirection = direction;
-    
-    if (nearestBugInfo && nearestBugInfo.distance <= 10) {
-        // Steer toward bug
-        const bug = nearestBugInfo.bug;
-        const rowDiff = bug.row - row;
-        const colDiff = bug.col - col;
-        
-        // Choose direction that gets closer to bug
-        if (Math.abs(rowDiff) > Math.abs(colDiff)) {
-            targetDirection = rowDiff > 0 ? 'south' : 'north';
-        } else if (colDiff !== 0) {
-            targetDirection = colDiff > 0 ? 'east' : 'west';
-        }
-    }
-    
-    const nextPoint = getNextPointInDirection(new Point(row, col), targetDirection);
+    // ULTRA-SIMPLE AI - Use new minimal decision system
+    const nextDirection = getNextDirection(row, col, direction, botId);
+
+    // Get next position based on decision
+    const nextPoint = getNextPointInDirection(new Point(row, col), nextDirection);
     const nextTarget = getTarget(nextPoint.row, nextPoint.col);
 
-    if (!nextTarget || nextTarget.classList.contains("blocker")) {
-        // Hit wall - just change direction (no idle to avoid getting stuck)
-        const newDirection = getRandomDirection(direction);
-        lostSquare(target, time, newDirection, className);
+    // Move to next position (or stay if somehow blocked)
+    if (nextTarget && !nextTarget.classList.contains("blocker")) {
+        lostSquare(nextTarget, time, nextDirection, className, botIndex);
     } else {
-        // Continue moving (5% chance to change direction randomly)
-        if (Math.random() > 0.95) {
-            lostSquare(nextTarget, time, getRandomDirection(direction), className);
-        } else {
-            lostSquare(nextTarget, time, direction, className);
-        }
+        // Stuck, stay in place and try again
+        lostSquare(target, time, nextDirection, className, botIndex);
     }
 }
 
@@ -698,16 +804,18 @@ function cleanup() {
     botTrails = []; // Clear all trails
     bugCells = []; // Clear all bugs
     fixedCells = []; // Clear all fixed cells
-    
+    botPreviousCell.clear(); // Clear bot memory
+    botLastDirection.clear(); // Clear direction memory
+
     // Stop render loop
     stopRenderLoop();
-    
+
     // Clear bug spawn timer
     if (bugSpawnTimer) {
         clearInterval(bugSpawnTimer);
         bugSpawnTimer = null;
     }
-    
+
     // Destroy WebGL renderer
     if (webglRenderer) {
         webglRenderer.destroy();
@@ -720,7 +828,7 @@ function cleanup() {
         svg = null;
         g = null;
     }
-    
+
     if (botCanvas) {
         botCanvas.remove();
         botCanvas = null;
