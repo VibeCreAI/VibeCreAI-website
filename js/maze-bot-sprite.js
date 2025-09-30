@@ -6,12 +6,9 @@
 class MazeBotSprite {
     constructor() {
         // Sprite configuration
-        this.spriteSheets = {
-            up: null,
-            down: null,
-            left: null,
-            right: null
-        };
+        this.directions = ['up', 'down', 'left', 'right', 'idle'];
+        this.spriteSheets = {};
+        this.coloredSpriteSheets = {};
         this.cols = 3;
         this.rows = 4;
         this.totalFrames = this.cols * this.rows; // 12 frames
@@ -26,6 +23,13 @@ class MazeBotSprite {
             solid4: { name: 'yellow', hex: '#ffeaa7' }
         };
 
+        this.colorFileMap = {
+            solid1: 'RED',
+            solid2: 'TEAL',
+            solid3: 'PURPLE',
+            solid4: 'YELLOW'
+        };
+
         // Loading state
         this.loaded = false;
         this.loadPromises = [];
@@ -35,14 +39,10 @@ class MazeBotSprite {
     }
 
     loadSpriteSheets() {
-        const directions = ['up', 'down', 'left', 'right', 'idle'];
-
-        directions.forEach(direction => {
+        this.directions.forEach(direction => {
             const img = new Image();
-            // Note: Don't set crossOrigin for local files (causes CORS errors on file://)
-            const loadPromise = new Promise((resolve, reject) => {
+            const loadPromise = new Promise((resolve) => {
                 img.onload = () => {
-                    // Calculate frame dimensions from first loaded image
                     if (this.frameWidth === 0) {
                         this.frameWidth = img.width / this.cols;
                         this.frameHeight = img.height / this.rows;
@@ -51,54 +51,44 @@ class MazeBotSprite {
                 };
                 img.onerror = () => {
                     console.error(`Failed to load sprite: ${direction}`);
-                    reject();
+                    resolve();
                 };
             });
 
-            // Handle IDLE sprite with different naming convention
-            if (direction === 'idle') {
-                img.src = `images/AI BOT-IDLE.png`;
-            } else {
-                img.src = `images/AI BOT-${direction.toUpperCase()}.png`;
-            }
+            const defaultSuffix = this.colorFileMap.solid1; // Use red as baseline sheet
+            const directionKey = direction.toUpperCase();
+            img.src = direction === 'idle'
+                ? `images/AI BOT-IDLE-${defaultSuffix}.png`
+                : `images/AI BOT-${directionKey}-${defaultSuffix}.png`;
+
             this.spriteSheets[direction] = img;
             this.loadPromises.push(loadPromise);
+
+            this.coloredSpriteSheets[direction] = {};
+
+            Object.keys(this.botColors).forEach(colorKey => {
+                const colorImg = new Image();
+                colorImg.onload = () => {
+                    this.coloredSpriteSheets[direction][colorKey] = colorImg;
+                };
+                colorImg.onerror = () => {
+                    console.warn(`Optional colored sprite missing: ${direction}-${colorKey}`);
+                };
+                const suffix = this.colorFileMap[colorKey];
+                if (!suffix) {
+                    return;
+                }
+                colorImg.src = direction === 'idle'
+                    ? `images/AI BOT-IDLE-${suffix}.png`
+                    : `images/AI BOT-${directionKey}-${suffix}.png`;
+            });
         });
 
-        // Wait for all sprites to load
         Promise.all(this.loadPromises).then(() => {
             this.loaded = true;
         }).catch((err) => {
             console.error('❌ Failed to load maze bot sprites', err);
         });
-    }
-
-    /**
-     * Get color filter for applying bot color to white sprite
-     */
-    getColorFilter(colorKey) {
-        const color = this.botColors[colorKey];
-        if (!color) return '';
-
-        // Convert hex to RGB for filter generation
-        const hex = color.hex;
-        const r = parseInt(hex.slice(1, 3), 16);
-        const g = parseInt(hex.slice(3, 5), 16);
-        const b = parseInt(hex.slice(5, 7), 16);
-
-        // Specific filter values for each color to match original exactly
-        switch(colorKey) {
-            case 'solid1': // Red #ff6b6b
-                return 'brightness(0) saturate(100%) invert(62%) sepia(89%) saturate(2799%) hue-rotate(324deg) brightness(102%) contrast(101%)';
-            case 'solid2': // Teal #4ecdc4
-                return 'brightness(0) saturate(100%) invert(75%) sepia(14%) saturate(2487%) hue-rotate(131deg) brightness(92%) contrast(87%)';
-            case 'solid3': // Purple #a29bfe
-                return 'brightness(0) saturate(100%) invert(74%) sepia(20%) saturate(1087%) hue-rotate(201deg) brightness(101%) contrast(98%)';
-            case 'solid4': // Yellow #ffeaa7
-                return 'brightness(0) saturate(100%) invert(93%) sepia(18%) saturate(1008%) hue-rotate(316deg) brightness(104%) contrast(101%)';
-            default:
-                return '';
-        }
     }
 
     /**
@@ -112,11 +102,14 @@ class MazeBotSprite {
      * @param {string} colorKey - Color identifier (solid1-4)
      */
     drawBot(ctx, x, y, size, direction, frameIndex, colorKey) {
-        
-        
         if (!this.loaded || !this.spriteSheets[direction]) return;
 
-        const spriteSheet = this.spriteSheets[direction];
+        const coloredSheet = this.coloredSpriteSheets[direction] && this.coloredSpriteSheets[direction][colorKey];
+        const spriteSheet = (coloredSheet && coloredSheet.complete) ? coloredSheet : this.spriteSheets[direction];
+
+        if (!spriteSheet || (spriteSheet instanceof HTMLImageElement && !spriteSheet.complete)) {
+            return;
+        }
         const frame = frameIndex % this.totalFrames;
 
         // Calculate source position in sprite sheet
@@ -128,22 +121,14 @@ class MazeBotSprite {
         // Save context state
         ctx.save();
 
-        // Apply color filter
-        const filter = this.getColorFilter(colorKey);
-        if (filter) {
-            ctx.filter = filter;
-        }
-
-        // Draw the sprite frame
         ctx.drawImage(
             spriteSheet,
-            sx, sy,                          // Source position
-            this.frameWidth, this.frameHeight, // Source size
-            x, y,                            // Destination position
-            size, size                       // Destination size
+            sx, sy,
+            this.frameWidth, this.frameHeight,
+            x, y,
+            size, size
         );
 
-        // Restore context state
         ctx.restore();
     }
 

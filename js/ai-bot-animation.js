@@ -14,6 +14,16 @@ class AIBotAnimation {
         this.animationFrame = null;
         this.lastFrameTime = 0;
         this.container = null;
+        this.supportsCanvasFilter = this.detectCanvasFilterSupport();
+        this.themeSpriteCache = new Map();
+        this.coloredSpriteSheet = null;
+        this.themeSpritePaths = {
+            default: 'images/AI_bot_default.png',
+            matrix: 'images/AI_bot_matrix.png',
+            synthwave: 'images/AI_bot_synthwave.png',
+            ghost: 'images/AI_bot_ghost.png'
+        };
+        this.currentThemeKey = 'default';
 
         this.init();
     }
@@ -58,82 +68,182 @@ class AIBotAnimation {
             this.startAnimation();
             this.showBot();
         };
-        // No crossOrigin needed since we're using CSS filters instead of pixel manipulation
-        this.spriteSheet.src = 'images/AI_bot_white.png';
+        // Load default themed sprite as baseline asset
+        this.spriteSheet.src = this.themeSpritePaths.default;
     }
 
     applyThemeColor() {
         if (!this.isLoaded || !this.spriteSheet) return;
 
-        // Get current theme color and apply CSS filter instead of pixel manipulation
-        const themeColor = this.getCurrentThemeColor();
-        const filter = this.getColorFilter(themeColor);
+        const themeInfo = this.getThemeInfo();
+        this.currentThemeKey = themeInfo.key;
 
-        // Apply color filter to canvas (no glow by default)
         if (this.canvas) {
-            this.canvas.style.filter = filter;
+            this.canvas.style.filter = 'none';
         }
 
-        // Use original sprite sheet directly
-        this.coloredSpriteSheet = this.spriteSheet;
+        const themedAsset = this.ensureThemeSprite(themeInfo.key);
+
+        if (
+            themedAsset &&
+            themedAsset.complete &&
+            themedAsset.naturalWidth > 0
+        ) {
+            if (this.coloredSpriteSheet !== themedAsset) {
+                this.coloredSpriteSheet = themedAsset;
+                this.drawCurrentFrame();
+            }
+            return;
+        }
+
+        // Fallback logic when a dedicated themed asset isn't available yet
+        if (this.supportsCanvasFilter) {
+            const filter = this.getColorFilter(themeInfo.key);
+            if (this.canvas) {
+                this.canvas.style.filter = filter;
+            }
+            this.coloredSpriteSheet = this.spriteSheet;
+        } else {
+            this.coloredSpriteSheet = this.getTintedThemeSprite(themeInfo.key, themeInfo.hex);
+        }
+
         this.drawCurrentFrame();
     }
 
-    getColorFilter(themeColor) {
-        // Get the current theme from the body classes to determine exact color
+    getThemeInfo() {
         const body = document.body;
+        const root = document.documentElement;
+        const fallback = this.normalizeColor(getComputedStyle(root).getPropertyValue('--primary-color') || '#00ffff');
 
         if (body.classList.contains('theme-matrix')) {
-            // Matrix theme - bright green #00ff41
-            return 'brightness(0) saturate(100%) invert(50%) sepia(96%) saturate(2089%) hue-rotate(88deg) brightness(118%) contrast(119%)';
-        } else if (body.classList.contains('theme-synthwave')) {
-            // Synthwave theme - pink #ff6b9d
-            return 'brightness(0) saturate(100%) invert(13%) sepia(79%) saturate(7439%) hue-rotate(295deg) brightness(104%) contrast(105%)';
-        } else if (body.classList.contains('theme-ghost')) {
-            // Ghost theme - keep white/light blue
-            return 'brightness(1.2) saturate(0.8)';
-        } else {
-            // Default theme - exact same cyan as main logo AI text #00ffff
-            return 'brightness(0) saturate(100%) invert(89%) sepia(100%) saturate(3533%) hue-rotate(140deg) brightness(104%) contrast(105%)';
+            return { key: 'matrix', hex: this.normalizeColor('#00ff41') };
+        }
+
+        if (body.classList.contains('theme-synthwave')) {
+            return { key: 'synthwave', hex: this.normalizeColor('#ff6b9d') };
+        }
+
+        if (body.classList.contains('theme-ghost')) {
+            return { key: 'ghost', hex: this.normalizeColor('#ffffff') };
+        }
+
+        return { key: 'default', hex: fallback };
+    }
+
+    ensureThemeSprite(themeKey) {
+        const cacheKey = `asset-${themeKey}`;
+        const path = this.themeSpritePaths[themeKey] || this.themeSpritePaths.default;
+
+        if (!path) {
+            return null;
+        }
+
+        let entry = this.themeSpriteCache.get(cacheKey);
+        if (entry && entry.error) {
+            return null;
+        }
+
+        if (entry && entry.loaded && entry.image.complete) {
+            return entry.image;
+        }
+
+        if (!entry) {
+            const image = new Image();
+            entry = { image, loaded: false, error: false };
+            this.themeSpriteCache.set(cacheKey, entry);
+
+            image.onload = () => {
+                entry.loaded = true;
+                if (this.currentThemeKey === themeKey) {
+                    this.coloredSpriteSheet = image;
+                    this.drawCurrentFrame();
+                }
+            };
+
+            image.onerror = () => {
+                entry.error = true;
+            };
+
+            // Bust cache so the browser refetches updated assets
+            image.src = `${path}?v=${Date.now()}`;
+        }
+
+        return (entry.loaded && entry.image.complete) ? entry.image : null;
+    }
+
+    getColorFilter(themeKey) {
+        switch (themeKey) {
+            case 'matrix':
+                return 'brightness(0) saturate(100%) invert(50%) sepia(96%) saturate(2089%) hue-rotate(88deg) brightness(118%) contrast(119%)';
+            case 'synthwave':
+                return 'brightness(0) saturate(100%) invert(13%) sepia(79%) saturate(7439%) hue-rotate(295deg) brightness(104%) contrast(105%)';
+            case 'ghost':
+                return 'brightness(1.2) saturate(0.8)';
+            case 'default':
+            default:
+                return 'brightness(0) saturate(100%) invert(89%) sepia(100%) saturate(3533%) hue-rotate(140deg) brightness(104%) contrast(105%)';
         }
     }
 
-    getCurrentThemeColor() {
-        const root = document.documentElement;
-        const computedStyle = getComputedStyle(root);
-        return computedStyle.getPropertyValue('--primary-color').trim() || '#00FFFF';
+    normalizeColor(colorValue) {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+            return '#00ffff';
+        }
+
+        try {
+            ctx.fillStyle = colorValue;
+            return ctx.fillStyle;
+        } catch (error) {
+            return '#00ffff';
+        }
     }
 
-    hexToRgb(hex) {
-        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-        return result ? {
-            r: parseInt(result[1], 16),
-            g: parseInt(result[2], 16),
-            b: parseInt(result[3], 16)
-        } : { r: 0, g: 255, b: 255 }; // Default cyan
+    detectCanvasFilterSupport() {
+        return false;
     }
 
-    rgbToHsl(r, g, b) {
-        r /= 255;
-        g /= 255;
-        b /= 255;
-        const max = Math.max(r, g, b);
-        const min = Math.min(r, g, b);
-        let h, s, l = (max + min) / 2;
+    getTintedThemeSprite(themeKey, colorHex) {
+        const cacheKey = `tinted-${themeKey}`;
+        const existing = this.themeSpriteCache.get(cacheKey);
+        if (existing && existing.loaded && existing.image.complete) {
+            return existing.image;
+        }
 
-        if (max === min) {
-            h = s = 0; // achromatic
-        } else {
-            const d = max - min;
-            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-            switch (max) {
-                case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-                case g: h = (b - r) / d + 2; break;
-                case b: h = (r - g) / d + 4; break;
+        if (!this.spriteSheet || !this.spriteSheet.complete) {
+            return this.spriteSheet;
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = this.spriteSheet.width;
+        canvas.height = this.spriteSheet.height;
+        const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = false;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(this.spriteSheet, 0, 0);
+        ctx.globalCompositeOperation = 'source-in';
+        ctx.fillStyle = colorHex;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.globalCompositeOperation = 'source-over';
+
+        const tintedImage = new Image();
+        const entry = { image: tintedImage, loaded: false, error: false };
+        this.themeSpriteCache.set(cacheKey, entry);
+
+        tintedImage.onload = () => {
+            entry.loaded = true;
+            if (this.coloredSpriteSheet === tintedImage) {
+                this.drawCurrentFrame();
             }
-            h /= 6;
-        }
-        return [h * 360, s, l];
+        };
+        tintedImage.onerror = () => {
+            entry.error = true;
+        };
+        tintedImage.src = canvas.toDataURL('image/png');
+
+        return tintedImage;
     }
 
     startAnimation() {
@@ -152,7 +262,12 @@ class AIBotAnimation {
     }
 
     drawCurrentFrame() {
-        if (!this.ctx || !this.spriteSheet || !this.isLoaded) return;
+        const spriteSource = this.coloredSpriteSheet || this.spriteSheet;
+        if (!this.ctx || !spriteSource || !this.isLoaded) return;
+
+        if (spriteSource instanceof HTMLImageElement && !spriteSource.complete) {
+            return;
+        }
 
         // Clear canvas
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -163,7 +278,7 @@ class AIBotAnimation {
 
         // Draw the frame using original sprite sheet
         this.ctx.drawImage(
-            this.spriteSheet,
+            spriteSource,
             col * this.frameWidth,
             row * this.frameHeight,
             this.frameWidth,
