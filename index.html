@@ -1,5 +1,4 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+﻿<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, shrink-to-fit=no, viewport-fit=cover">
@@ -34,6 +33,9 @@
     <!-- Resource Hints for Performance -->
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="preload" href="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" as="script">
+    <link rel="preload" href="fonts/Born2bSportyFS.otf" as="font" type="font/otf" crossorigin>
+    <link rel="preload" href="fonts/MinecraftRegular.otf" as="font" type="font/otf" crossorigin>
+    <link rel="preload" href="fonts/MinecraftItalic.otf" as="font" type="font/otf" crossorigin>
     
     <!-- CRITICAL: Always start from hero page - Must be in HEAD -->
     <script>
@@ -128,9 +130,16 @@
 
     <!-- Loading Screen -->
     <div id="loading-screen">
-        <div class="loading-text">LOADING<span class="loading-cursor">_</span></div>
-        <div class="loading-bar">
-            <div class="loading-progress"></div>
+        <div class="loading-text">BOOTING<span class="loading-cursor">_</span></div>
+        <div class="loading-gauge">
+            <div class="loading-track">
+                <div class="loading-fill"></div>
+                <div class="loading-cap"></div>
+            </div>
+            <div class="loading-metrics">
+                <span class="loading-percent">0%</span>
+                <span class="loading-label" data-phases='[{"title":"BOOTING","label":"Initializing AI core…"},{"title":"LOADING","label":"Deploying pixel maze agents…"},{"title":"LOADING","label":"Calibrating neon shaders…"},{"title":"READY","label":"Enjoy the vibes!"}]'>Initializing AI core…</span>
+            </div>
         </div>
     </div>
 

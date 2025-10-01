@@ -370,6 +370,9 @@ class VibeCreAIApp {
         // Start logo shuffle animation first
         if (this.elements.logoContainer) {
             this.initLogoShuffle().then(() => {
+                if (typeof window.startAIBotAnimation === 'function') {
+                    window.startAIBotAnimation();
+                }
                 // After logo is complete, start tagline scramble with a slight delay
                 setTimeout(() => {
                     if (this.elements.tagline) {
@@ -380,36 +383,136 @@ class VibeCreAIApp {
         } else if (this.elements.tagline) {
             // If no logo container, just start tagline
             this.initTaglineScramble();
+            if (typeof window.startAIBotAnimation === 'function') {
+                window.startAIBotAnimation();
+            }
         }
     }
 
     setupLoadingScreen() {
         window.addEventListener('load', () => {
-            const loadingProgress = document.querySelector('.loading-progress');
             const loadingScreen = document.getElementById('loading-screen');
 
-            if (!loadingProgress || !loadingScreen) return;
+            if (!loadingScreen) {
+                this.startHeroAnimations();
+                return;
+            }
+
+            const gaugeFill = loadingScreen.querySelector('.loading-fill');
+            const percentLabel = loadingScreen.querySelector('.loading-percent');
+            const statusLabel = loadingScreen.querySelector('.loading-label');
+            const loadingTitle = loadingScreen.querySelector('.loading-text');
+            const track = loadingScreen.querySelector('.loading-track');
+
+            if (!gaugeFill || !percentLabel || !statusLabel || !track) {
+                this.startHeroAnimations();
+                return;
+            }
+
+            const phaseData = (() => {
+                try {
+                    const raw = statusLabel.dataset.phases;
+                    if (!raw) return [];
+                    const parsed = JSON.parse(raw);
+                    if (!Array.isArray(parsed)) return [];
+                    return parsed.map((entry) => {
+                        if (typeof entry === 'string') {
+                            return { title: entry, label: entry };
+                        }
+                        if (entry && typeof entry === 'object') {
+                            const title = entry.title || entry.label || 'LOADING';
+                            const label = entry.label || entry.title || title;
+                            return { title, label };
+                        }
+                        return { title: 'LOADING', label: 'Working…' };
+                    });
+                } catch (error) {
+                    console.warn('Loading label phase data malformed', error);
+                    return [];
+                }
+            })();
+
+            const applyPhase = (index) => {
+                if (!phaseData.length) return;
+                const boundedIndex = Math.min(Math.max(index, 0), phaseData.length - 1);
+                const phase = phaseData[boundedIndex];
+                if (loadingTitle && loadingTitle.firstChild) {
+                    loadingTitle.firstChild.textContent = phase.title.toUpperCase();
+                }
+                const labelHtml = phase.label.replace(/\n/g, '<br>');
+                statusLabel.innerHTML = labelHtml;
+            };
+
+            if (phaseData.length) {
+                applyPhase(0);
+            }
+
+            const thresholds = (() => {
+                if (!phaseData.length) {
+                    return [0, 50, 99];
+                }
+
+                if (phaseData.length === 1) {
+                    return [0];
+                }
+
+                return phaseData.map((_, index) => {
+                    if (index === phaseData.length - 1) {
+                        return 99;
+                    }
+                    return Math.round((100 / (phaseData.length - 1)) * index);
+                });
+            })();
+            let currentPhaseIndex = -1;
+
+            const updatePhaseLabel = (value) => {
+                if (!phaseData.length) return;
+
+                let targetIndex = 0;
+                thresholds.forEach((thresholdValue, index) => {
+                    if (value >= thresholdValue) {
+                        targetIndex = index;
+                    }
+                });
+
+                if (targetIndex !== currentPhaseIndex) {
+                    currentPhaseIndex = targetIndex;
+                    applyPhase(targetIndex);
+                }
+            };
+
+            const progressState = { value: 0 };
 
             anime({
-                targets: loadingProgress,
-                width: '100%',
-                duration: 1500,
-                easing: 'easeInOutQuad',
+                targets: progressState,
+                value: 100,
+                duration: 2200,
+                easing: 'easeInOutCubic',
+                update: () => {
+                    const currentValue = Math.round(progressState.value);
+                    gaugeFill.style.width = `${currentValue}%`;
+                    percentLabel.textContent = `${currentValue}%`;
+                    updatePhaseLabel(currentValue);
+                },
                 complete: () => {
+                    gaugeFill.style.width = '100%';
+                    percentLabel.textContent = '100%';
+                    updatePhaseLabel(100);
+                    track.classList.add('flash');
+
                     anime({
                         targets: loadingScreen,
                         opacity: 0,
-                        duration: 500,
+                        delay: 350,
+                        duration: 600,
                         easing: 'easeOutQuad',
                         complete: () => {
                             loadingScreen.style.display = 'none';
 
-                            // Apply browser optimizations
                             if (window.PerformanceManager) {
                                 window.PerformanceManager.applyBrowserOptimizations();
                             }
 
-                            // Trigger hero animations after loading screen disappears
                             this.startHeroAnimations();
                         }
                     });

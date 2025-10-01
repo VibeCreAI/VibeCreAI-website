@@ -30,7 +30,7 @@ nav {
 }
 
 .logo {
-    font-family: 'Born2bSportyFont', monospace;
+    font-family: 'Born2bSportyFont', 'MinecraftFont', 'Courier New', monospace;
     font-size: 2rem;
     text-decoration: none;
     letter-spacing: 0.1em;
@@ -60,7 +60,7 @@ nav {
 }
 
 .nav-links a {
-    font-family: 'Born2bSportyFont', monospace;
+    font-family: 'Born2bSportyFont', 'MinecraftFont', 'Courier New', monospace;
     font-size: 1.3rem;
     color: var(--text-color);
     text-decoration: none;
@@ -190,7 +190,7 @@ body.terminal-active .cta-container {
 }
 
 .hero-title {
-    font-family: 'Born2bSportyFont', monospace;
+    font-family: 'Born2bSportyFont', 'MinecraftFont', 'Courier New', monospace;
     font-size: 6rem;
     font-weight: normal;
     text-transform: uppercase;
@@ -223,7 +223,7 @@ body.terminal-active .cta-container {
 }
 
 .hero-subtitle {
-    font-family: 'Born2bSportyFont', monospace;
+    font-family: 'Born2bSportyFont', 'MinecraftFont', 'Courier New', monospace;
     font-size: 1.5rem;
     margin-bottom: 30px;
     color: var(--primary-color);
@@ -299,7 +299,7 @@ body.terminal-active .cta-container {
 }
 
 .vibe-icon {
-    font-family: 'Born2bSportyFont', monospace;
+    font-family: 'Born2bSportyFont', 'MinecraftFont', 'Courier New', monospace;
     font-size: 1.1rem;
     font-weight: bold;
     color: var(--primary-color);
@@ -313,7 +313,7 @@ body.terminal-active .cta-container {
 }
 
 .vibe-tooltip {
-    font-family: 'Born2bSportyFont', monospace;
+    font-family: 'Born2bSportyFont', 'MinecraftFont', 'Courier New', monospace;
     position: absolute;
     bottom: 70px;
     right: 0;
@@ -396,7 +396,7 @@ body.terminal-active .cta-container {
 }
 
 .about-card h3 {
-    font-family: 'Born2bSportyFont', monospace;
+    font-family: 'Born2bSportyFont', 'MinecraftFont', 'Courier New', monospace;
     font-size: 1.5rem;
     margin-bottom: 15px;
     color: #ffffff;
@@ -493,7 +493,7 @@ body.terminal-active .cta-container {
 }
 
 .app-title {
-    font-family: 'Born2bSportyFont', monospace;
+    font-family: 'Born2bSportyFont', 'MinecraftFont', 'Courier New', monospace;
     font-size: 1.5rem;
     margin-bottom: 10px;
     color: #ffffff;
@@ -509,7 +509,7 @@ body.terminal-active .cta-container {
 }
 
 .app-button {
-    font-family: 'Born2bSportyFont', monospace;
+    font-family: 'Born2bSportyFont', 'MinecraftFont', 'Courier New', monospace;
     font-size: 1rem;
     padding: 10px 30px;
     background: transparent;
@@ -652,7 +652,7 @@ body.terminal-active .cta-container {
 }
 
 .form-group button {
-    font-family: 'Born2bSportyFont', monospace;
+    font-family: 'Born2bSportyFont', 'MinecraftFont', 'Courier New', monospace;
     font-size: 1.1rem;
     padding: 15px 40px;
     background: transparent;
@@ -714,7 +714,7 @@ body.terminal-active .cta-container {
 
 /* Footer */
 footer {
-    font-family: 'Born2bSportyFont', monospace;
+    font-family: 'Born2bSportyFont', 'MinecraftFont', 'Courier New', monospace;
     padding: 30px 20px;
     background: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(10px);

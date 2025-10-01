@@ -437,7 +437,7 @@
 .focus-container {
     position: relative;
     display: inline-block;
-    font-family: 'Born2bSportyFont', monospace;
+    font-family: 'Born2bSportyFont', 'MinecraftFont', 'Courier New', monospace;
 }
 
 .focus-word {

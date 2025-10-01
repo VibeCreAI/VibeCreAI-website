@@ -7,7 +7,7 @@
 @font-face {
     font-family: 'Born2bSportyFont';
     src: url('../fonts/Born2bSportyFS.otf') format('opentype');
-    font-display: swap; /* Fallback if font fails to load */
+    font-display: swap;
 }
 
 @font-face {
@@ -53,7 +53,7 @@ html {
 }
 
 body {
-    font-family: 'MinecraftFont', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'MinecraftFont', 'Courier New', 'Lucida Console', monospace;
     background: var(--dark-bg);
     color: var(--text-color);
     min-width: 380px; /* Minimum website width */
@@ -89,7 +89,7 @@ body {
 }
 
 .section-title {
-    font-family: 'Born2bSportyFont', monospace;
+    font-family: 'Born2bSportyFont', 'MinecraftFont', 'Courier New', monospace;
     font-size: 3rem;
     text-align: center;
     margin-bottom: 60px;
@@ -138,27 +138,90 @@ body {
 }
 
 .loading-text {
-    font-family: 'Born2bSportyFont', monospace;
+    font-family: 'Born2bSportyFont', 'MinecraftFont', 'Courier New', monospace;
     font-size: 3rem;
     color: #ffffff;
-    text-shadow: var(--neon-glow);
+    text-shadow: none;
     letter-spacing: 0.2em;
 }
 
-.loading-bar {
-    width: 300px;
-    height: 2px;
-    background: rgba(255, 255, 255, 0.1);
-    margin-top: 30px;
+.loading-gauge {
+    width: clamp(240px, 60vw, 420px);
+    margin-top: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.loading-track {
+    --gauge-height: 20px;
     position: relative;
+    height: var(--gauge-height);
+    border-radius: calc(var(--gauge-height) / 2);
+    background:
+        linear-gradient(90deg, rgba(255, 255, 255, 0.06) 0 12px, transparent 12px) 0 0 / 16px 100%,
+        rgba(255, 255, 255, 0.08);
+    box-shadow:
+        inset 0 0 15px rgba(0, 0, 0, 0.8),
+        0 0 12px rgba(0, 255, 255, 0.15);
     overflow: hidden;
 }
 
-.loading-progress {
-    height: 100%;
-    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color), var(--accent-color));
+.loading-track.flash {
+    box-shadow:
+        inset 0 0 15px rgba(0, 0, 0, 0.8),
+        0 0 16px rgba(0, 255, 255, 0.4),
+        0 0 32px rgba(0, 255, 255, 0.25);
+}
+
+.loading-fill {
+    position: absolute;
+    inset: 2px;
+    border-radius: calc(var(--gauge-height) / 2);
+    background: #00ffff;
     width: 0%;
-    transition: width 0.3s ease;
+}
+
+.loading-cap {
+    position: absolute;
+    top: 50%;
+    right: 4px;
+    transform: translateY(-50%);
+    width: 12px;
+    height: calc(var(--gauge-height) - 6px);
+    border-radius: 999px;
+    opacity: 0.2;
+    background: rgba(255, 255, 255, 0.4);
+}
+
+.loading-metrics {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: 'MinecraftFont', 'Courier New', 'Lucida Console', monospace;
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.loading-percent {
+    font-family: 'Born2bSportyFont', 'MinecraftFont', 'Courier New', monospace;
+    font-size: 1.3rem;
+    color: var(--primary-color);
+}
+
+.loading-label {
+    opacity: 0.8;
+    text-transform: uppercase;
+    display: inline-block;
+    text-align: right;
+    line-height: 1.1;
+}
+
+@media (max-width: 480px) {
+    .loading-gauge {
+        width: 80vw;
+    }
 }
 
 /* Utility Classes */
@@ -183,7 +246,7 @@ body {
 
 /* Base Button Styles */
 .cta-button {
-    font-family: 'Born2bSportyFont', monospace;
+    font-family: 'Born2bSportyFont', 'MinecraftFont', 'Courier New', monospace;
     font-size: 1.1rem;
     padding: 10px 20px;
     width: 120px;
@@ -239,7 +302,7 @@ body {
 
 /* Typography and Text Styles */
 .tagline {
-    font-family: 'Born2bSportyFont', monospace;
+    font-family: 'Born2bSportyFont', 'MinecraftFont', 'Courier New', monospace;
     font-size: 1.2rem;
     color: var(--primary-color);
     min-height: 2.5rem;

@@ -341,17 +341,18 @@ class AIBotAnimation {
     }
 }
 
-// Initialize the AI bot animation after main logo animation completes
-document.addEventListener('DOMContentLoaded', () => {
-    // Wait for main logo shuffle animation to complete
-    // Logo has 9 characters with 100ms stagger + animation duration = ~1500ms total
-    setTimeout(() => {
-        window.aiBotAnimation = new AIBotAnimation();
-        window.aiBotAnimation.attachToHero();
-    }, 1800); // Start after logo animation is definitely finished
-});
+function bootstrapAIBotAnimation() {
+    if (window.aiBotAnimation) {
+        return window.aiBotAnimation;
+    }
 
-// Export for module use
+    window.aiBotAnimation = new AIBotAnimation();
+    window.aiBotAnimation.attachToHero();
+    return window.aiBotAnimation;
+}
+
+window.startAIBotAnimation = bootstrapAIBotAnimation;
+
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = AIBotAnimation;
+    module.exports = { AIBotAnimation, bootstrapAIBotAnimation };
 }
