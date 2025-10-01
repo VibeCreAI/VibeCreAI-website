@@ -202,9 +202,12 @@ body.terminal-active .cta-container {
     align-items: baseline;
     justify-content: center;
     width: 100%;
+    min-height: 1.2em;
+    line-height: 1;
     opacity: 0;
     transform: translateY(-100px);
 }
+
 
 .title-v, .title-c {
     color: #ffffff;
