@@ -10,6 +10,11 @@ A stunning personal portfolio website showcasing the power of **AI-human collabo
 
 ### Latest Improvements
 - ✅ **Modular Architecture**: Transitioned from single-file to organized CSS/JS modules for better maintainability
+- ✅ **Hero Experience Refresh**:
+  - Introduced a **Programmer Companion Sprite** in place of the old dinosaur artwork
+  - Tuned hover filters for cross-browser fidelity (including Samsung Internet)
+- ✅ **Animated Pixel Maze Bug Hunt**: Upgraded the background maze into an interactive pixel-art system that highlights bugs in real time
+- ✅ **Vibe Survivor Standalone**: Split the survival game into its own deployment at https://vibe-survivor.vercel.app/ with lightweight linking from the main site
 - ✅ **Enhanced UI/UX**: 
   - Updated navigation from "PROJECTS" to "APPS" for clarity
   - Standardized button widths for visual consistency  
@@ -31,8 +36,9 @@ A stunning personal portfolio website showcasing the power of **AI-human collabo
 ### 🎨 **Interactive UI**
 - **Progressive Theme Switcher**: 4 unique visual themes (Default, Synthwave, Matrix, Ghost)
 - **Source Code Terminal**: Click the tagline to explore the project's story progressively
-- **Neural Network Animation**: Dynamic canvas background with particle effects
+- **Animated Pixel Maze Bug Hunt**: WebGL-powered maze that animates pixel agents to surface bugs visually
 - **Matrix Rain Effect**: Iconic digital rain animation
+- **Programmer Companion Sprite**: Canvas animator showcasing the hero developer with responsive hover glow
 - **Custom Cursor System**: Smooth, animated cursor with interactive feedback
 
 ### 🖥️ **Progressive Content Discovery**
@@ -44,7 +50,7 @@ A stunning personal portfolio website showcasing the power of **AI-human collabo
 
 ### 🎮 **Hidden Interactive Games**
 - **Vibe Runner Game**: Complete side-scrolling endless runner with obstacles, power-ups, and progressive difficulty
-- **Vibe Survivor Game**: Advanced survival/defense game with:
+- **Vibe Survivor Game** *(launches externally)*: Advanced survival/defense experience now hosted at [vibe-survivor.vercel.app](https://vibe-survivor.vercel.app/) with:
   - **Multiple Weapon Systems**: Basic projectiles, spread shots, laser beams, plasma weapons, shotgun blasts, lightning bolts, flame streams, homing missiles, railgun beams, and boss missiles
   - **Enemy Variety**: Standard enemies, fast runners, tanks, shooters, and epic boss battles with minions
   - **Progressive Gameplay**: Level-up system with weapon upgrades and passive abilities
@@ -109,24 +115,21 @@ The site represents not just a portfolio, but a philosophy: *You don't need to b
 
 ```javascript
 const techStack = {
-    "frontend": ["HTML5", "CSS3", "JavaScript ES6+"],
-    "animations": "Anime.js",
-    "graphics": "Canvas API",
-    "effects": [
-        "Neural Network Canvas Animation",
-        "Matrix Rain Effect", 
-        "Particle Systems",
-        "Custom Cursor",
-        "Screen Shake Effects",
-        "Trail Multipliers"
+    frontend: ["HTML5", "CSS3", "Vanilla JS"],
+    animations: ["Anime.js", "CSS Keyframes", "Canvas Sprite Sheets"],
+    effects: [
+        "Animated Pixel Maze Bug Hunt",
+        "Programmer Companion Sprite",
+        "Interactive Terminal"
     ],
-    "games": [
+    rendering: ["WebGL Maze Renderer", "2D Canvas"],
+    games: [
         "Vibe Runner (Side-scrolling)",
-        "Vibe Survivor (Survival/Defense)"
+        "Vibe Survivor (Standalone at vibe-survivor.vercel.app)"
     ],
-    "architecture": "Single-page application with modular game components",
-    "ai_tools": ["Claude", "Cursor IDE"],
-    "deployment": "Vercel with custom domain"
+    architecture: "Single-page application with modular game components",
+    ai_tools: ["Claude Code", "Codex CLI", "Cursor IDE"],
+    deployment: "Vercel with custom domain"
 };
 ```
 
@@ -159,12 +162,13 @@ vibecreai-website/
 │   ├── menu-handler.js     # Navigation and menu interactions
 │   ├── performance-utils.js # Performance monitoring utilities
 │   ├── pixel-hover.js      # Pixel art hover effects
-│   ├── pixel-maze-background.js # Dynamic maze background
+│   ├── pixel-maze-background.js # Animated pixel maze bug hunt controller
+│   ├── maze-bot-sprite.js  # Sprite definitions for maze agents
+│   ├── webgl-maze-renderer.js # WebGL renderer powering the maze system
+│   ├── ai-bot-animation.js # Programmer companion sprite animation
 │   ├── terminal.js         # Terminal interface functionality
 │   ├── theme-switcher.js   # Theme system management
 │   ├── vibe-runner-game.js # Side-scrolling endless runner game
-│   ├── vibe-survivor-game.js # Advanced survival/defense game (8500+ lines)
-│   │                       # Includes multi-phase performance optimization system
 │   └── components/         # Reusable component modules
 ├── styles/                 # Modular CSS architecture
 │   ├── base.css           # Base styles and layout
@@ -184,6 +188,9 @@ vibecreai-website/
 └── fonts/                  # Custom font files
     └── Born2bSportyFS.otf  # Custom display font
 ```
+
+Standalone projects:
+- **Vibe Survivor** → https://vibe-survivor.vercel.app/ (dedicated repository & deployment)
 
 ## 🚀 Live Demo
 
