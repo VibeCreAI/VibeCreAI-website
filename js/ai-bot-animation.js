@@ -103,11 +103,11 @@ class AIBotAnimation {
                 this.canvas.style.filter = filter;
             }
             this.coloredSpriteSheet = this.spriteSheet;
-        } else {
-            this.coloredSpriteSheet = this.getTintedThemeSprite(themeInfo.key, themeInfo.hex);
+            this.drawCurrentFrame();
+            return;
         }
 
-        this.drawCurrentFrame();
+        // No compatible fallback available; wait until the themed asset finishes loading
     }
 
     getThemeInfo() {
