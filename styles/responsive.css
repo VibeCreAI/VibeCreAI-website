@@ -50,6 +50,10 @@
         pointer-events: auto;
         touch-action: manipulation;
     }
+
+    .programmer-container {
+        margin-bottom: 5px;
+    }
     
     /* Header Mobile */
     header {
