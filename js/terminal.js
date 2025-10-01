@@ -44,14 +44,15 @@ class Terminal {
                 prompt: "cat tech_stack.js",
                 content: `const techStack = {
     "frontend": ["HTML5", "CSS3", "Vanilla JS"],
-    "animations": ["Anime.js", "CSS Keyframes"],
+    "animations": ["Anime.js", "CSS Keyframes", "Canvas Sprite Sheets"],
     "effects": [
-        "Pixel Maze Background",
-        "Pixel Art Dinosaur",
+        "Animated Pixel Maze Bug Hunt",
+        "Programmer Companion Sprite",
         "Interactive Terminal"
     ],
+    "rendering": ["WebGL Maze Renderer", "2D Canvas"],
     "icons": "Grommet Icons (SVG)",
-    "ai_tools": ["Claude Code", "Cursor IDE"],
+    "ai_tools": ["Claude Code", "Codex CLI", "Cursor IDE"],
     "deployment": "Vercel + Custom Domain"
 };`
             },
