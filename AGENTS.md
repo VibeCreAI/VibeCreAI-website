@@ -1,9 +1,12 @@
 # Repository Guidelines
 
+## Active Agent Context
+- Codex currently operates from Windows PowerShell on Windows.
+
 ## Project Structure & Module Organization
 - `index.html` orchestrates the layout, loads global styles, and bootstraps the JavaScript modules.
 - CSS lives in `styles/` (`base.css`, `themes.css`, `responsive.css`, etc.); extend the closest existing file when adding tokens, animations, or breakpoints.
-- Interactive logic sits in `js/`; `main.js` manages site flows, `game-manager.js` coordinates shared state, and `vibe-runner-game.js` / `vibe-survivor-game.js` contain canvas game loops. Shared utilities and schedulers are in `performance-utils.js`.
+- Interactive logic sits in `js/`; `main.js` bootstraps site flows, `game-manager.js` coordinates shared state, and `vibe-runner-game.js` drives the neon runner canvas loop. Supporting modules such as `menu-handler.js`, `terminal.js`, `theme-switcher.js`, `ai-bot-animation.js`, `pixel-hover.js`, `pixel-maze-background.js`, `maze-bot-sprite.js`, and `webgl-maze-renderer.js` wire up navigation, terminal reveals, theming, hero animation, and background effects.
 - Assets stay flat: fonts in `fonts/`, hero art in `images/`, audio in `sound/`. Optimize new media (WebP for imagery, compressed OTF/WOFF for fonts, <1 MB audio).
 
 ## Build, Test, and Development Commands
@@ -18,9 +21,9 @@
 
 ## Testing Guidelines
 - No automated suite exists; run manual regressions in Chromium, Firefox, and WebKit builds.
-- Validate both games after changes: start/pause/resume flows, projectile collisions, adaptive difficulty, touch joystick, and audio toggles.
-- Check responsive behavior down to 380 px width, theme switching, terminal reveal sequences, and CTA navigation.
-- Capture performance metrics with Chrome DevTools’ Performance monitor and inspect `window.vibeSurvivor.frameRateMonitor` in console before/after intensive updates.
+- Validate the Vibe Runner experience end-to-end: start/pause/resume flows, projectile collisions, adaptive difficulty, touch joystick, and audio toggles.
+- Verify terminal reveal sequences, navigation/menu transitions, theme switching, pixel hover effects, AI bot animation loops, and CTA navigation down to 380 px width.
+- Capture performance metrics with Chrome DevTools' Performance monitor and inspect `window.vibeRunner.frameRateMonitor` before/after intensive updates.
 
 ## Commit & Pull Request Guidelines
 - Mimic current history: concise imperative sentences (`"Refactor game loop"`, `"Enhance project documentation"`). Group related CSS and JS edits together when possible.
