@@ -24,9 +24,13 @@ class PixelHover {
     init() {
         // Create SVG container
         this.createSVG();
-        this.calculateGrid();
-        this.buildPixelGrid();
-        this.setupEventListeners();
+
+        // Use RAF to avoid forced reflow - batch layout reads after DOM changes
+        requestAnimationFrame(() => {
+            this.calculateGrid();
+            this.buildPixelGrid();
+            this.setupEventListeners();
+        });
     }
 
     createSVG() {
@@ -216,10 +220,12 @@ function cleanupPixelHoverEffect() {
 
 // Handle resize
 function handlePixelHoverResize() {
-    // Recreate pixel grids on resize
-    pixelHoverElements.forEach((pixelHover, element) => {
-        pixelHover.calculateGrid();
-        pixelHover.buildPixelGrid();
+    // Use RAF to batch layout reads and avoid forced reflow during resize
+    requestAnimationFrame(() => {
+        pixelHoverElements.forEach((pixelHover, element) => {
+            pixelHover.calculateGrid();
+            pixelHover.buildPixelGrid();
+        });
     });
 }
 
