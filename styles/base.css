@@ -95,7 +95,7 @@ body {
     margin-bottom: 60px;
     color: #ffffff;
     position: relative;
-    cursor: pointer;
+    cursor: default;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     display: inline-block;
     width: 100%;
@@ -312,7 +312,7 @@ body {
     align-items: center;
     justify-content: center;
     text-align: center;
-    cursor: pointer;
+    cursor: default;
     transition: all 0.3s ease;
     position: relative;
 }
@@ -345,8 +345,9 @@ body {
 }
 
 /* Tagline Container */
-.tagline-container {
-    cursor: pointer;
+/* Removed cursor: pointer from tagline-container - now only on programmer character */
+#programmer-character {
+    cursor: default;
 }
 
 /* Particle System Base */
@@ -387,7 +388,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
+    cursor: default;
     width: 192px;
     overflow: visible;
 }

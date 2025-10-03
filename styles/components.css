@@ -165,6 +165,7 @@ nav {
     justify-content: center;
     position: relative;
     z-index: 10;
+    pointer-events: none; /* Allow clicks to pass through to background */
     transition: height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -182,6 +183,7 @@ body.terminal-active .cta-container {
 .hero-content {
     text-align: center;
     z-index: 10;
+    pointer-events: auto; /* Re-enable clicks for interactive content */
 }
 
 .glitch-wrapper {
@@ -345,8 +347,17 @@ body.terminal-active .cta-container {
     padding: 160px 30px;
     position: relative;
     z-index: 10;
+    pointer-events: none; /* Allow clicks to pass through to background */
     background: linear-gradient(180deg, transparent, rgba(0, 255, 255, 0.02), transparent);
     background-color: #00000075;
+}
+
+.about .section-title, .about .section-subtitle {
+    pointer-events: auto; /* Re-enable hover/tap effects on headings */
+}
+
+.about .container {
+    pointer-events: auto; /* Restore interactions for section content */
 }
 
 .about-grid {
@@ -365,6 +376,7 @@ body.terminal-active .cta-container {
     overflow: hidden;
     transition: all 0.3s ease;
     text-align: center;
+    pointer-events: auto; /* Re-enable clicks for cards */
 }
 
 .about-card::after {
@@ -412,6 +424,15 @@ body.terminal-active .cta-container {
     position: relative;
     background-color: #00000075;
     z-index: 10;
+    pointer-events: none; /* Allow clicks to pass through to background */
+}
+
+.apps .section-title, .apps .section-subtitle {
+    pointer-events: auto; /* Re-enable hover/tap effects on headings */
+}
+
+.apps .apps-container {
+    pointer-events: auto; /* Restore interactions for app content */
 }
 
 .apps-container {
@@ -435,6 +456,7 @@ body.terminal-active .cta-container {
     overflow: hidden;
     transition: all 0.3s ease;
     cursor: pointer;
+    pointer-events: auto; /* Re-enable clicks for cards */
 }
 
 .app-card::after {
@@ -616,6 +638,7 @@ body.terminal-active .cta-container {
     padding: 150px 50px;
     position: relative;
     z-index: 10;
+    pointer-events: none; /* Allow clicks to pass through to background */
     background: linear-gradient(180deg, transparent, rgba(255, 0, 255, 0.02), transparent);
     background-color: #00000075;
 }
@@ -624,6 +647,7 @@ body.terminal-active .cta-container {
     max-width: 800px;
     margin: 0 auto;
     text-align: center;
+    pointer-events: auto; /* Re-enable clicks for interactive content */
 }
 
 .contact-form {
@@ -725,6 +749,7 @@ footer {
     border-top: 1px solid var(--primary-color);
     position: relative;
     z-index: 10;
+    pointer-events: none; /* Allow clicks to pass through to background */
     letter-spacing: 0.05em;
 }
 

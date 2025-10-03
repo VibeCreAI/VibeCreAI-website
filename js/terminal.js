@@ -12,6 +12,7 @@ class Terminal {
         this.isAnimating = false;
         this.ignoreNextClick = false;
         this.touchCooldownId = null;
+        this.taglineGuardHandler = null;
         this.touchData = {
             startX: 0,
             startY: 0,
@@ -110,6 +111,7 @@ Email: contact@vibecreai.com`
         // Cache terminal-related elements
         this.elements = {
             taglineContainer: dom.get('taglineContainer'),
+            programmerCharacter: document.getElementById('programmer-character'),
             sourceTerminal: dom.get('sourceTerminal'),
             terminalContent: dom.get('terminalContent'),
             closeTerminal: dom.get('closeTerminal'),
@@ -125,13 +127,42 @@ Email: contact@vibecreai.com`
 
     bindEvents() {
         const { events } = window.VibePerf;
-        const { taglineContainer, closeTerminal, sourceTerminal } = this.elements;
+        const { programmerCharacter, closeTerminal, sourceTerminal, taglineContainer } = this.elements;
 
-        if (!taglineContainer) return;
+        if (!programmerCharacter) return;
 
-        // Tagline container click handler
-        taglineContainer.addEventListener('click', (e) => {
+        if (taglineContainer && !this.taglineGuardHandler) {
+            this.taglineGuardHandler = (event) => {
+                const target = event.target;
+                const isProgrammerArea = programmerCharacter && (target === programmerCharacter || programmerCharacter.contains(target) || target.closest('#programmer-container'));
+                if (isProgrammerArea) {
+                    return;
+                }
+
+                const isTerminalElement = target.closest('#source-code-terminal, .terminal-content, #close-terminal');
+                if (isTerminalElement) {
+                    event.stopPropagation();
+                    return;
+                }
+
+                // Allow bug placement and other background interactions within tagline text
+                const isTaglineArea = target.closest('.tagline-container');
+                if (isTaglineArea) {
+                    return;
+                }
+
+                event.stopPropagation();
+            };
+
+            ['click', 'touchstart', 'touchend', 'touchmove', 'touchcancel'].forEach((eventName) => {
+                taglineContainer.addEventListener(eventName, this.taglineGuardHandler, true);
+            });
+        }
+
+        // Programmer character click handler (changed from taglineContainer)
+        programmerCharacter.addEventListener('click', (e) => {
             e.preventDefault();
+            e.stopPropagation(); // Prevent bug placement
             if (this.ignoreNextClick) {
                 return;
             }
@@ -139,10 +170,10 @@ Email: contact@vibecreai.com`
         });
 
         // Mobile touch handler to avoid double-trigger flashes
-        taglineContainer.addEventListener('touchstart', this.handleTaglineTouch, { passive: false });
-        taglineContainer.addEventListener('touchmove', this.handleTaglineTouchMove, { passive: true });
-        taglineContainer.addEventListener('touchend', this.handleTaglineTouchEnd, { passive: false });
-        taglineContainer.addEventListener('touchcancel', this.handleTaglineTouchEnd, { passive: false });
+        programmerCharacter.addEventListener('touchstart', this.handleTaglineTouch, { passive: false });
+        programmerCharacter.addEventListener('touchmove', this.handleTaglineTouchMove, { passive: true });
+        programmerCharacter.addEventListener('touchend', this.handleTaglineTouchEnd, { passive: false });
+        programmerCharacter.addEventListener('touchcancel', this.handleTaglineTouchEnd, { passive: false });
 
         // Close button handler
         if (closeTerminal) {
@@ -514,11 +545,18 @@ Email: contact@vibecreai.com`
             }
         });
 
-        if (this.elements.taglineContainer) {
-            this.elements.taglineContainer.removeEventListener('touchstart', this.handleTaglineTouch);
-            this.elements.taglineContainer.removeEventListener('touchmove', this.handleTaglineTouchMove);
-            this.elements.taglineContainer.removeEventListener('touchend', this.handleTaglineTouchEnd);
-            this.elements.taglineContainer.removeEventListener('touchcancel', this.handleTaglineTouchEnd);
+        if (this.elements.programmerCharacter) {
+            this.elements.programmerCharacter.removeEventListener('touchstart', this.handleTaglineTouch);
+            this.elements.programmerCharacter.removeEventListener('touchmove', this.handleTaglineTouchMove);
+            this.elements.programmerCharacter.removeEventListener('touchend', this.handleTaglineTouchEnd);
+            this.elements.programmerCharacter.removeEventListener('touchcancel', this.handleTaglineTouchEnd);
+        }
+
+        if (this.elements.taglineContainer && this.taglineGuardHandler) {
+            ['click', 'touchstart', 'touchend', 'touchmove', 'touchcancel'].forEach((eventName) => {
+                this.elements.taglineContainer.removeEventListener(eventName, this.taglineGuardHandler, true);
+            });
+            this.taglineGuardHandler = null;
         }
 
         if (this.touchCooldownId) {
@@ -531,6 +569,7 @@ Email: contact@vibecreai.com`
 
         this.touchCooldownId = null;
         this.ignoreNextClick = false;
+        this.taglineGuardHandler = null;
         this.touchData = {
             startX: 0,
             startY: 0,

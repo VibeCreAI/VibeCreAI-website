@@ -43,6 +43,30 @@ const BUG_SPAWN_INTERVAL = 5000; // Spawn new bugs every 5 seconds
 const BUGS_PER_SPAWN = 2; // Number of bugs to spawn at once
 let bugSpawnTimer = null;
 
+// User interaction system for bug placement
+
+// Ensure cell visuals are reset before marking as a bug
+function prepareCellForBug(target) {
+    if (!target) return;
+
+    if (target.classList.contains('fixed-cell')) {
+        target.classList.remove('fixed-cell');
+        fixedCells = fixedCells.filter(fixed => fixed.element !== target);
+    }
+
+    if (target.classList.contains('bug-cell')) {
+        target.classList.remove('bug-cell');
+    }
+
+    target.style.removeProperty('opacity');
+    target.style.removeProperty('filter');
+    target.style.removeProperty('transform');
+    target.style.removeProperty('transition');
+}
+
+let lastBugPlacementTime = 0;
+const BUG_PLACEMENT_COOLDOWN = 500; // 500ms cooldown between user placements
+
 // Initialize maze system
 async function initPixelMaze() {
     cleanup();
@@ -118,6 +142,46 @@ function createSVGContainer() {
     createBotCanvas();
 }
 
+// Handle click/touch on canvas to place bugs
+function handleCanvasInteraction(event) {
+    if (!mazeActive) return;
+
+    const clickedElement = event.target;
+    const withinHeroTitle = !!clickedElement.closest('.hero-title');
+    const withinTaglineContainer = !!clickedElement.closest('.tagline-container');
+    const withinProgrammerArea = !!clickedElement.closest('#programmer-container, #programmer-character');
+    const withinTerminal = !!clickedElement.closest('#source-code-terminal');
+    const allowHeroOverrides = (withinHeroTitle || withinTaglineContainer) && !withinProgrammerArea && !withinTerminal;
+
+    // Ignore clearly interactive elements unless we're on explicitly allowed hero areas
+    const interactiveElements = ['A', 'BUTTON', 'INPUT', 'TEXTAREA', 'SELECT', 'IMG', 'VIDEO', 'CANVAS', 'LABEL'];
+    if (interactiveElements.includes(clickedElement.tagName) && !allowHeroOverrides) return;
+
+    const interactiveSelector = "a, button, input, textarea, select, img, video, canvas, [role=\"button\"], [data-no-bug], .no-bug-area, .cta-button, .app-button";
+    if (clickedElement.closest(interactiveSelector) && !allowHeroOverrides) return;
+
+    // Never spawn bugs on the character or terminal itself
+    if (withinProgrammerArea || withinTerminal) return;
+
+    // Get coordinates (handle both mouse and touch)
+    let clientX, clientY;
+    if (event.type === 'touchstart') {
+        const touch = event.touches[0];
+        clientX = touch.clientX;
+        clientY = touch.clientY;
+    } else {
+        clientX = event.clientX;
+        clientY = event.clientY;
+    }
+
+    // Convert to grid coordinates
+    const cell = getCellFromScreenCoords(clientX, clientY);
+    if (!cell) return;
+
+    // Try to spawn bug at position
+    spawnBugAtPosition(cell.row, cell.col);
+}
+
 // Create canvas overlay for animated bot sprites
 function createBotCanvas() {
     botCanvas = document.createElement('canvas');
@@ -136,32 +200,37 @@ function createBotCanvas() {
     `;
     botCanvas.width = window.innerWidth;
     botCanvas.height = window.innerHeight;
-    
+
+    // Add click and touch event listeners to DOCUMENT for bug placement
+    // This way clicks anywhere on the page can place bugs
+    document.addEventListener('click', handleCanvasInteraction);
+    document.addEventListener('touchstart', handleCanvasInteraction, { passive: false });
+
     // Try WebGL first, fallback to Canvas2D
     // Temporarily disabled - WebGL sprite frames need debugging
     useWebGL = false;
     if (false && window.WebGLMazeRenderer && window.mazeBotSprite) {
         webglRenderer = new WebGLMazeRenderer(botCanvas, window.mazeBotSprite);
         useWebGL = webglRenderer.initialize();
-        
+
         if (useWebGL) {
             console.log('✅ WebGL renderer initialized');
         } else {
             console.log('⚠️ WebGL not available, using Canvas2D fallback');
         }
     }
-    
+
     // Fallback to Canvas2D
     if (!useWebGL) {
         console.log('✅ Using Canvas2D renderer');
-        botCtx = botCanvas.getContext('2d', { 
+        botCtx = botCanvas.getContext('2d', {
             alpha: true,
             desynchronized: true,
             willReadFrequently: false
         });
         botCtx.imageSmoothingEnabled = false;
     }
-    
+
     document.body.appendChild(botCanvas);
 
     // Don't start render loop yet - wait for maze to activate
@@ -302,9 +371,66 @@ function spawnBug() {
     if (!target || target.classList.contains('blocker')) return;
     if (bugCells.some(bug => bug.row === row && bug.col === col)) return;
     
+    // Reset any lingering fixed/fade state before marking bug
+    prepareCellForBug(target);
+
     // Mark cell as bug
     target.classList.add('bug-cell');
     bugCells.push({ row, col, element: target });
+}
+
+// Convert screen coordinates to grid cell coordinates
+function getCellFromScreenCoords(screenX, screenY) {
+    const col = Math.floor(screenX / WIDTH);
+    const row = Math.floor(screenY / WIDTH);
+
+    // Validate bounds
+    if (row < 0 || row > ROWS || col < 0 || col > COLS) {
+        return null;
+    }
+
+    return { row, col };
+}
+
+// Spawn bug at specific position (user-placed)
+function spawnBugAtPosition(row, col) {
+    // Check cooldown
+    const now = Date.now();
+    if (now - lastBugPlacementTime < BUG_PLACEMENT_COOLDOWN) {
+        return false;
+    }
+
+    // Check if max bugs reached
+    if (bugCells.length >= MAX_BUGS) {
+        return false;
+    }
+
+    const target = getTarget(row, col);
+
+    // Validate: must be valid cell, not a wall, not an existing bug
+    if (!target || target.classList.contains('blocker')) {
+        return false;
+    }
+    if (bugCells.some(bug => bug.row === row && bug.col === col)) {
+        return false;
+    }
+
+    // Place the bug
+    prepareCellForBug(target);
+    target.classList.add('bug-cell');
+    bugCells.push({ row, col, element: target });
+
+    // Visual feedback: brief flash animation
+    target.style.transition = 'all 0.3s ease';
+    target.style.transform = 'scale(1.2)';
+    setTimeout(() => {
+        target.style.transform = 'scale(1)';
+    }, 300);
+
+    // Update cooldown
+    lastBugPlacementTime = now;
+
+    return true;
 }
 
 // Remove bug from tracking
@@ -314,7 +440,7 @@ function removeBug(row, col) {
         const bug = bugCells[bugIndex];
         bug.element.classList.remove('bug-cell');
         bugCells.splice(bugIndex, 1);
-        
+
         // Add to fixed cells for visual transition
         bug.element.classList.add('fixed-cell');
         fixedCells.push({ element: bug.element, timestamp: Date.now() });

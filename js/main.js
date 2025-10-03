@@ -170,6 +170,9 @@ class VibeCreAIApp {
 
         // Button hover effects
         this.initButtonHoverEffects();
+
+        // Touch feedback for section titles
+        this.initSectionTitleTouchFeedback();
     }
 
     initLogoShuffle() {
@@ -249,6 +252,38 @@ class VibeCreAIApp {
             events.addPassiveListener(button, 'mouseleave', () => {
                 const animation = animations.scaleAnimation(button, 1.05, 1, 300);
                 anime(animation);
+            });
+        });
+    }
+
+    initSectionTitleTouchFeedback() {
+        const titles = document.querySelectorAll('.section-title');
+        if (!titles.length) return;
+
+        const { events, memory } = window.VibePerf;
+
+        titles.forEach(title => {
+            const scheduleRemoval = (delay = 400) => {
+                if (title._touchHighlightTimeout) {
+                    memory.clear(title._touchHighlightTimeout, 'timeout');
+                }
+                title._touchHighlightTimeout = memory.setTimeout(() => {
+                    title.classList.remove('is-touch-highlight');
+                    title._touchHighlightTimeout = null;
+                }, delay);
+            };
+
+            events.addPassiveListener(title, 'touchstart', () => {
+                title.classList.add('is-touch-highlight');
+                scheduleRemoval(600);
+            });
+
+            events.addPassiveListener(title, 'touchend', () => {
+                scheduleRemoval(200);
+            });
+
+            events.addPassiveListener(title, 'touchcancel', () => {
+                scheduleRemoval(0);
             });
         });
     }

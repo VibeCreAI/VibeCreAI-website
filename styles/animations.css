@@ -167,7 +167,7 @@
 }
 
 /* Section Title Hover Effects */
-.section-title:hover {
+.section-title:hover, .section-title.is-touch-highlight {
     text-shadow: 
         0 0 20px color-mix(in srgb, var(--primary-color) 80%, transparent),
         0 0 40px color-mix(in srgb, var(--primary-color) 60%, transparent),
@@ -175,7 +175,7 @@
     transform: translateY(-3px) scale(1.02);
 }
 
-.section-title:hover::after {
+.section-title:hover::after, .section-title.is-touch-highlight::after {
     content: '';
     position: absolute;
     bottom: -10px;
