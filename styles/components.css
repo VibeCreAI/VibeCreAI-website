@@ -126,7 +126,7 @@ nav {
     left: 0;
     width: 0;
     height: 2px;
-    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    background: var(--primary-color);
     transition: width 0.3s ease;
 }
 
@@ -597,7 +597,7 @@ body.terminal-active .cta-container {
     top: 10px;
     right: 10px;
     padding: 5px 15px;
-    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    background: var(--primary-color);
     color: var(--dark-bg);
     font-size: 0.8rem;
     font-weight: bold;
