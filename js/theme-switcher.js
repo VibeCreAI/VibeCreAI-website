@@ -219,17 +219,18 @@ class ThemeSwitcher {
             background: 'rgba(0, 0, 0, 0.9)',
             color: 'var(--primary-color)',
             padding: '12px 20px',
-            border: '1px solid var(--primary-color)',
-            borderRadius: '25px',
+            border: '3px solid var(--primary-color)',
+            borderRadius: '0',
             fontSize: '0.9rem',
             fontWeight: 'bold',
             letterSpacing: '0.1em',
             zIndex: '10000',
             pointerEvents: 'none',
-            backdropFilter: 'blur(10px)',
+
             boxShadow: '0 0 20px rgba(0, 255, 255, 0.3)',
             opacity: '0',
-            transform: 'translateX(100px) scale(0.8)'
+            transform: 'translateX(100px) scale(0.8)',
+            clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)'
         });
 
         return notification;

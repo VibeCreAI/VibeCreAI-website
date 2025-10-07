@@ -351,15 +351,17 @@ body.terminal-active .cta-container {
     align-items: center;
     justify-content: center;
     background: rgba(0, 0, 0, 0.8);
-    border: 1px solid var(--primary-color);
-    border-radius: 50%;
+    border: 3px solid var(--primary-color);
+    border-radius: 0;
     cursor: pointer;
     z-index: 999;
-    backdrop-filter: blur(10px);
     box-shadow: 
-        0 4px 20px rgba(0, 0, 0, 0.3),
-        0 0 40px rgba(0, 255, 255, 0.1);
+        0 4px 20px rgba(0, 0, 0, 0.3);
     transition: all 0.3s ease;
+    clip-path: polygon(
+        8px 0, 100% 0, 100% calc(100% - 8px), 
+        calc(100% - 8px) 100%, 0 100%, 0 8px
+    );
 }
 
 .vibe-switcher::before {
@@ -369,7 +371,6 @@ body.terminal-active .cta-container {
     left: 0;
     width: 100%;
     height: 100%;
-    border-radius: 50%;
     background: color-mix(in srgb, var(--primary-color) 5%, transparent);
     opacity: 0;
     transition: all 0.3s ease;
