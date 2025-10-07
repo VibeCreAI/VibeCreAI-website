@@ -464,14 +464,11 @@ body.terminal-active .cta-container {
     overflow: visible;
     transition: all 0.3s ease;
     text-align: center;
-    pointer-events: auto; /* Re-enable clicks for cards */
+    pointer-events: auto;
     clip-path: polygon(
         12px 0, 100% 0, 100% calc(100% - 12px), 
         calc(100% - 12px) 100%, 0 100%, 0 12px
     );
-    box-shadow: 
-        -3px 0 0 0 var(--primary-color),
-        0 3px 0 0 var(--primary-color);
 }
 
 .about-card::after {
@@ -495,8 +492,6 @@ body.terminal-active .cta-container {
     transform: scale(1.05);
     border-color: var(--primary-color);
     box-shadow: 
-        -3px 0 0 0 var(--primary-color),
-        0 3px 0 0 var(--primary-color),
         0 10px 40px rgba(0, 0, 0, 0.2),
         var(--neon-glow);
 }
@@ -553,14 +548,11 @@ body.terminal-active .cta-container {
     overflow: visible;
     transition: all 0.3s ease;
     cursor: pointer;
-    pointer-events: auto; /* Re-enable clicks for cards */
+    pointer-events: auto;
     clip-path: polygon(
         12px 0, 100% 0, 100% calc(100% - 12px), 
         calc(100% - 12px) 100%, 0 100%, 0 12px
     );
-    box-shadow: 
-        -3px 0 0 0 var(--primary-color),
-        0 3px 0 0 var(--primary-color);
 }
 
 .app-card::after {
@@ -585,8 +577,6 @@ body.terminal-active .cta-container {
     transform: scale(1.05);
     border-color: var(--primary-color);
     box-shadow: 
-        -3px 0 0 0 var(--primary-color),
-        0 3px 0 0 var(--primary-color),
         0 10px 40px rgba(0, 0, 0, 0.2),
         var(--neon-glow);
 }
@@ -657,18 +647,13 @@ body.terminal-active .cta-container {
         8px 0, 100% 0, 100% calc(100% - 8px), 
         calc(100% - 8px) 100%, 0 100%, 0 8px
     );
-    box-shadow: 
-        -3px 0 0 0 var(--primary-color),
-        0 3px 0 0 var(--primary-color);
+    
 }
 
 .app-button:hover {
     background: var(--primary-color);
     color: var(--dark-bg);
-    box-shadow: 
-        -3px 0 0 0 var(--primary-color),
-        0 3px 0 0 var(--primary-color),
-        var(--neon-glow);
+    box-shadow: var(--neon-glow);
 }
 
 .app-buttons-container {
@@ -814,9 +799,7 @@ body.terminal-active .cta-container {
         8px 0, 100% 0, 100% calc(100% - 8px), 
         calc(100% - 8px) 100%, 0 100%, 0 8px
     );
-    box-shadow: 
-        -3px 0 0 0 var(--primary-color),
-        0 3px 0 0 var(--primary-color);
+    
 }
 
 .form-group button::before {
@@ -833,10 +816,7 @@ body.terminal-active .cta-container {
 
 .form-group button:hover {
     color: var(--dark-bg);
-    box-shadow: 
-        -3px 0 0 0 var(--primary-color),
-        0 3px 0 0 var(--primary-color),
-        var(--neon-glow);
+    box-shadow: var(--neon-glow);
 }
 
 .form-group button:hover::before {

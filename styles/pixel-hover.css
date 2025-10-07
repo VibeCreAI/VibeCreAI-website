@@ -8,16 +8,12 @@
     border: 3px solid rgba(0, 255, 255);
     transition: border 0.5s ease;
     overflow: hidden;
-    box-shadow: 
-        -3px 0 0 0 rgba(0, 255, 255),
-        0 3px 0 0 rgba(0, 255, 255);
+    
 }
 
 .pixel-hover-enabled:hover {
     border: 3px solid rgba(0, 255, 255);
-    box-shadow: 
-        -3px 0 0 0 rgba(0, 255, 255),
-        0 3px 0 0 rgba(0, 255, 255);
+    
 }
 
 /* Container for pixel SVG */
@@ -45,9 +41,7 @@
 /* Theme variations */
 .theme-synthwave .pixel-hover-enabled {
     border: 3px solid rgba(255, 0, 255);
-    box-shadow: 
-        -3px 0 0 0 rgba(255, 0, 255),
-        0 3px 0 0 rgba(255, 0, 255);
+    
 }
 
 .theme-synthwave .pixel-hover-enabled .pixel-rect {
@@ -56,9 +50,7 @@
 
 .theme-matrix .pixel-hover-enabled {
     border: 3px solid rgba(0, 255, 65);
-    box-shadow: 
-        -3px 0 0 0 rgba(0, 255, 65),
-        0 3px 0 0 rgba(0, 255, 65);
+    
 }
 
 .theme-matrix .pixel-hover-enabled .pixel-rect {
@@ -67,9 +59,7 @@
 
 .theme-ghost .pixel-hover-enabled {
     border: 3px solid rgba(184, 184, 255);
-    box-shadow: 
-        -3px 0 0 0 rgba(184, 184, 255),
-        0 3px 0 0 rgba(184, 184, 255);
+    
 }
 
 .theme-ghost .pixel-hover-enabled .pixel-rect {
