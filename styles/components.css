@@ -42,15 +42,64 @@ nav {
 
 .logo-v, .logo-c {
     color: #ffffff;
+    text-shadow:
+        -1px 1px 0 rgba(0, 0, 0, 1),
+        -2px 2px 0 rgba(0, 0, 0, 1),
+        -3px 3px 0 rgba(0, 0, 0, 1),
+        -4px 4px 8px rgba(0, 0, 0, 0.4),
+        0 0 15px rgba(255, 255, 255, 0.4),
+        0 0 20px rgba(255, 255, 255, 0.2);
 }
 
 .logo-small {
     font-size: 1.6rem;
     color: #ffffff;
+    text-shadow:
+        -1px 1px 0 rgba(0, 0, 0, 1),
+        -2px 2px 0 rgba(0, 0, 0, 1),
+        -3px 3px 0 rgba(0, 0, 0, 1),
+        -4px 4px 8px rgba(0, 0, 0, 0.4),
+        0 0 15px rgba(255, 255, 255, 0.4),
+        0 0 20px rgba(255, 255, 255, 0.2);
 }
 
 .logo-ai {
     color: var(--primary-color);
+    text-shadow:
+        -1px 1px 0 rgba(0, 0, 0, 1),
+        -2px 2px 0 rgba(0, 0, 0, 1),
+        -3px 3px 0 rgba(0, 0, 0, 1),
+        -4px 4px 8px rgba(0, 0, 0, 0.4),
+        0 0 15px rgba(255, 255, 255, 0.4),
+        0 0 20px rgba(255, 255, 255, 0.2);
+}
+
+
+
+/* Hover effects for header logo */
+.logo:hover .logo-ai {
+    text-shadow:
+        -1px 1px 0 rgba(0, 0, 0, 1),
+        -2px 2px 0 rgba(0, 0, 0, 1),
+        -3px 3px 0 rgba(0, 0, 0, 1),
+        -4px 4px 8px rgba(0, 0, 0, 0.4),
+        0 0 10px color-mix(in srgb, var(--primary-color) 60%, transparent),
+        0 0 20px color-mix(in srgb, var(--primary-color) 40%, transparent);
+}
+
+
+
+/* Hover effects for header VIBECRE text */
+.logo:hover .logo-v,
+.logo:hover .logo-c,
+.logo:hover .logo-small {
+    text-shadow:
+        -1px 1px 0 rgba(0, 0, 0, 1),
+        -2px 2px 0 rgba(0, 0, 0, 1),
+        -3px 3px 0 rgba(0, 0, 0, 1),
+        -4px 4px 8px rgba(0, 0, 0, 0.4),
+        0 0 10px color-mix(in srgb, var(--primary-color) 60%, transparent),
+        0 0 20px color-mix(in srgb, var(--primary-color) 40%, transparent);
 }
 
 .nav-links {
@@ -214,17 +263,56 @@ body.terminal-active .cta-container {
 .title-v, .title-c {
     color: #ffffff;
     font-size: 7rem;
+    text-shadow:
+        -1px 1px 0 rgba(0, 0, 0, 1),
+        -2px 2px 0 rgba(0, 0, 0, 1),
+        -3px 3px 0 rgba(0, 0, 0, 1),
+        -4px 4px 0 rgba(0, 0, 0, 1),
+        -5px 5px 0 rgba(0, 0, 0, 1),
+        -6px 6px 0 rgba(0, 0, 0, 1),
+        -7px 7px 0 rgba(0, 0, 0, 1),
+        -8px 8px 0 rgba(0, 0, 0, 1),
+        -9px 9px 0 rgba(0, 0, 0, 1),
+        -10px 10px 20px rgba(0, 0, 0, 0.5),
+        0 0 15px rgba(255, 255, 255, 0.4),
+        0 0 20px rgba(255, 255, 255, 0.2);
 }
 
 .title-small {
     font-size: 5.8rem;
     color: #ffffff;
+    text-shadow:
+        -1px 1px 0 rgba(0, 0, 0, 1),
+        -2px 2px 0 rgba(0, 0, 0, 1),
+        -3px 3px 0 rgba(0, 0, 0, 1),
+        -4px 4px 0 rgba(0, 0, 0, 1),
+        -5px 5px 0 rgba(0, 0, 0, 1),
+        -6px 6px 0 rgba(0, 0, 0, 1),
+        -7px 7px 0 rgba(0, 0, 0, 1),
+        -8px 8px 0 rgba(0, 0, 0, 1),
+        -9px 9px 0 rgba(0, 0, 0, 1),
+        -10px 10px 20px rgba(0, 0, 0, 0.5),
+        0 0 15px rgba(255, 255, 255, 0.4),
+        0 0 20px rgba(255, 255, 255, 0.2);
 }
 
 .title-ai {
     color: var(--primary-color);
     font-size: 7rem;
     transition: text-shadow 0.3s ease;
+    text-shadow:
+        -1px 1px 0 rgba(0, 0, 0, 1),
+        -2px 2px 0 rgba(0, 0, 0, 1),
+        -3px 3px 0 rgba(0, 0, 0, 1),
+        -4px 4px 0 rgba(0, 0, 0, 1),
+        -5px 5px 0 rgba(0, 0, 0, 1),
+        -6px 6px 0 rgba(0, 0, 0, 1),
+        -7px 7px 0 rgba(0, 0, 0, 1),
+        -8px 8px 0 rgba(0, 0, 0, 1),
+        -9px 9px 0 rgba(0, 0, 0, 1),
+        -10px 10px 20px rgba(0, 0, 0, 0.5),
+        0 0 15px rgba(255, 255, 255, 0.4),
+        0 0 20px rgba(255, 255, 255, 0.2);
 }
 
 .hero-subtitle {
@@ -1078,9 +1166,38 @@ footer {
 
 /* No default glow effects - only on hover like main logo */
 
+/* Hover effects for hero VIBECRE text */
+.hero-title:hover .title-v,
+.hero-title:hover .title-c,
+.hero-title:hover .title-small {
+    text-shadow:
+        -1px 1px 0 rgba(0, 0, 0, 1),
+        -2px 2px 0 rgba(0, 0, 0, 1),
+        -3px 3px 0 rgba(0, 0, 0, 1),
+        -4px 4px 0 rgba(0, 0, 0, 1),
+        -5px 5px 0 rgba(0, 0, 0, 1),
+        -6px 6px 0 rgba(0, 0, 0, 1),
+        -7px 7px 0 rgba(0, 0, 0, 1),
+        -8px 8px 0 rgba(0, 0, 0, 1),
+        -9px 9px 0 rgba(0, 0, 0, 1),
+        -10px 10px 20px rgba(0, 0, 0, 0.5),
+        0 0 20px color-mix(in srgb, var(--primary-color) 60%, transparent),
+        0 0 40px color-mix(in srgb, var(--primary-color) 40%, transparent);
+}
+
 /* Hover effects for AI text */
 .hero-title:hover .title-ai {
-    text-shadow: 
+    text-shadow:
+        -1px 1px 0 rgba(0, 0, 0, 1),
+        -2px 2px 0 rgba(0, 0, 0, 1),
+        -3px 3px 0 rgba(0, 0, 0, 1),
+        -4px 4px 0 rgba(0, 0, 0, 1),
+        -5px 5px 0 rgba(0, 0, 0, 1),
+        -6px 6px 0 rgba(0, 0, 0, 1),
+        -7px 7px 0 rgba(0, 0, 0, 1),
+        -8px 8px 0 rgba(0, 0, 0, 1),
+        -9px 9px 0 rgba(0, 0, 0, 1),
+        -10px 10px 20px rgba(0, 0, 0, 0.5),
         0 0 10px color-mix(in srgb, var(--primary-color) 60%, transparent),
         0 0 20px color-mix(in srgb, var(--primary-color) 40%, transparent),
         0 0 30px color-mix(in srgb, var(--primary-color) 30%, transparent);
