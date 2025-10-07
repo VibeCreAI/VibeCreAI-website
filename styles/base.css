@@ -100,6 +100,19 @@ body {
     display: inline-block;
     width: 100%;
     letter-spacing: 0.05em;
+    text-shadow:
+        -1px 1px 0 rgba(0, 0, 0, 1),
+        -2px 2px 0 rgba(0, 0, 0, 1),
+        -3px 3px 0 rgba(0, 0, 0, 1),
+        -4px 4px 0 rgba(0, 0, 0, 1),
+        -5px 5px 0 rgba(0, 0, 0, 1),
+        -6px 6px 0 rgba(0, 0, 0, 1),
+        -7px 7px 0 rgba(0, 0, 0, 1),
+        -8px 8px 0 rgba(0, 0, 0, 1),
+        -9px 9px 0 rgba(0, 0, 0, 1),
+        -10px 10px 20px rgba(0, 0, 0, 0.5),
+        0 0 15px rgba(255, 255, 255, 0.4),
+        0 0 20px rgba(255, 255, 255, 0.2);
 }
 
 .section-subtitle {
@@ -253,7 +266,7 @@ body {
     text-align: center;
     background: #0000007d;
     color: var(--primary-color);
-    border: 2px solid var(--primary-color);
+    border: 3px solid var(--primary-color);
     text-decoration: none;
     font-weight: bold;
     position: relative;
@@ -263,6 +276,17 @@ body {
     letter-spacing: 0.1em;
     opacity: 0;
     transform: translateY(30px);
+    border-radius: 0;
+    clip-path: polygon(
+        8px 0, 100% 0, 100% calc(100% - 8px), 
+        calc(100% - 8px) 100%, 0 100%, 0 8px
+    );
+    box-shadow: 
+        inset -2px -2px 0 rgba(0, 0, 0, 0.3),
+        inset 2px 2px 0 rgba(255, 255, 255, 0.1),
+        -4px 4px 0 rgba(0, 0, 0, 1),
+        -8px 8px 0 rgba(0, 0, 0, 0.7),
+        -4px 4px 0 0 var(--primary-color);
 }
 
 .cta-button::before {
@@ -279,7 +303,11 @@ body {
 
 .cta-button:hover {
     color: var(--dark-bg);
-    box-shadow: var(--neon-glow);
+    box-shadow: 
+        -4px 4px 0 rgba(0, 0, 0, 1),
+        -8px 8px 0 rgba(0, 0, 0, 0.7),
+        -4px 4px 0 0 var(--primary-color),
+        var(--neon-glow);
 }
 
 .cta-button:hover::before {

@@ -458,13 +458,21 @@ body.terminal-active .cta-container {
 
 .about-card {
     background: #0000007d;
-    border: 1px solid var(--primary-color);
+    border: 2px solid var(--primary-color);
     padding: 40px;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
     transition: all 0.3s ease;
     text-align: center;
     pointer-events: auto; /* Re-enable clicks for cards */
+    clip-path: polygon(
+        12px 0, 100% 0, 100% calc(100% - 12px), 
+        calc(100% - 12px) 100%, 0 100%, 0 12px
+    );
+    box-shadow: 
+        -6px 6px 0 rgba(0, 0, 0, 1),
+        -12px 12px 0 rgba(0, 0, 0, 0.7),
+        -6px 6px 0 0 var(--primary-color);
 }
 
 .about-card::after {
@@ -488,6 +496,9 @@ body.terminal-active .cta-container {
     transform: scale(1.05);
     border-color: var(--primary-color);
     box-shadow: 
+        -6px 6px 0 rgba(0, 0, 0, 1),
+        -12px 12px 0 rgba(0, 0, 0, 0.7),
+        -6px 6px 0 0 var(--primary-color),
         0 10px 40px rgba(0, 0, 0, 0.2),
         var(--neon-glow);
 }
@@ -537,14 +548,22 @@ body.terminal-active .cta-container {
 
 .app-card {
     background: #0000007d;
-    border: 1px solid var(--primary-color);
+    border: 2px solid var(--primary-color);
     padding: 30px;
     text-align: center;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
     transition: all 0.3s ease;
     cursor: pointer;
     pointer-events: auto; /* Re-enable clicks for cards */
+    clip-path: polygon(
+        12px 0, 100% 0, 100% calc(100% - 12px), 
+        calc(100% - 12px) 100%, 0 100%, 0 12px
+    );
+    box-shadow: 
+        -6px 6px 0 rgba(0, 0, 0, 1),
+        -12px 12px 0 rgba(0, 0, 0, 0.7),
+        -6px 6px 0 0 var(--primary-color);
 }
 
 .app-card::after {
@@ -569,6 +588,9 @@ body.terminal-active .cta-container {
     transform: scale(1.05);
     border-color: var(--primary-color);
     box-shadow: 
+        -6px 6px 0 rgba(0, 0, 0, 1),
+        -12px 12px 0 rgba(0, 0, 0, 0.7),
+        -6px 6px 0 0 var(--primary-color),
         0 10px 40px rgba(0, 0, 0, 0.2),
         var(--neon-glow);
 }
@@ -626,7 +648,7 @@ body.terminal-active .cta-container {
     font-size: 1rem;
     padding: 10px 30px;
     background: transparent;
-    border: 1px solid var(--primary-color);
+    border: 3px solid var(--primary-color);
     color: var(--primary-color);
     text-decoration: none;
     display: inline-block;
@@ -634,12 +656,27 @@ body.terminal-active .cta-container {
     position: relative;
     overflow: hidden;
     letter-spacing: 0.05em;
+    border-radius: 0;
+    clip-path: polygon(
+        8px 0, 100% 0, 100% calc(100% - 8px), 
+        calc(100% - 8px) 100%, 0 100%, 0 8px
+    );
+    box-shadow: 
+        inset -2px -2px 0 rgba(0, 0, 0, 0.3),
+        inset 2px 2px 0 rgba(255, 255, 255, 0.1),
+        -4px 4px 0 rgba(0, 0, 0, 1),
+        -8px 8px 0 rgba(0, 0, 0, 0.7),
+        -4px 4px 0 0 var(--primary-color);
 }
 
 .app-button:hover {
     background: var(--primary-color);
     color: var(--dark-bg);
-    box-shadow: var(--neon-glow);
+    box-shadow: 
+        -4px 4px 0 rgba(0, 0, 0, 1),
+        -8px 8px 0 rgba(0, 0, 0, 0.7),
+        -4px 4px 0 0 var(--primary-color),
+        var(--neon-glow);
 }
 
 .app-buttons-container {
@@ -772,7 +809,7 @@ body.terminal-active .cta-container {
     padding: 15px 40px;
     background: transparent;
     color: var(--primary-color);
-    border: 2px solid var(--primary-color);
+    border: 3px solid var(--primary-color);
     font-weight: bold;
     cursor: pointer;
     position: relative;
@@ -780,6 +817,17 @@ body.terminal-active .cta-container {
     transition: all 0.3s ease;
     text-transform: uppercase;
     letter-spacing: 0.1em;
+    border-radius: 0;
+    clip-path: polygon(
+        8px 0, 100% 0, 100% calc(100% - 8px), 
+        calc(100% - 8px) 100%, 0 100%, 0 8px
+    );
+    box-shadow: 
+        inset -2px -2px 0 rgba(0, 0, 0, 0.3),
+        inset 2px 2px 0 rgba(255, 255, 255, 0.1),
+        -4px 4px 0 rgba(0, 0, 0, 1),
+        -8px 8px 0 rgba(0, 0, 0, 0.7),
+        -4px 4px 0 0 var(--primary-color);
 }
 
 .form-group button::before {
@@ -796,7 +844,11 @@ body.terminal-active .cta-container {
 
 .form-group button:hover {
     color: var(--dark-bg);
-    box-shadow: var(--neon-glow);
+    box-shadow: 
+        -4px 4px 0 rgba(0, 0, 0, 1),
+        -8px 8px 0 rgba(0, 0, 0, 0.7),
+        -4px 4px 0 0 var(--primary-color),
+        var(--neon-glow);
 }
 
 .form-group button:hover::before {
