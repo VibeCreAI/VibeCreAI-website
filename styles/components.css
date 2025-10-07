@@ -785,6 +785,7 @@ footer {
     text-align: left;
     white-space: pre-wrap;
     word-wrap: break-word;
+    pointer-events: auto;
 }
 
 .terminal-prompt {
@@ -815,6 +816,10 @@ footer {
 .terminal-next-text:active {
     opacity: 0.6;
     background: rgba(0, 255, 255, 0.2);
+}
+
+.terminal-line {
+    pointer-events: auto;
 }
 
 .terminal-close {

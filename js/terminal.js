@@ -141,7 +141,6 @@ Email: contact@vibecreai.com`
 
                 const isTerminalElement = target.closest('#source-code-terminal, .terminal-content, #close-terminal');
                 if (isTerminalElement) {
-                    event.stopPropagation();
                     return;
                 }
 
@@ -596,3 +595,6 @@ const initTerminal = () => {
 };
 
 initTerminal();
+
+
+
