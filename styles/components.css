@@ -458,7 +458,7 @@ body.terminal-active .cta-container {
 
 .about-card {
     background: #0000007d;
-    border: 2px solid var(--primary-color);
+    border: 3px solid var(--primary-color);
     padding: 40px;
     position: relative;
     overflow: visible;
@@ -470,9 +470,8 @@ body.terminal-active .cta-container {
         calc(100% - 12px) 100%, 0 100%, 0 12px
     );
     box-shadow: 
-        -6px 6px 0 rgba(0, 0, 0, 1),
-        -12px 12px 0 rgba(0, 0, 0, 0.7),
-        -6px 6px 0 0 var(--primary-color);
+        -3px 0 0 0 var(--primary-color),
+        0 3px 0 0 var(--primary-color);
 }
 
 .about-card::after {
@@ -496,9 +495,8 @@ body.terminal-active .cta-container {
     transform: scale(1.05);
     border-color: var(--primary-color);
     box-shadow: 
-        -6px 6px 0 rgba(0, 0, 0, 1),
-        -12px 12px 0 rgba(0, 0, 0, 0.7),
-        -6px 6px 0 0 var(--primary-color),
+        -3px 0 0 0 var(--primary-color),
+        0 3px 0 0 var(--primary-color),
         0 10px 40px rgba(0, 0, 0, 0.2),
         var(--neon-glow);
 }
@@ -548,7 +546,7 @@ body.terminal-active .cta-container {
 
 .app-card {
     background: #0000007d;
-    border: 2px solid var(--primary-color);
+    border: 3px solid var(--primary-color);
     padding: 30px;
     text-align: center;
     position: relative;
@@ -561,9 +559,8 @@ body.terminal-active .cta-container {
         calc(100% - 12px) 100%, 0 100%, 0 12px
     );
     box-shadow: 
-        -6px 6px 0 rgba(0, 0, 0, 1),
-        -12px 12px 0 rgba(0, 0, 0, 0.7),
-        -6px 6px 0 0 var(--primary-color);
+        -3px 0 0 0 var(--primary-color),
+        0 3px 0 0 var(--primary-color);
 }
 
 .app-card::after {
@@ -588,9 +585,8 @@ body.terminal-active .cta-container {
     transform: scale(1.05);
     border-color: var(--primary-color);
     box-shadow: 
-        -6px 6px 0 rgba(0, 0, 0, 1),
-        -12px 12px 0 rgba(0, 0, 0, 0.7),
-        -6px 6px 0 0 var(--primary-color),
+        -3px 0 0 0 var(--primary-color),
+        0 3px 0 0 var(--primary-color),
         0 10px 40px rgba(0, 0, 0, 0.2),
         var(--neon-glow);
 }
@@ -662,20 +658,16 @@ body.terminal-active .cta-container {
         calc(100% - 8px) 100%, 0 100%, 0 8px
     );
     box-shadow: 
-        inset -2px -2px 0 rgba(0, 0, 0, 0.3),
-        inset 2px 2px 0 rgba(255, 255, 255, 0.1),
-        -4px 4px 0 rgba(0, 0, 0, 1),
-        -8px 8px 0 rgba(0, 0, 0, 0.7),
-        -4px 4px 0 0 var(--primary-color);
+        -3px 0 0 0 var(--primary-color),
+        0 3px 0 0 var(--primary-color);
 }
 
 .app-button:hover {
     background: var(--primary-color);
     color: var(--dark-bg);
     box-shadow: 
-        -4px 4px 0 rgba(0, 0, 0, 1),
-        -8px 8px 0 rgba(0, 0, 0, 0.7),
-        -4px 4px 0 0 var(--primary-color),
+        -3px 0 0 0 var(--primary-color),
+        0 3px 0 0 var(--primary-color),
         var(--neon-glow);
 }
 
@@ -721,7 +713,7 @@ body.terminal-active .cta-container {
     font-weight: bold;
     cursor: pointer;
     transition: all 0.3s ease;
-    border-width: 2px;
+    border-width: 3px;
 }
 
 .game-button:hover {
@@ -791,7 +783,7 @@ body.terminal-active .cta-container {
     max-width: 400px;
     padding: 15px 20px;
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--primary-color);
+    border: 3px solid var(--primary-color);
     color: var(--text-color);
     font-size: 16px;
     transition: all 0.3s ease;
@@ -823,11 +815,8 @@ body.terminal-active .cta-container {
         calc(100% - 8px) 100%, 0 100%, 0 8px
     );
     box-shadow: 
-        inset -2px -2px 0 rgba(0, 0, 0, 0.3),
-        inset 2px 2px 0 rgba(255, 255, 255, 0.1),
-        -4px 4px 0 rgba(0, 0, 0, 1),
-        -8px 8px 0 rgba(0, 0, 0, 0.7),
-        -4px 4px 0 0 var(--primary-color);
+        -3px 0 0 0 var(--primary-color),
+        0 3px 0 0 var(--primary-color);
 }
 
 .form-group button::before {
@@ -845,9 +834,8 @@ body.terminal-active .cta-container {
 .form-group button:hover {
     color: var(--dark-bg);
     box-shadow: 
-        -4px 4px 0 rgba(0, 0, 0, 1),
-        -8px 8px 0 rgba(0, 0, 0, 0.7),
-        -4px 4px 0 0 var(--primary-color),
+        -3px 0 0 0 var(--primary-color),
+        0 3px 0 0 var(--primary-color),
         var(--neon-glow);
 }
 
