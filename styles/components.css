@@ -705,6 +705,29 @@ body.terminal-active .cta-container {
     box-shadow: 0 5px 15px rgba(0, 255, 255, 0.4);
 }
 
+/* Icon and text color controls for itch.io button */
+/* When card is hovered, icon turns white but text stays cyan */
+.app-card:hover .game-button svg path {
+    fill: #ffffff;
+}
+
+.app-card:hover .game-button {
+    color: var(--primary-color) !important;
+}
+
+/* When button is hovered, icon stays white and text turns black */
+.game-button:hover {
+    background: var(--primary-color) !important;
+}
+
+.app-card:hover .game-button:hover {
+    color: var(--dark-bg) !important;
+}
+
+.game-button:hover svg path {
+    fill: #ffffff !important;
+}
+
 #vibe-runner-btn {
     border-color: #FF6B6B;
     color: #FF6B6B;
