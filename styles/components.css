@@ -1111,7 +1111,7 @@ footer {
 
 /* Bug cells - red glitchy appearance */
 .maze-cell.bug-cell {
-    fill: #ff0000 !important;
+    fill: #ff073a !important;
     opacity: 0.8;
     animation: bugPulse 1.5s ease-in-out infinite;
 }
@@ -1127,22 +1127,23 @@ footer {
     }
 }
 
-/* Fixed cells - green glow that fades */
+/* Fixed cells - cyan glow that fades */
 .maze-cell.fixed-cell {
-    fill: #00ff00 !important;
+    fill: #00FFFF !important;
     opacity: 1;
     animation: fixedFade 2s ease-out forwards;
 }
 
 @keyframes fixedFade {
     0% {
-        fill: #00ff00;
+        fill: #00FFFF;
         opacity: 1;
-        filter: brightness(1.5) drop-shadow(0 0 10px #00ff00);
+        filter: brightness(2.5) drop-shadow(0 0 15px #00FFFF);
     }
     50% {
-        fill: #00ff88;
-        opacity: 0.8;
+        fill: #00FFFF;
+        opacity: 0.9;
+        filter: brightness(2.0);
     }
     100% {
         opacity: 0;
