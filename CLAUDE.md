@@ -40,11 +40,12 @@ VibeCreAI Website is a stunning personal portfolio showcasing AI-human collabora
 
 ### Local Development
 ```powershell
-# Serve locally (Windows)
-python -m http.server 8000
-# or
-npx serve .
+# Serve locally (Windows) - Recommended method
+npx -y serve . -p 8000
 # Then visit http://localhost:8000
+
+# Alternative: Python server
+python -m http.server 8000
 
 # Open in browser
 start index.html
