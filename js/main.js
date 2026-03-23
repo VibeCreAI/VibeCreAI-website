@@ -8,6 +8,11 @@ class VibeCreAIApp {
         this.isInitialized = false;
         this.elements = {};
         this.animations = {};
+        this.programmerDirection = 'default';
+        this.programmerSpriteSources = null;
+        this.preloadedProgrammerSprites = [];
+        this.pendingProgrammerPointer = null;
+        this.programmerPointerFrame = null;
         
         // Focus bracket system variables
         this.focusBracket = {
@@ -54,6 +59,7 @@ class VibeCreAIApp {
             logoContainer: document.getElementById('logo-text-container'),
             heroSubtitle: dom.get('heroSubtitle'),
             tagline: document.getElementById('tagline'),
+            programmerCharacter: document.getElementById('programmer-character'),
 
             // Form elements
             newsletterForm: dom.get('newsletterForm'),
@@ -66,7 +72,125 @@ class VibeCreAIApp {
     }
 
     setupProgrammerAnimation() {
-        // GIF handles animation automatically, no JavaScript needed
+        const { events } = window.VibePerf;
+        const { programmerCharacter } = this.elements;
+
+        if (!programmerCharacter) return;
+
+        const spriteVersion = '20260323a';
+        this.programmerSpriteSources = {
+            default: `images/Samson_programmer.gif?v=${spriteVersion}`,
+            up: `images/Samson_programmer_up.gif?v=${spriteVersion}`,
+            down: `images/Samson_programmer_down.gif?v=${spriteVersion}`,
+            left: `images/Samson_programmer_left.gif?v=${spriteVersion}`,
+            right: `images/Samson_programmer_right.gif?v=${spriteVersion}`
+        };
+
+        this.preloadProgrammerSprites();
+        this.setProgrammerDirection('default');
+
+        const queueDirectionUpdate = (clientX, clientY) => {
+            this.pendingProgrammerPointer = { clientX, clientY };
+
+            if (this.programmerPointerFrame) return;
+
+            this.programmerPointerFrame = window.requestAnimationFrame(() => {
+                this.programmerPointerFrame = null;
+
+                if (!this.pendingProgrammerPointer) return;
+
+                const { clientX: nextX, clientY: nextY } = this.pendingProgrammerPointer;
+                this.pendingProgrammerPointer = null;
+                this.setProgrammerDirection(this.getProgrammerDirectionFromPoint(nextX, nextY));
+            });
+        };
+
+        const resetDirection = () => {
+            this.pendingProgrammerPointer = null;
+
+            if (this.programmerPointerFrame) {
+                window.cancelAnimationFrame(this.programmerPointerFrame);
+                this.programmerPointerFrame = null;
+            }
+
+            this.setProgrammerDirection('default');
+        };
+
+        const handleTouchPoint = (event) => {
+            if (!event.touches || !event.touches.length) return;
+
+            const touch = event.touches[0];
+            queueDirectionUpdate(touch.clientX, touch.clientY);
+        };
+
+        events.addPassiveListener(document, 'mousemove', (event) => {
+            queueDirectionUpdate(event.clientX, event.clientY);
+        });
+
+        events.addPassiveListener(window, 'mouseout', (event) => {
+            if (!event.relatedTarget && !event.toElement) {
+                resetDirection();
+            }
+        });
+
+        events.addPassiveListener(window, 'blur', resetDirection);
+
+        events.addPassiveListener(document, 'visibilitychange', () => {
+            if (document.hidden) {
+                resetDirection();
+            }
+        });
+
+        events.addPassiveListener(document, 'touchstart', handleTouchPoint, { capture: true });
+        events.addPassiveListener(document, 'touchmove', handleTouchPoint, { capture: true });
+        events.addPassiveListener(document, 'touchend', resetDirection, { capture: true });
+        events.addPassiveListener(document, 'touchcancel', resetDirection, { capture: true });
+    }
+
+    preloadProgrammerSprites() {
+        if (!this.programmerSpriteSources) return;
+
+        this.preloadedProgrammerSprites = Object.values(this.programmerSpriteSources).map((src) => {
+            const image = new Image();
+            image.src = src;
+            return image;
+        });
+    }
+
+    getProgrammerDirectionFromPoint(clientX, clientY) {
+        const { programmerCharacter } = this.elements;
+
+        if (!programmerCharacter) {
+            return 'default';
+        }
+
+        const rect = programmerCharacter.getBoundingClientRect();
+        const centerX = rect.left + (rect.width / 2);
+        const centerY = rect.top + (rect.height / 2);
+        const deltaX = clientX - centerX;
+        const deltaY = clientY - centerY;
+        const deadZone = Math.max(28, Math.min(rect.width, rect.height) * 0.18);
+
+        if (Math.abs(deltaX) < deadZone && Math.abs(deltaY) < deadZone) {
+            return 'default';
+        }
+
+        if (Math.abs(deltaX) > Math.abs(deltaY)) {
+            return deltaX < 0 ? 'left' : 'right';
+        }
+
+        return deltaY < 0 ? 'up' : 'down';
+    }
+
+    setProgrammerDirection(direction) {
+        const { programmerCharacter } = this.elements;
+
+        if (!programmerCharacter || !this.programmerSpriteSources?.[direction]) return;
+        if (this.programmerDirection === direction) return;
+
+        programmerCharacter.src = this.programmerSpriteSources[direction];
+        programmerCharacter.dataset.direction = direction;
+        this.programmerDirection = direction;
     }
 
     initializeYear() {
