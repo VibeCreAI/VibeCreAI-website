@@ -54,6 +54,46 @@
     .programmer-container {
         margin-bottom: 5px;
     }
+
+    .hero-social-link {
+        width: 44px;
+        height: 44px;
+    }
+
+    .hero-social-link svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .hero-social-email {
+        top: 42%;
+        left: 4%;
+    }
+
+    .hero-social-github {
+        top: 50%;
+        left: 6%;
+    }
+
+    .hero-social-youtube {
+        top: 42%;
+        right: 4%;
+    }
+
+    .hero-social-twitter {
+        top: 58%;
+        left: 4%;
+    }
+
+    .hero-social-discord {
+        top: 50%;
+        right: 6%;
+    }
+
+    .hero-social-kakao {
+        top: 58%;
+        right: 4%;
+    }
     
     /* Header Mobile */
     header {
@@ -154,10 +194,19 @@
         font-size: 1.1rem;
     }
     
-    .contact-info {
-        flex-direction: column;
-        gap: 20px;
-        align-items: center;
+    .contact-social-links {
+        margin-top: 30px;
+        gap: 12px;
+    }
+
+    .contact-social-link {
+        width: 44px;
+        height: 44px;
+    }
+
+    .contact-social-link svg {
+        width: 20px;
+        height: 20px;
     }
 }
 
@@ -245,6 +294,31 @@
         transform: scale(0.95);
         transform-origin: center;
     }
+
+    .hero-social-link {
+        width: 40px;
+        height: 40px;
+    }
+
+    .hero-social-link svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .hero-social-email,
+    .hero-social-youtube {
+        top: 44%;
+    }
+
+    .hero-social-github,
+    .hero-social-discord {
+        top: 52%;
+    }
+
+    .hero-social-twitter,
+    .hero-social-kakao {
+        top: 60%;
+    }
     
     /* AI Bot responsive scaling */
     .ai-bot-container {
@@ -255,15 +329,11 @@
     }
 
     /* Prevent scaling from affecting game modals */
-    .vibe-survivor-modal,
-    .vibe-runner-modal,
-    .runner-modal {
+    .vibe-survivor-modal {
         transform: none !important;
     }
 
-    .vibe-survivor-modal *,
-    .vibe-runner-modal *,
-    .runner-modal * {
+    .vibe-survivor-modal * {
         transform: none !important;
     }
     
@@ -315,5 +385,40 @@
         height: 80px !important;
         top: -60px !important; /* Adjust position for smaller size */
         transform: translateX(-50%) scale(0.95) !important;
+    }
+
+    .hero-social-link {
+        width: 36px;
+        height: 36px;
+    }
+
+    .hero-social-link svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .hero-social-email,
+    .hero-social-youtube {
+        top: 46%;
+    }
+
+    .hero-social-github,
+    .hero-social-discord {
+        top: 54%;
+    }
+
+    .hero-social-twitter,
+    .hero-social-kakao {
+        top: 62%;
+    }
+
+    .contact-social-link {
+        width: 40px;
+        height: 40px;
+    }
+
+    .contact-social-link svg {
+        width: 18px;
+        height: 18px;
     }
 }

@@ -115,6 +115,7 @@ Email: contact@vibecreai.com`
             sourceTerminal: dom.get('sourceTerminal'),
             terminalContent: dom.get('terminalContent'),
             closeTerminal: dom.get('closeTerminal'),
+            minimizeTerminal: document.querySelector('#source-code-terminal .window-control.minimize'),
             tagline: dom.get('tagline')
         };
 
@@ -127,7 +128,7 @@ Email: contact@vibecreai.com`
 
     bindEvents() {
         const { events } = window.VibePerf;
-        const { programmerCharacter, closeTerminal, sourceTerminal, taglineContainer } = this.elements;
+        const { programmerCharacter, closeTerminal, minimizeTerminal, sourceTerminal, taglineContainer } = this.elements;
 
         if (!programmerCharacter) return;
 
@@ -177,6 +178,14 @@ Email: contact@vibecreai.com`
         // Close button handler
         if (closeTerminal) {
             closeTerminal.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.closeTerminal();
+            });
+        }
+
+        // Minimize button handler (collapse terminal window)
+        if (minimizeTerminal) {
+            minimizeTerminal.addEventListener('click', (e) => {
                 e.stopPropagation();
                 this.closeTerminal();
             });
