@@ -900,6 +900,28 @@ body.terminal-active .cta-container {
     box-shadow: 0 0 20px rgba(255, 75, 75, 0.45) !important;
 }
 
+.eco-guardian-web-button {
+    border-color: #3ddc84 !important;
+    color: #3ddc84 !important;
+}
+
+.eco-guardian-web-button:hover {
+    background: #3ddc84 !important;
+    color: var(--dark-bg) !important;
+    box-shadow: 0 0 20px rgba(61, 220, 132, 0.5) !important;
+}
+
+.vibejam-button {
+    border-color: #ff2e9a !important;
+    color: #ff2e9a !important;
+}
+
+.vibejam-button:hover {
+    background: #ff2e9a !important;
+    color: var(--dark-bg) !important;
+    box-shadow: 0 0 20px rgba(255, 46, 154, 0.5) !important;
+}
+
 .demo-youtube-icon {
     display: inline-block;
     width: 20px;

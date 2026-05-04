@@ -422,3 +422,14 @@
         height: 18px;
     }
 }
+
+/* Large desktops: fit 4 app cards per row */
+@media (min-width: 1400px) {
+    .apps-container {
+        max-width: 1400px;
+    }
+
+    .app-showcase {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
