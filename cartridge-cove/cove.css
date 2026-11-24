@@ -243,10 +243,11 @@ body.booting .station-travel, body:has(dialog[open]) .station-travel { visibilit
     pointer-events: none;
 }
 .mast {
+    --mast-top: max(env(safe-area-inset-top), calc(var(--floor-top) - 4px));
     display: flex;
     height: var(--mast-height);
     z-index: 25;
-    top: var(--floor-top);
+    top: var(--mast-top);
 }
 .mast :is(a, button) {
     pointer-events: auto;
@@ -259,23 +260,7 @@ body.booting .station-travel, body:has(dialog[open]) .station-travel { visibilit
     bottom: var(--floor-bottom);
     z-index: 3;
 }
-.booting .mast .wordmark { visibility: hidden; }
-.mast > :is(.wordmark, .settings-toggle) {
-    position: relative;
-    isolation: isolate;
-}
-.mast > :is(.wordmark, .settings-toggle)::before {
-    content: '';
-    position: absolute;
-    z-index: -1;
-    inset: 0;
-    margin-block: auto;
-    height: clamp(30px, 2.8vw, 36px);
-    background: rgb(3 7 10 / 88%);
-    border: 1px solid #557a80;
-    box-shadow: 0 2px 0 rgb(0 0 0 / 65%);
-    pointer-events: none;
-}
+.booting .mast { visibility: hidden; }
 .wordmark {
     display: grid;
     place-items: center;
@@ -306,48 +291,22 @@ body.booting .station-travel, body:has(dialog[open]) .station-travel { visibilit
     color: #f3faf9;
     background: transparent;
 }
-.mast .settings-toggle::before {
-    background: linear-gradient(155deg, rgb(48 69 78 / 96%), rgb(16 29 36 / 94%) 72%);
-    border-color: #a1bfc4 #36505a #1b3039 #77969d;
-    box-shadow: inset 1px 1px #4e6871, inset -1px -1px #15252d, 0 2px #30454e, 0 4px #03090d;
+.settings-toggle svg {
+    width: clamp(33px, 3.2vw, 39px);
+    height: auto;
+    /* Align the artwork with the visible letters inside the wordmark's line box. */
+    margin-block-start: 6px;
 }
-.settings-toggle span {
-    position: relative;
-    width: 22px;
-    height: 4px;
-    filter: drop-shadow(1px 2px 0 #03090d);
-}
-.settings-toggle span,
-.settings-toggle span::before,
-.settings-toggle span::after {
-    background: linear-gradient(to bottom, #fff 0 1px, currentColor 1px 3px, #719ca5 3px);
-}
-.settings-toggle span::before,
-.settings-toggle span::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-}
-.settings-toggle span::before { transform: translateY(-7px); }
-.settings-toggle span::after { transform: translateY(7px); }
-.mast .settings-toggle:active::before {
-    transform: translateY(2px);
-    box-shadow: inset 1px 1px #4e6871, inset -1px -1px #15252d, 0 2px #03090d;
-}
-.settings-toggle:active span { transform: translateY(2px); }
-.mast:has(:popover-open) .settings-toggle span { color: var(--cyan); background: transparent; }
-.mast:has(:popover-open) .settings-toggle span::before { transform: rotate(45deg); }
-.mast:has(:popover-open) .settings-toggle span::after { transform: rotate(-45deg); }
-.mast:has(:popover-open) .settings-toggle::before,
-.mast > :is(.wordmark, .settings-toggle):focus-visible::before {
-    border-color: var(--cyan);
-}
+.settings-toggle:active svg { transform: translateY(2px); }
+.settings-toggle .menu-close,
+.mast:has(:popover-open) .menu-bars { display: none; }
+.mast:has(:popover-open) .menu-close { display: inline; color: var(--cyan); }
 #arcade-settings {
     position: fixed;
-    inset: calc(var(--floor-top) + var(--mast-height) + 4px) var(--floor-inset) auto auto;
+    inset: calc(var(--mast-top) + var(--mast-height) + 4px) var(--floor-inset) auto auto;
     margin: 0;
     width: min(218px, calc(100% - 2 * var(--floor-inset)));
-    max-height: calc(100svh - var(--floor-top) - var(--mast-height) - 18px);
+    max-height: calc(100svh - var(--mast-top) - var(--mast-height) - 18px);
     overflow: auto;
     overscroll-behavior: contain;
     padding: 4px 12px 12px;

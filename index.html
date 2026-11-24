@@ -35,7 +35,29 @@
                 <span>V<small>IBE</small>C<small>RE</small><b>AI</b></span>
             </a>
             <button type="button" class="settings-toggle" popovertarget="arcade-settings" aria-label="Arcade settings" title="Arcade settings">
-                <span aria-hidden="true"></span>
+                <svg width="48" height="32" viewBox="0 0 48 32" aria-hidden="true" focusable="false" shape-rendering="crispEdges">
+                    <defs>
+                        <g id="menu-slab">
+                            <path fill="#000" d="M0 0h42v1h2v1h2v1h2v7H6V9H4V8H2V7H0z" />
+                            <path fill="#566976" d="M3 5h38l4 3H7z" />
+                            <path fill="#92acb6" d="M40 2h2v1h2v1h1v4h-2V7h-2V6h-1z" />
+                            <path fill="currentColor" d="M3 2h37v4H3z" />
+                            <path fill="#fff" d="M3 2h37v1H3z" />
+                        </g>
+                        <path id="menu-cross" d="m16 8 14 14m0-14L16 22" />
+                    </defs>
+                    <g class="menu-bars">
+                        <use href="#menu-slab" />
+                        <use href="#menu-slab" y="11" />
+                        <use href="#menu-slab" y="22" />
+                    </g>
+                    <g class="menu-close" fill="none" stroke-linecap="square">
+                        <use href="#menu-cross" stroke="#000" stroke-width="8" />
+                        <use href="#menu-cross" transform="translate(2 2)" stroke="#000" stroke-width="8" />
+                        <use href="#menu-cross" transform="translate(2 2)" stroke="#377b88" stroke-width="4" />
+                        <use href="#menu-cross" stroke="currentColor" stroke-width="4" />
+                    </g>
+                </svg>
             </button>
             <div id="arcade-settings" popover role="group" aria-label="Arcade settings">
                 <button type="button" id="arcade-sound" aria-label="Arcade sound" aria-pressed="true" hidden>
