@@ -33,6 +33,7 @@
         "Who's The Killer?": '범인은 누구?', 'Neon Circle Traffic': '네온 서클 트래픽',
         '1ST PLACE': '1위', 'FIGHTING & SHOOTER': '격투 · 슈팅', 'SEASON 1  /  2025': '시즌 1  /  2025',
         'VIBE CODING': '바이브 코딩', 'CREATIVE': '창작',
+        'BUILD': '빌드', 'BRICK BREAK': '벽돌 깨기', 'STAGE CLEAR': '스테이지 클리어',
         'HOME': '홈', 'ABOUT': '소개', 'APPS': '작품', 'CONTACT': '연락처', 'Menu': '메뉴',
         'MEET THE CREATOR': '개발자 소개', 'SOLO DEVELOPER': '1인 개발자', 'AI COLLABORATION': 'AI와 함께 만들기',
         'FUN FIRST': '재미가 먼저', 'MY AI CREATIONS': 'AI로 만든 작품',

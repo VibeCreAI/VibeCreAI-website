@@ -870,6 +870,10 @@ async function startWorld() {
         deskLook = new T.Vector3();
     let first = true;
     let lastDraw = 0;
+    let seatedSince = null;
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) seatedSince = null;
+    });
     let arrowCenter, arrowTop;
     drawWorld = (now, speed) => {
         const w = viewWidth,
@@ -979,7 +983,11 @@ async function startWorld() {
         actor.rotation.y = heading;
         camera.position.copy(cam);
         camera.lookAt(look);
-        if (distance < standTravel + 1) updateMarquee(performance.now(), reduced.matches);
+        const seated = !booting && !journey && stand < 0.012 && target < standTravel * 0.012;
+        seatedSince = seated && !reduced.matches ? (seatedSince ?? now) : null;
+        if (distance < standTravel + 1) {
+            updateMarquee(seatedSince === null ? 0 : (now - seatedSince) / 1000, camera.aspect);
+        }
         scene.updateMatrixWorld();
         ink.draw(scene, camera);
         // Project the torso using the same camera that just rendered the actor. Keep the hit targets

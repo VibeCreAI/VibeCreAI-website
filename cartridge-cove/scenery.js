@@ -1,4 +1,5 @@
 import { createToonBands } from '../js/arcade-look.js';
+import { createMarqueeShutter, demoSeconds, drawDeskDemo } from './desk-demo.js';
 
 const T = window.THREE;
 const { t } = window.VibeLocale;
@@ -335,9 +336,7 @@ export function makeArcade(scene, onFontReady) {
     // The cyan inlay follows the aisle past every cabinet.
     for (let x = -4; x < 44; x += 0.8) box(x, 0.003, 1.82, 0.46, 0.01, 0.037, '#397873', 0, 0, true);
     const loader = new T.TextureLoader();
-    const botSheet = loader.load('../images/creator-bot.webp', () => {
-        botSign.visible = true;
-    });
+    const botSheet = loader.load('../images/creator-bot.webp', onFontReady);
     botSheet.magFilter = botSheet.minFilter = T.NearestFilter;
     botSheet.generateMipmaps = false;
     botSheet.encoding = T.sRGBEncoding;
@@ -347,6 +346,12 @@ export function makeArcade(scene, onFontReady) {
     botSign.material.alphaTest = 0.5;
     const mainSign = canvasTexture(896, 266, () => {});
     const ctx = mainSign.image.getContext('2d');
+    const deskScreen = face(mainSign, -0.35, 2.95, -2.947, 4.4, 1.32);
+    const shutter = createMarqueeShutter(T, deskScreen);
+    const demo = canvasTexture(448, 133, () => {});
+    demo.generateMipmaps = false;
+    demo.minFilter = T.LinearFilter;
+    const demoCtx = demo.image.getContext('2d');
     const titleParts = [
         ['V', 76],
         ['IBE', 64],
@@ -354,11 +359,40 @@ export function makeArcade(scene, onFontReady) {
         ['RE', 64],
         ['AI', 76]
     ];
-    let previousWord = -1;
-    function updateMarquee(now, still) {
-        const frame = still ? 50 : (50 + Math.floor(now / 80)) % 100;
+    const titleSeconds = 4.5;
+    const closeSeconds = 0.55, holdSeconds = 0.12, openSeconds = 0.78;
+    const returnAt = titleSeconds + demoSeconds;
+    const cycleSeconds = returnAt + closeSeconds + holdSeconds + openSeconds;
+    let previousWord = -1, previousDemoFrame = -1;
+    function updateMarquee(seatedSeconds, aspect) {
+        const time = seatedSeconds % cycleSeconds;
+        const returning = time - returnAt;
+        shutter.visible = returning >= 0;
+        if (shutter.visible) {
+            const closing = 1 - returning / closeSeconds;
+            const opening = (returning - closeSeconds - holdSeconds) / openSeconds;
+            const aperture = T.MathUtils.clamp(Math.max(closing, opening), 0, 1);
+            shutter.material.uniforms.aperture.value = aperture * aperture * (3 - 2 * aperture);
+        }
+        // Change the underlying artwork with the shutter closed, then reveal the first logo frame.
+        const showingTitle = time < titleSeconds || returning >= closeSeconds;
+        deskScreen.material.map = showingTitle ? mainSign : demo;
+        botSign.visible = showingTitle && Boolean(botSheet.image);
+        if (!showingTitle) {
+            const demoFrame = Math.floor(Math.min(time - titleSeconds, demoSeconds) * 16);
+            if (demoFrame !== previousDemoFrame) {
+                // In portrait the desk camera crops the physical edges of the marquee.
+                drawDeskDemo(demoCtx, demoFrame / 16, stamp, t, Math.min(1, aspect * 1.92));
+                demo.needsUpdate = true;
+                previousDemoFrame = demoFrame;
+            }
+            return;
+        }
+        previousDemoFrame = -1;
+        const titleTime = shutter.visible ? 0 : time;
+        const frame = (50 + Math.floor(titleTime / 0.08)) % 100;
         botSheet.offset.y = (99 - frame) / 100;
-        const selected = still ? 0 : Math.floor(now / 1500) % 3;
+        const selected = Math.floor(titleTime / 1.5);
         if (selected === previousWord) return;
         previousWord = selected;
         const { width, height } = mainSign.image;
@@ -406,9 +440,8 @@ export function makeArcade(scene, onFontReady) {
         });
         mainSign.needsUpdate = true;
     }
-    updateMarquee(0, true);
+    updateMarquee(0, 1);
     box(-0.35, 2.95, -3.12, 4.55, 1.46, 0.27, ink);
-    face(mainSign, -0.35, 2.95, -2.947, 4.4, 1.32);
     box(-0.35, 2.18, -3.08, 4.41, 0.038, 0.14, mint, 0, 0, true);
     pool(-0.35, 2.86, -3.43, 7.7, 3.2, '#17d9d1', 0.6, true);
     pool(0.05, 0.016, 0.26, 2.7, 2.15, '#000000', 0.86, false, true);
@@ -660,7 +693,7 @@ export function makeArcade(scene, onFontReady) {
     function repaintSigns() {
         for (const paint of signPainters) paint();
         previousWord = -1;
-        updateMarquee(performance.now(), false);
+        previousDemoFrame = -1;
     }
     document.addEventListener('vibe-language-change', repaintSigns);
     // Canvas textures retain their original glyphs if a web font finishes after the first draw.
