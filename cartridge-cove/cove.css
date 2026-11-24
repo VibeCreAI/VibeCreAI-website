@@ -5,9 +5,16 @@
     --panel: #0d181e;
     --line: #315357;
     --floor-inset: max(env(safe-area-inset-left), env(safe-area-inset-right), clamp(14px, 3vw, 46px));
+    --floor-top: max(env(safe-area-inset-top), clamp(4px, 1svh, 12px));
     --floor-bottom: max(env(safe-area-inset-bottom), clamp(12px, 2.6svh, 28px));
+    --mast-height: max(44px, 2.75rem);
     --control-width: 208px;
-    --control-height: 5.25rem;
+    --control-height: 4.5rem;
+    --station-panel-max: 620px;
+    --station-panel-width: min(var(--station-panel-max), 44vw);
+    --hud-surface: rgb(3 7 10 / 76%);
+    --hud-highlight: rgb(12 37 42 / 92%);
+    --hud-cell-highlight: rgb(0 255 255 / 13%);
     color-scheme: dark;
     font:
         16px/1.45 var(--arcade-font);
@@ -154,7 +161,7 @@ html:has(body.booting), body.booting #route-scroll {
     --arrow-size: clamp(60px, 6vw, 76px);
     --edge: calc(var(--arrow-size) / 2 + 4px);
     /* Size the pair once for this viewport. Slide it as a unit when the card opens. */
-    --card-reserve: calc(clamp(18px, 3vw, 52px) + min(450px, 43%) + 4px);
+    --card-reserve: calc(clamp(18px, 3vw, 52px) + var(--station-panel-width) + 4px);
     --spread: min(clamp(110px, 32svh, 236px), calc((100% - var(--card-reserve)) / 2 - var(--edge)));
     --right-limit: calc(100% - var(--edge));
     --pair-center: clamp(calc(var(--edge) + var(--spread)), var(--arrow-x), calc(var(--right-limit) - var(--spread)));
@@ -227,27 +234,41 @@ body.booting .station-travel, body:has(dialog[open]) .station-travel { visibilit
 @media (prefers-reduced-motion: reduce) {
     #arcade-boot { transition: none; }
 }
-.mast {
+.mast,
+.floor-controls {
     position: fixed;
-    z-index: 25;
-    inset: max(env(safe-area-inset-top), clamp(4px, 1svh, 12px)) var(--floor-inset) auto;
-    display: flex;
+    inset-inline: var(--floor-inset);
     justify-content: space-between;
-    align-items: center;
+    gap: 12px;
     pointer-events: none;
+}
+.mast {
+    --text-outline: -1px -1px 0 var(--ink), 1px -1px 0 var(--ink), -1px 1px 0 var(--ink), 1px 1px 0 var(--ink), 0 2px 3px #000;
+    display: flex;
+    height: var(--mast-height);
+    z-index: 25;
+    top: var(--floor-top);
+}
+.mast :is(a, button) {
+    pointer-events: auto;
+}
+.floor-controls {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, var(--control-width)));
+    grid-template-rows: minmax(0, 1fr);
+    height: var(--control-height);
+    bottom: var(--floor-bottom);
+    z-index: 3;
 }
 .booting .mast .wordmark { visibility: hidden; }
 .wordmark {
     display: grid;
-    align-items: center;
-    min-height: 44px;
-    pointer-events: auto;
-    filter: drop-shadow(0 2px 5px #05090d);
+    place-items: center;
     font:
         clamp(26px, 3.1vw, 41px)/1 var(--wordmark-font);
     letter-spacing: 0.025em;
     text-decoration: none;
-    text-shadow: 3px 3px #243238;
+    text-shadow: var(--text-outline), 2px 3px #243238;
 }
 .wordmark small {
     font-size: 0.82em;
@@ -256,46 +277,88 @@ body.booting .station-travel, body:has(dialog[open]) .station-travel { visibilit
     font-weight: inherit;
     color: var(--cyan);
 }
-.arcade-language {
-    display: flex;
-    align-items: center;
-    pointer-events: auto;
-}
-.arcade-language button {
-    position: relative;
+.mast .settings-toggle {
     display: grid;
     place-items: center;
-    min-width: 44px;
-    min-height: 44px;
-    padding: 0 7px;
+    width: 44px;
+    padding: 0;
     border: 0;
+    color: #f3faf9;
     background: transparent;
-    font: clamp(1rem, 1.6vw, 1.25rem)/1 var(--arcade-font);
-    color: #d3e3e5;
-    text-shadow: -1px -1px 0 var(--ink), 1px -1px 0 var(--ink), -1px 1px 0 var(--ink), 1px 2px 0 var(--ink);
 }
-.arcade-language button + button {
-    padding-inline-end: 0;
-}
-.arcade-language button + button::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    height: 0.75em;
-    border-left: 1px solid var(--muted);
-}
-.arcade-language button[aria-pressed="true"] { color: var(--cyan); }
-.arcade-language button span { position: relative; }
-.arcade-language button[aria-pressed="true"] span::after {
-    content: '';
-    position: absolute;
-    inset: auto 0 -4px;
-    height: 2px;
+.settings-toggle span {
+    position: relative;
+    width: 20px;
+    height: 3px;
     background: currentColor;
-    box-shadow: 1px 1px var(--ink);
+    filter: drop-shadow(1px 1px 0 var(--ink)) drop-shadow(-1px -1px 1px var(--ink));
 }
-@media (hover: hover) {
-    .arcade-language button:hover { color: white; }
+.settings-toggle span::before,
+.settings-toggle span::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: currentColor;
+}
+.settings-toggle span::before { transform: translateY(-6px); }
+.settings-toggle span::after { transform: translateY(6px); }
+.mast:has(:popover-open) .settings-toggle span { color: var(--cyan); background: transparent; }
+.mast:has(:popover-open) .settings-toggle span::before { transform: rotate(45deg); }
+.mast:has(:popover-open) .settings-toggle span::after { transform: rotate(-45deg); }
+#arcade-settings {
+    position: fixed;
+    inset: calc(var(--floor-top) + var(--mast-height) + 4px) var(--floor-inset) auto auto;
+    margin: 0;
+    width: min(218px, calc(100% - 2 * var(--floor-inset)));
+    max-height: calc(100svh - var(--floor-top) - var(--mast-height) - 18px);
+    overflow: auto;
+    overscroll-behavior: contain;
+    padding: 4px 12px 12px;
+    border: 1px solid var(--line);
+    border-top: 2px solid var(--cyan);
+    box-shadow: 3px 3px rgb(0 0 0 / 55%);
+    color: #f3faf9;
+    background: rgb(7 14 18 / 97%);
+    pointer-events: auto;
+    font: 16px/1.2 var(--arcade-font);
+}
+#arcade-sound {
+    width: 100%;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    background: transparent;
+    font: inherit;
+}
+.sound-state { color: var(--muted); }
+#arcade-sound[aria-pressed='true'] .sound-state { color: var(--cyan); }
+#arcade-sound[aria-pressed='true'] .sound-off,
+#arcade-sound[aria-pressed='false'] .sound-on { display: none; }
+.arcade-language {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+}
+#settings-language {
+    grid-column: 1 / -1;
+    padding-top: 10px;
+}
+.arcade-language button {
+    min-height: 44px;
+    padding: 0 4px;
+    border: 1px solid var(--line);
+    background: transparent;
+    font: inherit;
+    white-space: nowrap;
+}
+.arcade-language button[aria-pressed="true"] {
+    border-color: var(--cyan);
+    color: var(--cyan);
+    background: var(--hud-cell-highlight);
 }
 button,
 .primary,
@@ -320,52 +383,38 @@ kbd {
     padding: 2px 4px;
     margin-left: 4px;
 }
-.floor-controls {
-    position: fixed;
-    inset: auto var(--floor-inset) var(--floor-bottom);
-    z-index: 3;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, var(--control-width)));
-    justify-content: space-between;
-    gap: 12px;
-    height: var(--control-height);
-    grid-template-rows: minmax(0, 1fr);
-    pointer-events: none;
-}
-.guide,
-.quick-socials {
+.hud-panel {
+    min-width: 0;
     pointer-events: auto;
-    background: #050d13ef;
+    background: var(--hud-surface);
+    border: 1px solid var(--line);
+    box-shadow: 0 2px 0 rgb(0 0 0 / 42%);
+}
+.hud-panel.guide { border-inline-start: 3px solid var(--cyan); }
+.hud-panel.quick-socials { border-inline-end: 3px solid var(--cyan); }
+.hud-panel:focus-visible,
+.hud-panel:has(:focus-visible) {
+    border-color: var(--cyan);
+    background: var(--hud-highlight);
+}
+.hud-panel :is(a, button):focus-visible {
+    outline-offset: -3px;
 }
 .guide {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     grid-template-rows: auto minmax(0, 1fr) 2px;
-    gap: 3px 6px;
+    gap: 2px 6px;
     align-items: center;
-    padding: 7px 13px;
+    padding: 5px 12px;
     text-align: left;
     letter-spacing: 0;
-    border: 0;
-    min-width: 0;
-    border-left: 3px solid var(--cyan);
-    transition:
-        background 0.18s,
-        box-shadow 0.18s;
-}
-.guide:is(:hover, :focus-visible) {
-    background: #10282e;
-    box-shadow: 0 0 15px #00ffff28;
 }
 .station-switch {
     grid-area: 1 / 2;
     font-size: 14px;
     line-height: 1;
     color: var(--cyan);
-    transition: transform 0.2s;
-}
-.guide:hover .station-switch {
-    transform: translateY(-3px);
 }
 .position-label {
     grid-area: 1 / 1;
@@ -376,7 +425,7 @@ kbd {
 .guide strong {
     grid-area: 2 / 1 / 3 / -1;
     font:
-        1.25rem/1.1 var(--arcade-font);
+        1.125rem/1.08 var(--arcade-font);
 }
 .meter {
     grid-area: 3 / 1 / 4 / -1;
@@ -394,7 +443,6 @@ kbd {
 .quick-socials {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    border-right: 3px solid var(--cyan);
 }
 .quick-socials a {
     position: relative;
@@ -411,12 +459,30 @@ kbd {
     height: 22px;
     fill: currentColor;
 }
-.quick-socials a:is(:hover, :focus-visible, :active) {
-    color: var(--ink);
-    background: var(--cyan);
-    z-index: 1;
+.mast :is(.wordmark, button):is(:focus-visible, :active) {
+    color: var(--cyan);
+}
+.quick-socials a:is(:focus-visible, :active) {
+    color: var(--cyan);
+    background: var(--hud-cell-highlight);
+}
+@media (prefers-reduced-motion: no-preference) {
+    .hud-panel, .hud-panel :is(a, button) {
+        transition: background-color 120ms ease-out, border-color 120ms ease-out, color 120ms ease-out;
+    }
 }
 @media (hover: hover) {
+    .hud-panel:hover {
+        border-color: var(--cyan);
+        background: var(--hud-highlight);
+    }
+    .mast :is(.wordmark, button):hover {
+        color: var(--cyan);
+    }
+    .quick-socials a:hover {
+        color: var(--cyan);
+        background: var(--hud-cell-highlight);
+    }
     .quick-socials a:is(:hover, :focus-visible)::before {
         content: attr(aria-label);
         position: absolute;
@@ -438,7 +504,7 @@ kbd {
 #route-scroll {
     display: contents;
 }
-html:has(dialog[open]) {
+html:has(dialog[open], #arcade-settings:popover-open) {
     overflow: hidden;
 }
 html {
@@ -482,7 +548,7 @@ html {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    padding: 74px clamp(18px, 3vw, 52px) calc(var(--floor-bottom) + var(--control-height) + 14px);
+    padding: calc(var(--floor-top) + var(--mast-height) + 14px) clamp(18px, 3vw, 52px) calc(var(--floor-bottom) + var(--control-height) + 14px);
     pointer-events: none;
 }
 .paper,
@@ -499,7 +565,7 @@ dialog {
     flex-direction: column;
     background: linear-gradient(145deg, rgba(11, 27, 35, 0.76), rgba(6, 15, 23, 0.88) 72%);
     text-shadow: 0 1px 2px #040a10;
-    width: min(450px, 43%);
+    width: var(--station-panel-width);
     max-height: 100%;
     overflow: clip;
     pointer-events: auto;
@@ -668,6 +734,10 @@ dialog h2 {
     height: auto;
     aspect-ratio: 1;
     margin-left: -18%;
+    filter: drop-shadow(1px 1px 0 var(--ink)) drop-shadow(-1px -1px 0 var(--ink));
+}
+.creator-bio .creator-bot::before {
+    background: linear-gradient(135deg, #acfff5 0 29%, var(--cyan) 29% 64%, #169dba 64%);
 }
 .project {
     display: flow-root;
@@ -765,7 +835,6 @@ noscript {
     }
     :root {
         --control-width: 174px;
-        --control-height: 4.5rem;
     }
     #destination {
         padding-top: 45px;
@@ -775,7 +844,7 @@ noscript {
     }
     .paper {
         --paper-inset: 17px;
-        width: min(100%, 480px);
+        width: min(100%, var(--station-panel-max));
         max-height: 46svh;
     }
     .guide {
@@ -842,18 +911,23 @@ noscript {
     font-size: 11px;
 }
 #contacts {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
+    display: grid;
     gap: 4px;
     margin-top: 10px;
     padding-top: 10px;
     border-top: 1px solid var(--line);
 }
+.contact-row {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    min-width: 0;
+}
 #contacts a {
     display: grid;
     place-items: center;
-    width: 44px;
+    flex: 0 1 44px;
+    min-width: 0;
     height: 44px;
     color: #f4fbfa;
     background: var(--panel);

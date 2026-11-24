@@ -28,9 +28,19 @@
             <a class="wordmark" href="#desk" aria-label="Return to Samson’s desk">
                 <span>V<small>IBE</small>C<small>RE</small><b>AI</b></span>
             </a>
-            <div class="arcade-language" role="group" aria-label="Language">
-                <button type="button" lang="en" data-language="en" aria-label="English" aria-pressed="true"><span>EN</span></button>
-                <button type="button" lang="ko" data-language="ko" aria-pressed="false"><span>한국어</span></button>
+            <button type="button" class="settings-toggle" popovertarget="arcade-settings" aria-label="Arcade settings" title="Arcade settings">
+                <span aria-hidden="true"></span>
+            </button>
+            <div id="arcade-settings" popover role="group" aria-label="Arcade settings">
+                <button type="button" id="arcade-sound" aria-label="Arcade sound" aria-pressed="true" hidden>
+                    <span>Sound</span>
+                    <span class="sound-state" aria-hidden="true"><span class="sound-off">Off</span><span class="sound-on">On</span></span>
+                </button>
+                <div class="arcade-language" role="group" aria-labelledby="settings-language">
+                    <span id="settings-language">Language</span>
+                    <button type="button" lang="en" data-language="en" aria-pressed="true">English</button>
+                    <button type="button" lang="ko" data-language="ko" aria-pressed="false">한국어</button>
+                </div>
             </div>
         </header>
         <div id="arcade-boot">
@@ -65,7 +75,7 @@
                 </nav>
                 <div class="floor-controls">
                     <button
-                        class="guide"
+                        class="guide hud-panel"
                         id="map-button"
                         aria-haspopup="dialog"
                         aria-controls="map"
@@ -77,7 +87,7 @@
                         <span class="station-switch" aria-hidden="true">⌃</span>
                         <span class="meter"><i id="progress"></i></span>
                     </button>
-                    <nav class="quick-socials" id="quick-socials" aria-label="Featured social channels"></nav>
+                    <nav class="quick-socials hud-panel" id="quick-socials" aria-label="Featured social channels"></nav>
                 </div>
                 <main id="destination" hidden>
                     <article class="paper" aria-label="Station content">

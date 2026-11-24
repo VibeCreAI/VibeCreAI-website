@@ -1,26 +1,28 @@
 // Find depth discontinuities and sharp changes in surface normals before smoothing the finished ink.
 // Outlines keep their screen width while the skinned character and camera move.
-export function inkRenderer(T, renderer) {
+export function inkRenderer(T, renderer, { transparentBackground = false } = {}) {
     const inkMask = new T.WebGLRenderTarget(1, 1, { depthBuffer: false });
     const surface = new T.WebGLRenderTarget(1, 1, { minFilter: T.NearestFilter, magFilter: T.NearestFilter });
     const normal = new T.MeshNormalMaterial();
     const skinNormal = new T.MeshNormalMaterial({ skinning: true, side: T.DoubleSide });
     normal.onBeforeCompile = skinNormal.onBeforeCompile = (shader) => {
-        shader.vertexShader =
-            'varying float inkDepth;\n' +
-            shader.vertexShader.replace(
-                '#include <project_vertex>',
-                '#include <project_vertex>\ninkDepth=1.0/(1.0-0.065*mvPosition.z);'
-            );
-        shader.fragmentShader =
-            'varying float inkDepth;\n' +
-            shader.fragmentShader.replace(' normal ), opacity', ' normal ), inkDepth');
+        // Interpolate view depth before encoding it, for both the aisle and orthographic portraits.
+        const varying = 'varying float inkViewDepth;\n';
+        shader.vertexShader = varying + shader.vertexShader.replace(
+            '#include <project_vertex>',
+            '#include <project_vertex>\ninkViewDepth = -mvPosition.z;'
+        );
+        shader.fragmentShader = varying + shader.fragmentShader.replace(
+            ' normal ), opacity',
+            ' normal ), 1.0 / (1.0 + 0.065 * inkViewDepth)'
+        );
     };
     const uniforms = {
         surface: { value: surface.texture },
         pixel: { value: new T.Vector2() }
     };
     const material = new T.ShaderMaterial({
+        defines: transparentBackground ? { TRANSPARENT_BACKGROUND: 1 } : {},
         uniforms,
         depthTest: false,
         depthWrite: false,
@@ -38,10 +40,14 @@ export function inkRenderer(T, renderer) {
             float distanceFade=mix(.27,1.,smoothstep(.16,.44,max(n.a,texture2D(surface,uvp+pixel).a)));
             vec3 ink=vec3(.008,.014,.025);
             float opacity=edge*.94*distanceFade;
+            #ifndef TRANSPARENT_BACKGROUND
             if(n.a<.001){
                 vec3 sky=mix(vec3(.040,.064,.090),vec3(.014,.022,.049),smoothstep(.30,1.,uvp.y));
                 gl_FragColor=vec4(mix(sky,ink,opacity),1.);
-            }else gl_FragColor=vec4(ink*opacity,opacity);}`
+                return;
+            }
+            #endif
+            gl_FragColor=vec4(ink*opacity,opacity);}`
     });
     const overlay = new T.ShaderMaterial({
         uniforms: { inkMask: { value: inkMask.texture }, texel: { value: new T.Vector2() } },
@@ -66,6 +72,15 @@ export function inkRenderer(T, renderer) {
     pass.add(screen);
     const flat = new T.Camera();
     return {
+        dispose() {
+            surface.dispose();
+            inkMask.dispose();
+            normal.dispose();
+            skinNormal.dispose();
+            material.dispose();
+            overlay.dispose();
+            screen.geometry.dispose();
+        },
         resize(w, h, outlineRatio) {
             surface.setSize(Math.round(w * outlineRatio), Math.round(h * outlineRatio));
             inkMask.setSize(surface.width, surface.height);

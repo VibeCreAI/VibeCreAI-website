@@ -1,3 +1,5 @@
+import { createToonBands } from '../js/arcade-look.js';
+
 const T = window.THREE;
 const { t } = window.VibeLocale;
 export const stations = [
@@ -46,9 +48,7 @@ export const routeLength = lengths[lengths.length - 1];
 export const stops = stopKnots.map((i) => standTravel + lengths[i * 60]);
 
 export function makeArcade(scene, onFontReady) {
-    const bands = new T.DataTexture(new Uint8Array([38, 99, 170, 245]), 4, 1, T.LuminanceFormat);
-    bands.minFilter = bands.magFilter = T.NearestFilter;
-    bands.needsUpdate = true;
+    const bands = createToonBands(T);
     const batches = new Map(),
         cube = new T.BoxGeometry(),
         transform = new T.Object3D(),
@@ -213,22 +213,44 @@ export function makeArcade(scene, onFontReady) {
         box(x, y, z, w + 0.13, h + 0.05, 0.16, '#24303c');
         box(x, y, z, w + 0.04, h + 0.12, 0.15, '#24303c');
         const tx = signTexture(768, 122, (ctx, W, H) => {
+            ctx.save();
             const enamel = ctx.createLinearGradient(0, 0, 0, H);
-            enamel.addColorStop(0, '#28404c');
-            enamel.addColorStop(0.48, '#162832');
-            enamel.addColorStop(1, '#0c1725');
+            enamel.addColorStop(0, '#14212b');
+            enamel.addColorStop(0.55, '#080f19');
+            enamel.addColorStop(1, '#101c26');
             ctx.fillStyle = enamel;
             ctx.fillRect(0, 0, W, H);
-            ctx.fillStyle = color;
-            ctx.fillRect(10, 5, W - 20, 4);
-            ctx.fillRect(24, H - 9, W - 48, 3);
-            for (const edge of [0, W - 10]) ctx.fillRect(edge, 19, 10, H - 38);
+
+            // Bake the halo and hot center into the sign so its glow needs no per-frame bloom pass.
+            const core = '#' + new T.Color(color).lerp(new T.Color(0xffffff), 0.72).getHexString();
+            const tube = new Path2D();
+            tube.moveTo(21, 10);
+            tube.lineTo(W - 21, 10);
+            tube.lineTo(W - 10, 21);
+            tube.lineTo(W - 10, H - 21);
+            tube.lineTo(W - 21, H - 10);
+            tube.lineTo(21, H - 10);
+            tube.lineTo(10, H - 21);
+            tube.lineTo(10, 21);
+            tube.closePath();
+            ctx.lineJoin = 'round';
+            ctx.shadowColor = color;
+            ctx.shadowBlur = 15;
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 6;
+            ctx.stroke(tube);
+            ctx.shadowBlur = 0;
+            ctx.strokeStyle = core;
+            ctx.lineWidth = 2;
+            ctx.stroke(tube);
+
             let textStart = 35;
             if (station.id === 'astrocade') {
                 const path = document.querySelector('#quick-socials a[href*="astrocade.com/profile/"] path');
                 ctx.save();
                 ctx.translate(53, 25);
                 ctx.scale(72 / 512, 72 / 512);
+                ctx.shadowBlur = 7;
                 ctx.fillStyle = '#f7fff6';
                 ctx.fill(new Path2D(path.getAttribute('d')), 'evenodd');
                 ctx.restore();
@@ -236,12 +258,22 @@ export function makeArcade(scene, onFontReady) {
             }
             const end = W - 67, center = (textStart + end) / 2;
             const title = t(station.title).toUpperCase();
-            lettering(ctx, title, center + 3, H / 2 + 5, 94, '#050c14', end - textStart);
+            ctx.shadowBlur = 16;
             lettering(ctx, title, center, H / 2 + 1, 94, color, end - textStart);
-            // The stepped arrow is visible at a distance and doubles as the tap affordance.
-            ctx.fillStyle = color;
+            ctx.shadowBlur = 4;
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2.5;
+            ctx.strokeText(title, center, H / 2 + 1, end - textStart);
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = core;
+            ctx.fillText(title, center, H / 2 + 1, end - textStart);
+
+            const arrow = new Path2D();
             for (let row = 0; row < 5; row++)
-                ctx.fillRect(W - 51 + (2 - Math.abs(2 - row)) * 6, H / 2 - 15 + row * 6, 12, 6);
+                arrow.rect(W - 51 + (2 - Math.abs(2 - row)) * 6, H / 2 - 15 + row * 6, 12, 6);
+            ctx.shadowBlur = 8;
+            ctx.fill(arrow);
+            ctx.restore();
         });
         return face(tx, x, y, z + 0.083, w, h);
     }
@@ -594,7 +626,7 @@ export function makeArcade(scene, onFontReady) {
     const cx = 2.48;
     box(cx, 1.01, -2.2, 0.99, 2.02, 0.85, '#ad6b54');
     box(cx, 1.27, -1.75, 0.81, 0.73, 0.09, '#c0ae8f');
-    sign('100 WON', 'COIN EXCHANGE', cx, 1.7, -1.72, 0.78, 0.43, '#ffd58c');
+    sign('25 CENTS', 'COIN EXCHANGE', cx, 1.7, -1.72, 0.78, 0.43, '#ffd58c');
     box(cx, 1.23, -1.66, 0.27, 0.09, 0.09, ink);
     box(cx, 0.85, -1.7, 0.43, 0.18, 0.11, ink);
     for (let i = 0; i < 4; i++) box(cx, 0.29 + i * 0.064, -1.74, 0.57, 0.022, 0.032, '#584d47');

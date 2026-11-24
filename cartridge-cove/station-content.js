@@ -41,7 +41,12 @@ export async function loadStationContent() {
         .map((name) => links.find((a) => a.title === name))
         .filter(Boolean);
     $('#quick-socials').append(...shortcuts.map(copy));
-    $('#contacts').append(...shortcuts, ...links.filter((a) => !shortcuts.includes(a)));
+    const otherLinks = links.filter((a) => !shortcuts.includes(a));
+    for (const group of [shortcuts, otherLinks]) {
+        const row = element('div', 'contact-row');
+        row.append(...group);
+        $('#contacts').append(row);
+    }
 
     const cards = new Map(
         [...doc.querySelectorAll('.app-card')].map((card) => [
@@ -102,7 +107,7 @@ export async function loadStationContent() {
         return section;
     });
 
-    mountCreatorCards(pages[0]);
+    mountCreatorCards(pages[0], { celShaded: true });
     document.body.append(copy(doc.querySelector('#demo-video-modal')));
     await import('../js/demo-modal.js');
     return pages;

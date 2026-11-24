@@ -22,6 +22,12 @@
     width: 3.8rem;
     height: 3.8rem;
     margin-left: -0.7rem;
+}
+
+.creator-bot::before {
+    content: '';
+    display: block;
+    height: 100%;
     background: var(--primary-color);
     mask: url('../images/creator-bot.webp') top / 100% 10000% no-repeat;
     animation: creator-bot-frames 8s steps(100, end) infinite;
@@ -32,7 +38,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .creator-bot {
+    .creator-bot::before {
         animation: none;
         mask-position: 0 calc(100% * 50 / 99);
     }

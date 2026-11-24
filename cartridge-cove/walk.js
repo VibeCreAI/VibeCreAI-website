@@ -2,8 +2,10 @@ import { stations, stops, standTravel, route, routeLength, makeArcade } from './
 import { loadStationContent } from './station-content.js';
 import { mountArcadeScores } from '../js/astrocade-scores.js';
 import { bindAvatarMotion } from '../js/avatar-motion.js';
+import { addArcadeLights, shadeArcadeAvatar } from '../js/arcade-look.js';
 import { inkRenderer } from './ink-renderer.js';
 import { avatarReactions } from './avatar-reactions.js';
+import { playCue, playFootstep, setTyping } from './audio.js';
 
 const T = window.THREE;
 const { t, localize } = window.VibeLocale;
@@ -30,6 +32,9 @@ let journey = null;
 let swipe = null;
 let suppressFloorClick = false;
 let touchRouteY = 0;
+let lastDesktopY = 0;
+let scrollGesture = null, nativeScrollHeld = false, lastScrollKey = -Infinity;
+const scrollGestureGap = 240;
 const tripSeconds = 2;
 const maxWalkingSpeed = 4.1;
 let pages,
@@ -127,9 +132,11 @@ function aisleY(meters, forward = true) {
 function setY(y) {
     const current = routeY();
     const top = Math.round(y);
-    if (y === current || top === current) return;
     if (touch.matches) touchRouteY = top;
-    else window.scrollTo({ top, behavior: 'instant' });
+    else {
+        if (y !== current && top !== current) window.scrollTo({ top, behavior: 'instant' });
+        lastDesktopY = window.scrollY;
+    }
 }
 
 function measure() {
@@ -199,10 +206,14 @@ function adjacentStation(step) {
 
 function updateTravelArrows(atDesk) {
     const previous = adjacentStation(-1), next = adjacentStation(1);
-    if (atDesk && document.activeElement === previousArrow) nextArrow.focus({ preventScroll: true });
+    const atEnd = next >= stops.length;
+    const focused = document.activeElement;
     if (previousArrow.hidden !== atDesk) previousArrow.hidden = atDesk;
+    if (nextArrow.hidden !== atEnd) nextArrow.hidden = atEnd;
+    if (atDesk && focused === previousArrow) nextArrow.focus({ preventScroll: true });
+    if (atEnd && focused === nextArrow) previousArrow.focus({ preventScroll: true });
     setArrow(previousArrow, previous, 'Previous station');
-    setArrow(nextArrow, next < stops.length ? next : -1, 'Next station');
+    if (!atEnd) setArrow(nextArrow, next, 'Next station');
 }
 
 function setArrow(button, index, directionLabel) {
@@ -290,6 +301,7 @@ function address(index, push = false) {
 
 function arrive(index) {
     dismissedStation = null;
+    if (index >= 0 && index !== active) playCue('select');
     updateCard(index);
     const top = entryY(index);
     setY(top);
@@ -298,6 +310,7 @@ function arrive(index) {
 
 function travelTo(index) {
     if (booting || !pages) return;
+    scrollGesture = null;
     dismissedStation = null;
     swipe = null;
     if (map.open) map.close();
@@ -374,11 +387,14 @@ function openMap() {
         else link.removeAttribute('aria-current');
     });
     map.showModal();
+    playCue('tap');
     (map.querySelector('[aria-current]') || $('#stations a')).focus({ preventScroll: true });
 }
 
 function backToFloor() {
     if (active < 0) return;
+    scrollGesture = null;
+    playCue('back');
     dismissedStation = active;
     swipe = null;
     setY(segments[active].start - scale * 0.52);
@@ -476,6 +492,7 @@ document.addEventListener('keydown', (e) => {
     if (
         booting ||
         e.defaultPrevented ||
+        document.querySelector('#arcade-settings:popover-open') ||
         e.ctrlKey ||
         e.metaKey ||
         e.altKey ||
@@ -501,6 +518,8 @@ document.addEventListener('keydown', (e) => {
         !map.open &&
         ['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', 'Home', 'End', ' '].includes(e.key)
     ) {
+        lastScrollKey = performance.now();
+        scrollGesture = null;
         swipe = null;
         cancelTravel();
     }
@@ -525,6 +544,7 @@ const aliases = {
 };
 function restore() {
     if (booting || !segments.length) return;
+    scrollGesture = null;
     swipe = null;
     journey = null;
     const id = location.hash.slice(1);
@@ -539,27 +559,69 @@ function restore() {
 }
 window.addEventListener('popstate', restore);
 window.addEventListener('hashchange', restore);
-window.addEventListener('scroll', schedule, { passive: true });
+// Lock an input gesture to the stops surrounding the character, even while the camera catches up.
+function limitDesktopScroll(y, origin, now) {
+    if (!scrollGesture || (!nativeScrollHeld && now - scrollGesture.time > scrollGestureGap)) {
+        const card = segments[active];
+        scrollGesture = {
+            previous: card && origin > card.start + 0.5 ? active : adjacentStation(-1),
+            next: card && origin < card.start + card.overflow - 0.5 ? active : adjacentStation(1),
+            reading: active,
+            remainder: 0
+        };
+    }
+    scrollGesture.time = now;
+    const next = segments[scrollGesture.next];
+    const upper = next
+        ? next.start + (scrollGesture.next === scrollGesture.reading ? next.overflow : 0)
+        : segments.at(-1).end;
+    return clamp(y, entryY(scrollGesture.previous), upper);
+}
+
+window.addEventListener('scroll', () => {
+    const y = window.scrollY;
+    if (!touch.matches && !booting && segments.length && y !== lastDesktopY) {
+        // Browser scrollbar drags and middle-button autoscroll do not emit wheel events.
+        const now = performance.now();
+        if (now - lastScrollKey > scrollGestureGap) {
+            const origin = lastDesktopY;
+            cancelTravel();
+            setY(limitDesktopScroll(y, origin, now));
+        } else lastDesktopY = y;
+    }
+    schedule();
+}, { passive: true });
 paperBody.addEventListener('scroll', () => {
     if (touch.matches && active >= 0) schedule();
 }, { passive: true });
 let lastWheel = -Infinity, leavingDeskByWheel = false;
 window.addEventListener('wheel', (event) => {
-    if (booting || touch.matches || event.ctrlKey || document.querySelector('dialog[open]')) return;
-    const now = performance.now();
-    const first = now - lastWheel > 220;
+    if (booting || !segments.length || touch.matches || event.ctrlKey || document.querySelector('dialog[open], #arcade-settings:popover-open')) return;
+    const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? viewHeight : 1;
+    const vertical = Math.abs(event.deltaY) >= Math.abs(event.deltaX);
+    const delta = unit * (vertical ? event.deltaY : event.deltaX);
+    if (!delta) return;
+    event.preventDefault();
+    lastScrollKey = -Infinity;
+    // Input timestamps preserve gesture spacing when a slow 3D frame delays delivery.
+    const now = event.timeStamp;
+    const first = now - lastWheel > scrollGestureGap;
     lastWheel = now;
     if (first) leavingDeskByWheel = !journey && active < 0 && distance < 0.01 && routeY() === 0 &&
-        event.deltaY < 0 && -event.deltaY > Math.abs(event.deltaX);
+        vertical && delta < 0;
     // Accept wheel-up at the desk and consume the rest of that gesture's momentum.
-    if (leavingDeskByWheel && event.deltaY < 0) {
-        event.preventDefault();
+    if (leavingDeskByWheel) {
         if (first) travelTo(0);
         return;
     }
-    leavingDeskByWheel = false;
     swipe = null;
     cancelTravel();
+    const y = routeY();
+    const remainder = first ? 0 : scrollGesture?.remainder || 0;
+    const bounded = limitDesktopScroll(y + delta + remainder, y, now);
+    setY(bounded);
+    scrollGesture.remainder = bounded - Math.round(bounded);
+    schedule();
 }, { passive: false });
 
 scroller.addEventListener('pointerdown', (event) => {
@@ -655,8 +717,16 @@ scroller.addEventListener('click', (event) => {
     event.stopImmediatePropagation();
 }, true);
 window.addEventListener('pointerdown', (event) => {
-    if (event.clientX >= document.documentElement.clientWidth) cancelTravel();
+    lastScrollKey = -Infinity;
+    scrollGesture = null;
+    lastWheel = -Infinity;
+    nativeScrollHeld = event.button === 1 || event.clientX >= document.documentElement.clientWidth;
+    if (nativeScrollHeld) cancelTravel();
 });
+function endNativeDrag() { nativeScrollHeld = false; }
+window.addEventListener('pointerup', endNativeDrag);
+window.addEventListener('pointercancel', endNativeDrag);
+window.addEventListener('blur', endNativeDrag);
 new ResizeObserver(queueMeasure).observe(world);
 touch.addEventListener('change', () => {
     swipe = null;
@@ -720,11 +790,7 @@ async function startWorld() {
     const { bands, updateMarquee, stationSigns } = makeArcade(scene, queueMeasure),
         camera = new T.PerspectiveCamera(41, 1, 0.23, 58);
     bindStationSigns(renderer.domElement, camera, scene, stationSigns);
-    const key = new T.DirectionalLight(0xffedcf, 0.68);
-    key.position.set(-3, 6, 4);
-    const rim = new T.DirectionalLight(0x73e7f9, 0.42);
-    rim.position.set(4, 3, -2);
-    scene.add(key, rim, new T.HemisphereLight(0xc9e8f6, 0x978aaa, 0.43));
+    addArcadeLights(T, scene);
     const ink = inkRenderer(T, renderer),
         loader = new T.GLTFLoader();
     async function motion(url) {
@@ -755,14 +821,7 @@ async function startWorld() {
     avatar.scene.traverse((obj) => {
         if (obj.isBone) bones[obj.name.replace(/^mixamorig:?/, '')] = obj;
         if (obj.isSkinnedMesh) {
-            obj.frustumCulled = false;
-            obj.layers.set(1);
-            obj.material = new T.MeshToonMaterial({
-                map: obj.material.map,
-                color: obj.material.color,
-                gradientMap: bands,
-                skinning: true
-            });
+            shadeArcadeAvatar(T, obj, bands);
             characterMaterials.push(obj.material);
         }
     });
@@ -867,8 +926,15 @@ async function startWorld() {
             if (!reduced.matches) idleTime = (idleTime + dt) % rest.duration;
             const idleLift = rest.sample(idleTime);
             // The shortcut crosses the actual aisle quickly. Bound the playback cadence so the legs stay readable.
+            const previousCycle = cycle;
             cycle +=
                 dt * (sprint ? clamp(speed / runningData.stride, 1.5, 2.65) : speed / walkingData.stride);
+            // Each clip plants its first foot at a different phase, then the other foot half a cycle later.
+            const plant = mix(0.34, 0.17, runWeight);
+            const crossedPlant = Math.floor((cycle - plant) * 2) > Math.floor((previousCycle - plant) * 2);
+            if (active < 0 && speed > 0.09 && crossedPlant) {
+                playFootstep(now);
+            }
             const phase = cycle % 1;
             const walkLift = gait > 0.001 ? walk.sample(phase * walk.duration, gait) : idleLift;
             const runLift =
@@ -886,8 +952,10 @@ async function startWorld() {
         );
         shadow.position.set(p.x, 0.011, actor.position.z);
         const reveal = smooth(distance, standTravel * 0.35, standTravel + 2);
-        deskCam.set(small ? 0.37 : 2.48, small ? 1.72 : 1.96, small ? 5.55 : 4.58);
-        deskLook.set(small ? -0.085 : 0.17, small ? 0.98 : 1.39, -0.24);
+        deskCam.set(0.37, 1.72, 5.55);
+        deskLook.set(-0.085, 0.98, -0.24);
+        // Pull back along the same sightline to fit the marquee in the narrower desktop field of view.
+        if (!small) deskCam.lerp(deskLook, -0.09);
         cam.set(p.x + (small ? -4.5 : -1.95), small ? 2.15 : 2.42, p.z + (small ? 3.6 : 5.4));
         look.set(p.x + (small ? 0.54 : 1.1), 1.47, p.z - 0.72);
         cam.lerp(deskCam, 1 - reveal);
@@ -941,7 +1009,10 @@ async function startWorld() {
                     : speed > 0.09
                       ? 'walking'
                       : 'idle';
-        if (document.body.dataset.motion !== motion) document.body.dataset.motion = motion;
+        if (document.body.dataset.motion !== motion) {
+            document.body.dataset.motion = motion;
+            setTyping(motion === 'typing');
+        }
         return (
             (!reduced.matches && (visibleTyping || stand >= 1)) ||
             Math.abs(approach - (goal >= 0 ? 1 : 0)) > 0.003 ||

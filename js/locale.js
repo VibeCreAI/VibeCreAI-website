@@ -1,7 +1,7 @@
 (() => {
     const key = 'vibecreai.language';
     const korean = {
-        'Language': '언어 선택', 'Video Arcade': '전자오락실', '100 WON': '100원', 'COIN EXCHANGE': '동전 교환',
+        'Language': '언어 선택', 'Video Arcade': '전자오락실', '25 CENTS': '100원', 'COIN EXCHANGE': '동전 교환',
         '3D Arcade': '3D 오락실', 'VibeCreAI Arcade': 'VibeCreAI 오락실',
         'VibeCreAI - Vibe coding + Creative + AI': 'VibeCreAI · 바이브 코딩과 AI로 만드는 게임과 앱',
         'Loading the arcade': '오락실을 여는 중', 'Starting the display': '화면을 켜는 중',
@@ -10,7 +10,8 @@
         'Open 2D homepage ↗': '2D 홈페이지 열기 ↗', 'Open the homepage': '홈페이지 열기',
         'Explore the VibeCreAI homepage': 'VibeCreAI 홈페이지 둘러보기',
         'Return to Samson’s desk': '샘슨의 작업대로 돌아가기', 'Samson’s desk': '샘슨의 작업대',
-        'Station select': '스테이션 선택',
+        'Station select': '스테이션 선택', 'Arcade sound': '오락실 소리',
+        'Arcade settings': '오락실 설정', 'Sound': '소리', 'Off': '꺼짐', 'On': '켜짐',
         'Station navigation': '스테이션 이동', 'Previous station': '이전 스테이션', 'Next station': '다음 스테이션',
         'Choose a station': '스테이션 선택', 'Choose a station (M)': '스테이션 선택 (M)',
         'Close station select': '스테이션 선택 닫기', 'Travel to a station': '스테이션으로 이동',
