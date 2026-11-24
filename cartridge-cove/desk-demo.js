@@ -47,7 +47,7 @@ export function createMarqueeShutter(T, screen) {
 }
 
 // The build meter and the game share the same seven bricks on this 448 × 133 display.
-export function drawDeskDemo(ctx, time, stamp, t, scale) {
+export function drawDeskDemo(ctx, time, botSheet, t, scale) {
     const launch = clamp01((time - buildSeconds) / launchSeconds);
     const volleys = Math.max(0, (time - buildSeconds - launchSeconds) / volleySeconds);
     const cleared = Math.min(hitOrder.length, Math.floor(volleys + 0.5));
@@ -63,7 +63,12 @@ export function drawDeskDemo(ctx, time, stamp, t, scale) {
     }
     ctx.fillStyle = '#28515b';
     ctx.fillRect(40, 30, 368, 1);
-    stamp(ctx, 42, 9, 2, '#50f5e3');
+    if (botSheet) {
+        // Frame 50 is the fully formed Vibe Bot on the desk marquee.
+        const size = botSheet.width;
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(botSheet, 0, 50 * size, size, size, 36, -5, 32, 32);
+    }
     ctx.font = '18px DungGeunMo, monospace';
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'left';

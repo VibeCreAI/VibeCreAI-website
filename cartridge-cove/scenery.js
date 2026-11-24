@@ -382,7 +382,7 @@ export function makeArcade(scene, onFontReady) {
             const demoFrame = Math.floor(Math.min(time - titleSeconds, demoSeconds) * 16);
             if (demoFrame !== previousDemoFrame) {
                 // In portrait the desk camera crops the physical edges of the marquee.
-                drawDeskDemo(demoCtx, demoFrame / 16, stamp, t, Math.min(1, aspect * 1.92));
+                drawDeskDemo(demoCtx, demoFrame / 16, botSheet.image, t, Math.min(1, aspect * 1.92));
                 demo.needsUpdate = true;
                 previousDemoFrame = demoFrame;
             }
