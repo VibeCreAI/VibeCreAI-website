@@ -69,9 +69,14 @@
 /* Text visibility */
 .pixel-hover-enabled:hover * {
     color: #ffffff;
+    text-shadow: none;
+}
+
+/* Raise creator content as a group so its animation stage stays out of flow. */
+.about-card:hover > .card-3d,
+.pixel-hover-enabled:not(.about-card):hover * {
     position: relative;
     z-index: 1;
-    text-shadow: none;
 }
 
 /* Mobile optimization */

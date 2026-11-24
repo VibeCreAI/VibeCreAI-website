@@ -209,7 +209,9 @@ class ThemeSwitcher {
     createNotificationElement(themeName) {
         const notification = document.createElement('div');
         notification.className = 'theme-notification';
-        notification.textContent = `${themeName} Theme Active`;
+        notification.textContent = window.VibeLocale.language === 'ko'
+            ? window.VibeLocale.t(themeName) + ' 테마 적용'
+            : themeName + ' Theme Active';
 
         // Apply optimized styles using CSS custom properties
         Object.assign(notification.style, {

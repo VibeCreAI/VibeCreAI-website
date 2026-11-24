@@ -1,0 +1,114 @@
+.arcade-ranking {
+    container-type: inline-size;
+    --cover-accent: var(--feature-accent, var(--cyan));
+}
+
+.arcade-ranking h4 {
+    margin: 0 0 12px;
+    font: inherit;
+    font-weight: bold;
+    color: var(--cover-accent);
+}
+
+.arcade-covers {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+@container (min-width: 480px) {
+    .arcade-covers {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+}
+
+.arcade-covers .game-cover {
+    display: block;
+    background: none;
+    border: 0;
+    color: inherit;
+    padding: 0;
+    text-decoration: none;
+}
+
+.game-cover img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 2 / 3;
+    border: 1px solid var(--feature-border, var(--line));
+}
+
+.game-cover strong, .game-cover small {
+    display: block;
+    margin-top: 4px;
+    line-height: 1.2;
+}
+
+.game-cover small {
+    font: 12px/1.35 var(--arcade-font);
+    color: #bfced0;
+}
+
+.game-cover small::before {
+    content: '#' counter(list-item) '  ·  ';
+    color: var(--cover-accent);
+    font-weight: bold;
+}
+
+.game-cover strong::after {
+    content: ' ↗' / '';
+    font-weight: 400;
+    color: var(--cover-accent);
+}
+
+.game-cover:is(:hover, :focus-visible) img {
+    outline: 2px solid var(--cover-accent);
+    outline-offset: -2px;
+}
+
+.game-cover:is(:hover, :focus-visible) strong {
+    text-decoration: underline;
+}
+
+.arcade-plays {
+    container-type: inline-size;
+}
+.arcade-plays strong, .paper .arcade-plays strong {
+    font-size: clamp(1.25rem, 14cqi, 5.5rem);
+    line-height: 1;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+.score-reels {
+    display: inline-flex;
+    vertical-align: bottom;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+.score-lane {
+    display: inline-block;
+    height: 1em;
+    overflow: hidden;
+    text-align: center;
+}
+.score-lane > span {
+    display: block;
+    white-space: pre;
+    line-height: 1;
+}
+.score-accessible {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+}
+.arcade-ranking .score-status {
+    margin: 0 0 10px;
+    font: 12px/1.4 var(--arcade-font);
+    color: #bfced0;
+}

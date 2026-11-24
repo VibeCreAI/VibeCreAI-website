@@ -10,24 +10,21 @@ class Terminal {
         this.keyBuffer = '';
         this.elements = {};
         this.isAnimating = false;
-        this.ignoreNextClick = false;
-        this.touchCooldownId = null;
         this.taglineGuardHandler = null;
-        this.touchData = {
-            startX: 0,
-            startY: 0,
-            moved: false,
-            active: false
-        };
-
-        this.handleTaglineTouch = this.handleTaglineTouch.bind(this);
-        this.handleTaglineTouchMove = this.handleTaglineTouchMove.bind(this);
-        this.handleTaglineTouchEnd = this.handleTaglineTouchEnd.bind(this);
 
         // Terminal content sections
         this.storyContent = [
             {
                 title: "ABOUT THIS PROJECT",
+                contentKo: `/*
+ * VibeCreAI 웹사이트
+ * 사용 기술: HTML5, CSS3, JavaScript, Anime.js
+ * 만든 사람: 샘슨 (AI와 함께)
+ *
+ * 상상한 것을 AI와 함께 어디까지 만들 수 있을까요?
+ * 이 사이트의 코드를 한 줄씩 써 내려가며
+ * 그 질문에 직접 답해 보고 있습니다.
+ */`,
                 prompt: "cat about_project.md",
                 content: `/*
  * VibeCreAI Website
@@ -42,6 +39,15 @@ class Terminal {
             },
             {
                 title: "TECH STACK",
+                contentKo: `const 사용기술 = {
+    화면: ["HTML5", "CSS3", "JavaScript"],
+    애니메이션: ["Anime.js", "CSS 키프레임", "스프라이트 시트"],
+    효과: ["픽셀 미로 벌레 잡기", "개발자 캐릭터", "대화형 터미널"],
+    렌더링: ["WebGL 미로", "2D 캔버스"],
+    아이콘: "Grommet Icons (SVG)",
+    AI도구: ["Claude Code", "Codex CLI", "Cursor IDE"],
+    배포: "Vercel + 개인 도메인"
+};`,
                 prompt: "cat tech_stack.js",
                 content: `const techStack = {
     "frontend": ["HTML5", "CSS3", "Vanilla JS"],
@@ -59,6 +65,16 @@ class Terminal {
             },
             {
                 title: "THE VIBE CODE",
+                contentKo: `function 바이브코딩() {
+    const 열정 = "무한";
+    const 코딩실력 = "배우는 중";
+    const AI와함께 = true;
+    if (열정 === "무한" && AI와함께) {
+        return "멋진 걸 만들 수 있어요!";
+    }
+}
+// 코딩 고수가 아니어도 괜찮아요.
+// 아이디어와 끈기, 함께할 AI가 있으면 시작할 수 있어요!`,
                 prompt: "cat vibe_philosophy.js",
                 content: `function createWithVibes() {
     const passion = "unlimited";
@@ -76,6 +92,14 @@ class Terminal {
             },
             {
                 title: "GET THE SOURCE",
+                contentKo: `// 이 웹사이트는 오픈 소스예요!
+// 코드를 둘러보고 나만의 버전도 만들어 보세요.
+
+깃허브 저장소:
+https://github.com/VibeCreAI/vibecreai-website
+
+// 협업 제안이나 질문은 이쪽으로 보내 주세요.
+이메일: contact@vibecreai.com`,
                 prompt: "cat repository_info.md",
                 content: `// This website is open source!
 // Feel free to explore, learn, and create your own version.
@@ -89,6 +113,9 @@ Email: contact@vibecreai.com`
         ];
 
         this.init();
+        document.addEventListener('vibe-language-change', () => {
+            if (this.isOpen && this.visibleStory) this.renderContent(this.visibleStory);
+        });
     }
 
     init() {
@@ -163,17 +190,8 @@ Email: contact@vibecreai.com`
         programmerCharacter.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation(); // Prevent bug placement
-            if (this.ignoreNextClick) {
-                return;
-            }
             this.toggleTerminal();
         });
-
-        // Mobile touch handler to avoid double-trigger flashes
-        programmerCharacter.addEventListener('touchstart', this.handleTaglineTouch, { passive: false });
-        programmerCharacter.addEventListener('touchmove', this.handleTaglineTouchMove, { passive: true });
-        programmerCharacter.addEventListener('touchend', this.handleTaglineTouchEnd, { passive: false });
-        programmerCharacter.addEventListener('touchcancel', this.handleTaglineTouchEnd, { passive: false });
 
         // Close button handler
         if (closeTerminal) {
@@ -246,91 +264,6 @@ Email: contact@vibecreai.com`
         }
     }
 
-    handleTaglineTouch(e) {
-        if (this.isAnimating) return;
-
-        if (e.touches && e.touches.length > 1) return;
-
-        const { sourceTerminal } = this.elements;
-        const target = e.target;
-        const interactiveTarget = target instanceof Element ? target : target?.parentElement;
-
-        if (sourceTerminal && interactiveTarget instanceof Element && interactiveTarget.closest('.source-code-terminal') === sourceTerminal) {
-            this.touchData.startX = 0;
-            this.touchData.startY = 0;
-            this.touchData.moved = false;
-            this.touchData.active = false;
-            return;
-        }
-
-        const touch = e.touches ? e.touches[0] : e;
-
-        this.touchData.startX = touch.clientX;
-        this.touchData.startY = touch.clientY;
-        this.touchData.moved = false;
-        this.touchData.active = true;
-
-        e.stopPropagation();
-
-        this.ignoreNextClick = true;
-
-        const memory = window.VibePerf?.memory;
-        if (this.touchCooldownId) {
-            if (memory) {
-                memory.clear(this.touchCooldownId, 'timeout');
-            } else {
-                clearTimeout(this.touchCooldownId);
-            }
-        }
-
-        const releaseClickBlock = () => {
-            this.ignoreNextClick = false;
-            this.touchCooldownId = null;
-        };
-
-        this.touchCooldownId = memory
-            ? memory.setTimeout(releaseClickBlock, 350)
-            : setTimeout(releaseClickBlock, 350);
-    }
-
-    handleTaglineTouchMove(e) {
-        if (!this.touchData.active) return;
-
-        if (e.touches && e.touches.length > 1) {
-            this.touchData.moved = true;
-            return;
-        }
-
-        const touch = e.touches ? e.touches[0] : e;
-        const deltaX = Math.abs(touch.clientX - this.touchData.startX);
-        const deltaY = Math.abs(touch.clientY - this.touchData.startY);
-
-        if (deltaX > 6 || deltaY > 6) {
-            this.touchData.moved = true;
-        }
-    }
-
-    handleTaglineTouchEnd(e) {
-        if (!this.touchData.active) return;
-
-        if (e.type === 'touchcancel') {
-            this.touchData.active = false;
-            return;
-        }
-
-        const wasTap = !this.touchData.moved;
-        this.touchData.active = false;
-
-        if (!wasTap) {
-            return;
-        }
-
-        e.preventDefault();
-        e.stopPropagation();
-
-        this.toggleTerminal();
-    }
-
     openTerminal() {
         if (this.isOpen || this.isAnimating) return;
 
@@ -339,9 +272,12 @@ Email: contact@vibecreai.com`
 
         const { sourceTerminal, tagline } = this.elements;
 
+        this.elements.programmerCharacter.dispatchEvent(new Event('workstation-enter'));
+
         // Add active classes
         sourceTerminal.classList.add('active');
         document.body.classList.add('terminal-active');
+        this.elements.programmerCharacter.setAttribute('aria-expanded', 'true');
 
         // Load initial content
         this.loadContent();
@@ -369,6 +305,7 @@ Email: contact@vibecreai.com`
         // Remove active classes
         sourceTerminal.classList.remove('active');
         document.body.classList.remove('terminal-active');
+        this.elements.programmerCharacter.setAttribute('aria-expanded', 'false');
 
         window.VibePerf.memory.setTimeout(() => {
             this.isAnimating = false;
@@ -388,6 +325,7 @@ Email: contact@vibecreai.com`
     }
 
     renderContent(contentData) {
+        this.visibleStory = contentData;
         const { terminalContent } = this.elements;
         if (!terminalContent) return;
 
@@ -410,7 +348,7 @@ Email: contact@vibecreai.com`
 
         // Add section indicator
         const sectionIndicator = this.createElement('div', 'terminal-line',
-            `<span style="color: #ffffff; font-size: 1.1em; font-weight: bold;"># ${contentData.title} (${contentData.displayIndex}/${this.storyContent.length})</span>`);
+            `<span style="color: #ffffff; font-size: 1.1em; font-weight: bold;"># ${window.VibeLocale.t(contentData.title)} (${contentData.displayIndex}/${this.storyContent.length})</span>`);
         sectionIndicator.style.animationDelay = '0.1s';
         fragment.appendChild(sectionIndicator);
 
@@ -420,7 +358,7 @@ Email: contact@vibecreai.com`
         fragment.appendChild(spacerLine);
 
         // Split content into lines and add them
-        const lines = contentData.content.split('\n');
+        const lines = (window.VibeLocale.language === 'ko' ? contentData.contentKo : contentData.content).split('\n');
         const maxLines = Math.min(lines.length, 12);
 
         lines.slice(0, maxLines).forEach((line, index) => {
@@ -553,37 +491,12 @@ Email: contact@vibecreai.com`
             }
         });
 
-        if (this.elements.programmerCharacter) {
-            this.elements.programmerCharacter.removeEventListener('touchstart', this.handleTaglineTouch);
-            this.elements.programmerCharacter.removeEventListener('touchmove', this.handleTaglineTouchMove);
-            this.elements.programmerCharacter.removeEventListener('touchend', this.handleTaglineTouchEnd);
-            this.elements.programmerCharacter.removeEventListener('touchcancel', this.handleTaglineTouchEnd);
-        }
-
         if (this.elements.taglineContainer && this.taglineGuardHandler) {
             ['click', 'touchstart', 'touchend', 'touchmove', 'touchcancel'].forEach((eventName) => {
                 this.elements.taglineContainer.removeEventListener(eventName, this.taglineGuardHandler, true);
             });
             this.taglineGuardHandler = null;
         }
-
-        if (this.touchCooldownId) {
-            if (window.VibePerf?.memory) {
-                window.VibePerf.memory.clear(this.touchCooldownId, 'timeout');
-            } else {
-                clearTimeout(this.touchCooldownId);
-            }
-        }
-
-        this.touchCooldownId = null;
-        this.ignoreNextClick = false;
-        this.taglineGuardHandler = null;
-        this.touchData = {
-            startX: 0,
-            startY: 0,
-            moved: false,
-            active: false
-        };
 
         // Reset state
         this.isOpen = false;

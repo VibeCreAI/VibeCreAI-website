@@ -4,6 +4,8 @@
 
 ![VibeCreAI](images/og_image.png)
 
+The homepage opens at Samson’s desk in the 3D arcade. The original portfolio is available at `/classic.html` and supplies the station content. The former `/cartridge-cove/` preview address forwards to the homepage.
+
 A stunning personal portfolio website showcasing the power of **AI-human collaboration** in web development. This open source project demonstrates what's possible when creativity meets cutting-edge AI tools, built through the partnership between human imagination and artificial intelligence.
 
 ## 🔄 Recent Updates & Status (2025)
@@ -49,7 +51,6 @@ A stunning personal portfolio website showcasing the power of **AI-human collabo
   4. **Get The Source** - Repository and contact information
 
 ### 🎮 **Hidden Interactive Games**
-- **Vibe Runner Game**: Complete side-scrolling endless runner with obstacles, power-ups, and progressive difficulty
 - **Vibe Survivor Game** *(launches externally)*: Advanced survival/defense experience now hosted at [vibe-survivor.vercel.app](https://vibe-survivor.vercel.app/) with:
   - **Multiple Weapon Systems**: Basic projectiles, spread shots, laser beams, plasma weapons, shotgun blasts, lightning bolts, flame streams, homing missiles, railgun beams, and boss missiles
   - **Enemy Variety**: Standard enemies, fast runners, tanks, shooters, and epic boss battles with minions
@@ -124,7 +125,6 @@ const techStack = {
     ],
     rendering: ["WebGL Maze Renderer", "2D Canvas"],
     games: [
-        "Vibe Runner (Side-scrolling)",
         "Vibe Survivor (Standalone at vibe-survivor.vercel.app)"
     ],
     architecture: "Single-page application with modular game components",
@@ -157,7 +157,6 @@ vibecreai-website/
 ├── app-ads.txt             # App ads configuration
 ├── .gitignore              # Git ignore rules
 ├── js/                     # JavaScript modules (modular architecture)
-│   ├── game-manager.js     # Game coordination and state management
 │   ├── main.js             # Core application logic and animations
 │   ├── menu-handler.js     # Navigation and menu interactions
 │   ├── performance-utils.js # Performance monitoring utilities
@@ -168,7 +167,6 @@ vibecreai-website/
 │   ├── ai-bot-animation.js # Programmer companion sprite animation
 │   ├── terminal.js         # Terminal interface functionality
 │   ├── theme-switcher.js   # Theme system management
-│   ├── vibe-runner-game.js # Side-scrolling endless runner game
 │   └── components/         # Reusable component modules
 ├── styles/                 # Modular CSS architecture
 │   ├── base.css           # Base styles and layout
@@ -182,7 +180,6 @@ vibecreai-website/
 │   ├── og_image.png        # Open Graph social sharing image
 │   ├── spin2pick_icon.png  # Spin2Pick app icon
 │   ├── AI_collaboration.png # AI collaboration showcase image
-│   ├── Vibe_Runner.png     # Vibe Runner game preview
 │   └── Vibe_Survivor.png   # Vibe Survivor game preview
 ├── sound/                  # Audio assets folder (for future game audio)
 └── fonts/                  # Custom font files
@@ -275,6 +272,8 @@ This website is deployed using [Vercel](https://vercel.com/) with automatic depl
 ## 🔧 Development
 
 ### Local Development
+For the 3D arcade and live Astrocade scoreboard, use Node.js 24 and a local Chrome installation. Run `npm ci` and `npm run dev`, then open `http://127.0.0.1:5173/cartridge-cove/`. The server reads the public profile and caches its scores for one minute. A plain static server displays the saved scores. Set `CHROME_EXECUTABLE_PATH` to use another Chromium executable.
+
 1. Clone this repository
 2. Open `index.html` in your preferred browser
 3. For live reload, use a local server:
@@ -345,7 +344,7 @@ When adding new weapons, enemies, or visual effects:
 - **Assets**: Images in `/images/`, fonts in `/fonts/`, sounds in `/sound/`
 - **Code Style**: Follow existing patterns - ES6+ classes, camelCase variables, extensive event listeners
 - **Performance**: Always test canvas animations at 60fps and ensure mobile responsiveness
-- **Games**: Test both Vibe Runner and Vibe Survivor on mobile and desktop
+- **Games**: Test Vibe Survivor on mobile and desktop
 
 ## 🎯 SEO & Social Media
 

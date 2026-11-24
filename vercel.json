@@ -1,5 +1,21 @@
 {
+  "functions": {
+    "api/astrocade-stats.js": {
+      "maxDuration": 60,
+      "includeFiles": "node_modules/@sparticuz/chromium/bin/**"
+    }
+  },
   "redirects": [
+    {
+      "source": "/cartridge-cove",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/cartridge-cove/index.html",
+      "destination": "/",
+      "permanent": true
+    },
     {
       "source": "/spin2pick",
       "destination": "https://spin2pick-app.vercel.app/",

@@ -3,29 +3,6 @@
  * Core styles, variables, and foundational elements
  */
 
-/* Font Face Declarations */
-@font-face {
-    font-family: 'Born2bSportyFont';
-    src: url('../fonts/Born2bSportyFS.otf') format('opentype');
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'MinecraftFont';
-    src: url('../fonts/MinecraftRegular.otf') format('opentype');
-    font-weight: normal;
-    font-style: normal;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'MinecraftFont';
-    src: url('../fonts/MinecraftItalic.otf') format('opentype');
-    font-weight: normal;
-    font-style: italic;
-    font-display: swap;
-}
-
 /* CSS Custom Properties (Variables) */
 :root {
     --primary-color: #00ffff;
@@ -53,7 +30,7 @@ html {
 }
 
 body {
-    font-family: 'MinecraftFont', 'Courier New', 'Lucida Console', monospace;
+    font-family: var(--arcade-font);
     background: var(--dark-bg);
     color: var(--text-color);
     min-width: 380px; /* Minimum website width */
@@ -89,7 +66,7 @@ body {
 }
 
 .section-title {
-    font-family: 'Born2bSportyFont', 'MinecraftFont', 'Courier New', monospace;
+    font-family: var(--arcade-font);
     font-size: 3rem;
     text-align: center;
     margin-bottom: 60px;
@@ -149,7 +126,7 @@ body {
 }
 
 .loading-text {
-    font-family: 'Born2bSportyFont', 'MinecraftFont', 'Courier New', monospace;
+    font-family: var(--arcade-font);
     font-size: 3rem;
     color: #ffffff;
     text-shadow: none;
@@ -209,14 +186,14 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    font-family: 'MinecraftFont', 'Courier New', 'Lucida Console', monospace;
+    font-family: var(--arcade-font);
     font-size: 0.8rem;
     letter-spacing: 0.08em;
     color: rgba(255, 255, 255, 0.85);
 }
 
 .loading-percent {
-    font-family: 'Born2bSportyFont', 'MinecraftFont', 'Courier New', monospace;
+    font-family: var(--arcade-font);
     font-size: 1.3rem;
     color: var(--primary-color);
 }
@@ -257,7 +234,7 @@ body {
 
 /* Base Button Styles */
 .cta-button {
-    font-family: 'Born2bSportyFont', 'MinecraftFont', 'Courier New', monospace;
+    font-family: var(--arcade-font);
     font-size: 1.1rem;
     padding: 10px 20px;
     width: 120px;
@@ -324,7 +301,7 @@ body {
 
 /* Typography and Text Styles */
 .tagline {
-    font-family: 'Born2bSportyFont', 'MinecraftFont', 'Courier New', monospace;
+    font-family: var(--arcade-font);
     font-size: 1.2rem;
     color: var(--primary-color);
     min-height: 2.5rem;
@@ -366,12 +343,6 @@ body {
     opacity: 0.6;
 }
 
-/* Tagline Container */
-/* Removed cursor: pointer from tagline-container - now only on programmer character */
-#programmer-character {
-    cursor: default;
-}
-
 /* Particle System Base */
 .particle {
     position: fixed;
@@ -402,242 +373,54 @@ body {
     opacity: 0.1;
 }
 
-/* Dinosaur Animation Styles */
+/* The animated GIF paints immediately while the live model loads. */
 .programmer-container {
     position: relative;
-    height: 156px;
-    margin: 2px auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: default;
-    width: 264px;
-    overflow: visible;
-}
-
-/* Screen flicker background */
-.programmer-container::before {
-    content: '';
-    position: absolute;
-    top: -20px;
-    left: -20px;
-    right: -20px;
-    bottom: -20px;
-    background: linear-gradient(45deg, rgba(0, 255, 255, 0.1), rgba(0, 255, 255, 0.05));
-    border-radius: 10px;
-    animation: screenFlicker 3s ease-in-out infinite;
-    z-index: -1;
-}
-
-/* Glow effect behind character */
-.programmer-container::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 268px;
-    height: 268px;
-    background: radial-gradient(circle, rgba(0, 255, 255, 0.3) 0%, transparent 70%);
-    border-radius: 50%;
-    animation: typingGlow 4s ease-in-out infinite;
-    z-index: -1;
-}
-
-/* Adjust programmer character position for desktop */
-@media (min-width: 769px) {
-    .programmer-container {
-        margin-bottom: 10px;
-    }
+    display: grid;
+    place-items: center;
+    width: 274px;
+    max-width: 100%;
+    margin: 2px auto 0;
+    background: radial-gradient(ellipse at 50% 58%, var(--dark-bg) 18%, transparent 75%);
 }
 
 .programmer-character {
-    width: 220px;
-    height: 220px;
-    margin-bottom: 25px;
+    appearance: none;
+    border: 0;
+    padding: 0;
+    width: min(100%, 248px);
+    aspect-ratio: 0.98;
+    background: transparent url('../images/Samson_programmer.gif') center / 220px auto no-repeat;
+    cursor: pointer;
+    user-select: none;
     image-rendering: pixelated;
-    image-rendering: -moz-crisp-edges;
-    image-rendering: crisp-edges;
-    transition: filter 0.3s ease;
-    position: relative;
-    z-index: 2;
 }
 
-/* Programmer character breathing animation */
-@keyframes breathingAnimation {
-    0% { opacity: 1; }
-    25% { opacity: 0.9; }
-    50% { opacity: 0.8; }
-    75% { opacity: 0.9; }
-    100% { opacity: 1; }
+.programmer-character.live {
+    background: transparent;
+    image-rendering: auto;
+    touch-action: pinch-zoom;
+    cursor: grab;
 }
 
-/* Screen flicker animation */
-@keyframes screenFlicker {
-    0%, 100% { 
-        opacity: 0.1;
-        transform: scale(1);
-    }
-    20% { 
-        opacity: 0.2;
-        transform: scale(1.02);
-    }
-    40% { 
-        opacity: 0.15;
-        transform: scale(0.98);
-    }
-    60% { 
-        opacity: 0.25;
-        transform: scale(1.01);
-    }
-    80% { 
-        opacity: 0.1;
-        transform: scale(1);
-    }
-}
-
-/* Typing glow effect */
-@keyframes typingGlow {
-    0%, 100% { 
-        opacity: 0.2;
-        transform: translate(-50%, -50%) scale(1);
-    }
-    25% { 
-        opacity: 0.4;
-        transform: translate(-50%, -50%) scale(1.1);
-    }
-    50% { 
-        opacity: 0.3;
-        transform: translate(-50%, -50%) scale(0.95);
-    }
-    75% { 
-        opacity: 0.5;
-        transform: translate(-50%, -50%) scale(1.05);
-    }
-}
-
-/* Typing gesture animation */
-@keyframes typingGesture {
-    0%, 100% { 
-        transform: translateX(0) scale(1) rotate(0deg);
-    }
-    15% { 
-        transform: translateX(-0.3px) scale(0.99) rotate(-0.2deg);
-    }
-    30% { 
-        transform: translateX(0.3px) scale(1.01) rotate(0.2deg);
-    }
-    45% { 
-        transform: translateX(-0.15px) scale(0.995) rotate(-0.1deg);
-    }
-    60% { 
-        transform: translateX(0.15px) scale(1.005) rotate(0.1deg);
-    }
-    75% { 
-        transform: translateX(-0.1px) scale(0.998) rotate(-0.05deg);
-    }
-    90% { 
-        transform: translateX(0.1px) scale(1.002) rotate(0.05deg);
-    }
-}
-
-/* Matrix rain code symbols */
-.programmer-container .code-symbol {
-    position: absolute;
-    font-family: 'Courier New', monospace;
-    font-size: 12px;
-    color: color-mix(in srgb, var(--primary-color) 80%, transparent);
+.programmer-character canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
     pointer-events: none;
-    z-index: 1;
-    text-shadow: 0 0 5px color-mix(in srgb, var(--primary-color) 60%, transparent);
-    opacity: 0;
-    animation-fill-mode: both;
 }
 
-.programmer-container .code-symbol:nth-child(1) {
-    bottom: -20px;
-    left: 30px;
-    animation: matrixRise 3s linear infinite;
-    animation-delay: 0s;
+.programmer-character.rotating {
+    cursor: grabbing;
 }
 
-.programmer-container .code-symbol:nth-child(2) {
-    bottom: -20px;
-    right: 40px;
-    animation: matrixRise 4s linear infinite;
-    animation-delay: 0.8s;
-}
-
-.programmer-container .code-symbol:nth-child(3) {
-    bottom: -20px;
-    left: 60px;
-    animation: matrixRise 3.5s linear infinite;
-    animation-delay: 1.5s;
-}
-
-.programmer-container .code-symbol:nth-child(4) {
-    bottom: -20px;
-    right: 70px;
-    animation: matrixRise 2.8s linear infinite;
-    animation-delay: 2.2s;
-}
-
-.programmer-container .code-symbol:nth-child(5) {
-    bottom: -32px;
-    left: 15px;
-    animation: matrixRise 3.6s linear infinite;
-    animation-delay: 2.8s;
-}
-
-.programmer-container .code-symbol:nth-child(6) {
-    bottom: -34px;
-    right: 25px;
-    animation: matrixRise 3.2s linear infinite;
-    animation-delay: 1.2s;
-}
-
-.programmer-container .code-symbol:nth-child(7) {
-    bottom: -38px;
-    left: 85px;
-    animation: matrixRise 3.9s linear infinite;
-    animation-delay: 3.4s;
-}
-
-.programmer-container .code-symbol:nth-child(8) {
-    bottom: -42px;
-    right: 60px;
-    animation: matrixRise 3.3s linear infinite;
-    animation-delay: 1.9s;
-}
-
-.programmer-container .code-symbol:nth-child(9) {
-    bottom: -48px;
-    left: 45px;
-    animation: matrixRise 3.7s linear infinite;
-    animation-delay: 0.6s;
-}
-
-.programmer-container .code-symbol:nth-child(10) {
-    bottom: -50px;
-    right: 100px;
-    animation: matrixRise 4.1s linear infinite;
-    animation-delay: 2.5s;
-}
-
-/* Matrix rain falling animation */
-@keyframes matrixRise {
-    0% { 
-        transform: translateY(0);
-        opacity: 0;
+@media (prefers-reduced-motion: no-preference) {
+    .programmer-container:has(.live) + .source-code-terminal.active {
+        transition-delay: 150ms;
     }
-    10% { 
-        opacity: 0.8;
-    }
-    90% { 
-        opacity: 0.4;
-    }
-    100% { 
-        transform: translateY(-140px);
-        opacity: 0;
-    }
+}
+
+.programmer-character:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 3px;
 }

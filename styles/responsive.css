@@ -9,7 +9,6 @@
     .source-code-terminal {
         width: 95vw;
         max-height: 0;
-        margin: 15px auto 0;
     }
     
     .source-code-terminal.active {
@@ -37,6 +36,17 @@
     body.terminal-active:not(.game-modal-open) .hero {
         height: calc(100vh + 150px);
     }
+
+    /* Keep terminal controls reachable where the window overlaps the social links. */
+    body.terminal-active .hero-content {
+        z-index: 12;
+        pointer-events: none;
+    }
+
+    body.terminal-active .programmer-character,
+    body.terminal-active .source-code-terminal {
+        pointer-events: auto;
+    }
     
     body.terminal-active .cta-container {
         z-index: 1002;
@@ -51,8 +61,9 @@
         touch-action: manipulation;
     }
 
-    .programmer-container {
-        margin-bottom: 5px;
+    .hero-floating-social {
+        --middle-row: 12%;
+        --row-gap: clamp(52px, 8vh, 78px);
     }
 
     .hero-social-link {
@@ -65,33 +76,27 @@
         height: 20px;
     }
 
-    .hero-social-email {
-        top: 42%;
+    .hero-social-astrocade {
         left: 4%;
     }
 
     .hero-social-github {
-        top: 50%;
         left: 6%;
     }
 
     .hero-social-youtube {
-        top: 42%;
         right: 4%;
     }
 
     .hero-social-twitter {
-        top: 58%;
         left: 4%;
     }
 
-    .hero-social-discord {
-        top: 50%;
+    .hero-social-tiktok {
         right: 6%;
     }
 
-    .hero-social-kakao {
-        top: 58%;
+    .hero-social-instagram {
         right: 4%;
     }
     
@@ -305,26 +310,14 @@
         height: 18px;
     }
 
-    .hero-social-email,
-    .hero-social-youtube {
-        top: 44%;
-    }
-
-    .hero-social-github,
-    .hero-social-discord {
-        top: 52%;
-    }
-
-    .hero-social-twitter,
-    .hero-social-kakao {
-        top: 60%;
+    .hero-floating-social {
+        --middle-row: 17%;
     }
     
     /* AI Bot responsive scaling */
     .ai-bot-container {
         width: 100px !important; /* Scale down from 120px */
         height: 100px !important;
-        top: -75px !important; /* Adjust position for smaller size */
         transform: translateX(-50%) scale(0.95) !important;
     }
 
@@ -337,20 +330,8 @@
         transform: none !important;
     }
     
-    .hero-title {
-        font-size: 5.7rem; /* 95% of 6rem */
-    }
-    
-    .title-v, .title-c, .title-ai, .glitch {
-        font-size: 5.7rem; /* 95% of 6rem */
-    }
-    
-    .title-small {
-        font-size: 4.56rem; /* 95% of 4.8rem */
-    }
-    
     .hero-subtitle {
-        font-size: 1.425rem; /* 95% of 1.5rem */
+        font-size: clamp(14px, 3.8vw, 20px);
     }
     
     .tagline {
@@ -383,7 +364,6 @@
     .ai-bot-container {
         width: 80px !important; /* Further scale down for very small screens */
         height: 80px !important;
-        top: -60px !important; /* Adjust position for smaller size */
         transform: translateX(-50%) scale(0.95) !important;
     }
 
@@ -397,19 +377,8 @@
         height: 16px;
     }
 
-    .hero-social-email,
-    .hero-social-youtube {
-        top: 46%;
-    }
-
-    .hero-social-github,
-    .hero-social-discord {
-        top: 54%;
-    }
-
-    .hero-social-twitter,
-    .hero-social-kakao {
-        top: 62%;
+    .hero-floating-social {
+        --middle-row: 22%;
     }
 
     .contact-social-link {

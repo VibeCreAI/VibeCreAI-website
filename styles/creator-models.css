@@ -1,0 +1,39 @@
+.about-icon.has-motion > img {
+    visibility: hidden;
+}
+
+/* Stage artwork can use the card's top padding without moving its heading. */
+.creator-stage {
+    position: absolute;
+    left: 50%;
+    bottom: -0.4rem;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    pointer-events: none;
+}
+
+.creator-stage canvas {
+    width: 6.65rem;
+    height: 6.65rem;
+}
+
+.creator-bot {
+    width: 3.8rem;
+    height: 3.8rem;
+    margin-left: -0.7rem;
+    background: var(--primary-color);
+    mask: url('../images/creator-bot.webp') top / 100% 10000% no-repeat;
+    animation: creator-bot-frames 8s steps(100, end) infinite;
+}
+
+@keyframes creator-bot-frames {
+    to { mask-position: 0 calc(100% * 100 / 99); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .creator-bot {
+        animation: none;
+        mask-position: 0 calc(100% * 50 / 99);
+    }
+}

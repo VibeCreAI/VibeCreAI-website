@@ -1,0 +1,18 @@
+{
+  "name": "vibecreai-website",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/preview.mjs"
+  },
+  "engines": {
+    "node": "24.x"
+  },
+  "dependencies": {
+    "@sparticuz/chromium": "153.0.0",
+    "puppeteer-core": "25.18.1"
+  },
+  "devDependencies": {
+    "serve-handler": "6.1.8"
+  }
+}

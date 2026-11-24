@@ -8,12 +8,6 @@ class VibeCreAIApp {
         this.isInitialized = false;
         this.elements = {};
         this.animations = {};
-        this.programmerDirection = 'default';
-        this.programmerSpriteSources = null;
-        this.preloadedProgrammerSprites = [];
-        this.pendingProgrammerPointer = null;
-        this.programmerPointerFrame = null;
-        
         // Focus bracket system variables
         this.focusBracket = {
             chunkElements: [],
@@ -38,7 +32,16 @@ class VibeCreAIApp {
             this.setupScrollBehavior();
             this.initializeAnimations();
             this.setupEventHandlers();
-            this.setupProgrammerAnimation();
+            const updateLanguage = () => {
+                document.title = window.VibeLocale.t('VibeCreAI - Vibe coding + Creative + AI');
+                this.focusBracket.chunkElements.forEach((node, index) => {
+                    node.textContent = window.VibeLocale.t(['VIBE CODING', 'CREATIVE', 'AI'][index]);
+                });
+                this.recalculateFocusBracket();
+                this.updateButtonTextForMobile();
+            };
+            document.addEventListener('vibe-language-change', updateLanguage);
+            updateLanguage();
             this.isInitialized = true;
             console.log('🎉 VibeCreAI App initialized');
         };
@@ -59,7 +62,6 @@ class VibeCreAIApp {
             logoContainer: document.getElementById('logo-text-container'),
             heroSubtitle: dom.get('heroSubtitle'),
             tagline: document.getElementById('tagline'),
-            programmerCharacter: document.getElementById('programmer-character'),
 
             // Form elements
             newsletterForm: dom.get('newsletterForm'),
@@ -69,128 +71,6 @@ class VibeCreAIApp {
             fadeInElements: dom.get('fadeInElements'),
             anchors: dom.get('anchors')
         };
-    }
-
-    setupProgrammerAnimation() {
-        const { events } = window.VibePerf;
-        const { programmerCharacter } = this.elements;
-
-        if (!programmerCharacter) return;
-
-        const spriteVersion = '20260323a';
-        this.programmerSpriteSources = {
-            default: `images/Samson_programmer.gif?v=${spriteVersion}`,
-            up: `images/Samson_programmer_up.gif?v=${spriteVersion}`,
-            down: `images/Samson_programmer_down.gif?v=${spriteVersion}`,
-            left: `images/Samson_programmer_left.gif?v=${spriteVersion}`,
-            right: `images/Samson_programmer_right.gif?v=${spriteVersion}`
-        };
-
-        this.preloadProgrammerSprites();
-        this.setProgrammerDirection('default');
-
-        const queueDirectionUpdate = (clientX, clientY) => {
-            this.pendingProgrammerPointer = { clientX, clientY };
-
-            if (this.programmerPointerFrame) return;
-
-            this.programmerPointerFrame = window.requestAnimationFrame(() => {
-                this.programmerPointerFrame = null;
-
-                if (!this.pendingProgrammerPointer) return;
-
-                const { clientX: nextX, clientY: nextY } = this.pendingProgrammerPointer;
-                this.pendingProgrammerPointer = null;
-                this.setProgrammerDirection(this.getProgrammerDirectionFromPoint(nextX, nextY));
-            });
-        };
-
-        const resetDirection = () => {
-            this.pendingProgrammerPointer = null;
-
-            if (this.programmerPointerFrame) {
-                window.cancelAnimationFrame(this.programmerPointerFrame);
-                this.programmerPointerFrame = null;
-            }
-
-            this.setProgrammerDirection('default');
-        };
-
-        const handleTouchPoint = (event) => {
-            if (!event.touches || !event.touches.length) return;
-
-            const touch = event.touches[0];
-            queueDirectionUpdate(touch.clientX, touch.clientY);
-        };
-
-        events.addPassiveListener(document, 'mousemove', (event) => {
-            queueDirectionUpdate(event.clientX, event.clientY);
-        });
-
-        events.addPassiveListener(window, 'mouseout', (event) => {
-            if (!event.relatedTarget && !event.toElement) {
-                resetDirection();
-            }
-        });
-
-        events.addPassiveListener(window, 'blur', resetDirection);
-
-        events.addPassiveListener(document, 'visibilitychange', () => {
-            if (document.hidden) {
-                resetDirection();
-            }
-        });
-
-        events.addPassiveListener(document, 'touchstart', handleTouchPoint, { capture: true });
-        events.addPassiveListener(document, 'touchmove', handleTouchPoint, { capture: true });
-        events.addPassiveListener(document, 'touchend', resetDirection, { capture: true });
-        events.addPassiveListener(document, 'touchcancel', resetDirection, { capture: true });
-    }
-
-    preloadProgrammerSprites() {
-        if (!this.programmerSpriteSources) return;
-
-        this.preloadedProgrammerSprites = Object.values(this.programmerSpriteSources).map((src) => {
-            const image = new Image();
-            image.src = src;
-            return image;
-        });
-    }
-
-    getProgrammerDirectionFromPoint(clientX, clientY) {
-        const { programmerCharacter } = this.elements;
-
-        if (!programmerCharacter) {
-            return 'default';
-        }
-
-        const rect = programmerCharacter.getBoundingClientRect();
-        const centerX = rect.left + (rect.width / 2);
-        const centerY = rect.top + (rect.height / 2);
-        const deltaX = clientX - centerX;
-        const deltaY = clientY - centerY;
-        const deadZone = Math.max(28, Math.min(rect.width, rect.height) * 0.18);
-
-        if (Math.abs(deltaX) < deadZone && Math.abs(deltaY) < deadZone) {
-            return 'default';
-        }
-
-        if (Math.abs(deltaX) > Math.abs(deltaY)) {
-            return deltaX < 0 ? 'left' : 'right';
-        }
-
-        return deltaY < 0 ? 'up' : 'down';
-    }
-
-    setProgrammerDirection(direction) {
-        const { programmerCharacter } = this.elements;
-
-        if (!programmerCharacter || !this.programmerSpriteSources?.[direction]) return;
-        if (this.programmerDirection === direction) return;
-
-        programmerCharacter.src = this.programmerSpriteSources[direction];
-        programmerCharacter.dataset.direction = direction;
-        this.programmerDirection = direction;
     }
 
     initializeYear() {
@@ -323,13 +203,18 @@ class VibeCreAIApp {
 
         let taglineCounter = 0;
         const nextTagline = () => {
-            taglineScramble.setText(taglines[taglineCounter]).then(() => {
+            taglineScramble.setText(window.VibeLocale.t(taglines[taglineCounter])).then(() => {
                 this.animations.taglineTimeout = window.VibePerf.memory.setTimeout(nextTagline, 3000);
             });
             taglineCounter = (taglineCounter + 1) % taglines.length;
         };
 
         this.animations.taglineScramble = taglineScramble;
+        document.addEventListener('vibe-language-change', () => {
+            clearTimeout(this.animations.taglineTimeout);
+            taglineCounter = (taglineCounter + taglines.length - 1) % taglines.length;
+            nextTagline();
+        });
         nextTagline();
     }
 
@@ -427,15 +312,14 @@ class VibeCreAIApp {
 
             const email = newsletterForm.querySelector('input[type="email"]').value;
             const button = newsletterForm.querySelector('button');
-            const originalText = button.textContent;
 
             // Animate subscription process
-            button.textContent = 'SUBSCRIBING...';
+            button.textContent = window.VibeLocale.t('SUBSCRIBING...');
             button.disabled = true;
 
             // Simulate API call
             window.VibePerf.memory.setTimeout(() => {
-                button.textContent = 'SUBSCRIBED!';
+                button.textContent = window.VibeLocale.t('SUBSCRIBED!');
                 button.style.background = 'linear-gradient(90deg, #00ff00, #00ffcc)';
                 newsletterForm.querySelector('input').value = '';
 
@@ -447,8 +331,8 @@ class VibeCreAIApp {
                 });
 
                 window.VibePerf.memory.setTimeout(() => {
-                    button.textContent = originalText;
                     button.disabled = false;
+                    this.updateButtonTextForMobile();
                     button.style.background = '';
                 }, 3000);
             }, 1500);
@@ -520,8 +404,8 @@ class VibeCreAIApp {
 
     updateButtonTextForMobile() {
         const joinButton = document.querySelector('.form-group button[type="submit"]');
-        if (joinButton) {
-            joinButton.textContent = window.innerWidth <= 480 ? 'JOIN' : 'JOIN THE VIBE';
+        if (joinButton && !joinButton.disabled) {
+            joinButton.textContent = window.VibeLocale.t(window.innerWidth <= 480 ? 'JOIN' : 'JOIN THE VIBE');
         }
     }
 
@@ -596,9 +480,9 @@ class VibeCreAIApp {
                 const boundedIndex = Math.min(Math.max(index, 0), phaseData.length - 1);
                 const phase = phaseData[boundedIndex];
                 if (loadingTitle && loadingTitle.firstChild) {
-                    loadingTitle.firstChild.textContent = phase.title.toUpperCase();
+                    loadingTitle.firstChild.textContent = window.VibeLocale.t(phase.title.toUpperCase());
                 }
-                const labelHtml = phase.label.replace(/\n/g, '<br>');
+                const labelHtml = window.VibeLocale.t(phase.label).replace(/\n/g, '<br>');
                 statusLabel.innerHTML = labelHtml;
             };
 
@@ -695,7 +579,7 @@ class VibeCreAIApp {
         wordChunks.forEach((chunk, index) => {
             const chunkSpan = document.createElement('span');
             chunkSpan.className = 'focus-word';
-            chunkSpan.textContent = chunk;
+            chunkSpan.textContent = window.VibeLocale.t(chunk);
             chunkSpan.style.marginRight = '1em';
             element.appendChild(chunkSpan);
             this.focusBracket.chunkElements.push(chunkSpan);

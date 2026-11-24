@@ -1,0 +1,65 @@
+@font-face {
+    font-family: VibeWordmark;
+    src: url('../fonts/Born2bSportyFS.otf') format('opentype');
+    font-display: block;
+}
+
+/* 둥근모꼴+ Fixedsys (public domain): https://cactus.tistory.com/193 */
+@font-face {
+    font-family: DungGeunMo;
+    src: url('../fonts/DungGeunMo.woff2') format('woff2');
+    font-display: swap;
+}
+
+:root {
+    --arcade-font: DungGeunMo, system-ui, sans-serif;
+    --wordmark-font: VibeWordmark, sans-serif;
+}
+
+:where(button, input, textarea, select) { font-family: var(--arcade-font); }
+
+.language-switch {
+    --switch-ink: var(--primary-color, #00ffff);
+    display: inline-flex;
+    flex: none;
+    white-space: nowrap;
+    align-items: stretch;
+    gap: 2px;
+    padding: 3px;
+    color: #d2e4e6;
+    background: #091619f2;
+    border: 1px solid #4b696e;
+    box-shadow: 2px 2px #051014;
+    font: 700 13px/1 var(--arcade-font);
+    letter-spacing: .02em;
+}
+.language-switch button {
+    display: grid;
+    place-items: center;
+    min-height: 29px;
+    padding: 0 7px;
+    border: 0;
+    color: inherit;
+    background: transparent;
+    font: inherit;
+    letter-spacing: inherit;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+html[lang="en"] .language-switch [lang="en"], html[lang="ko"] .language-switch [lang="ko"] {
+    background: var(--switch-ink);
+    color: #052024;
+}
+.language-switch:is(:hover, :focus-within) { border-color: var(--switch-ink); }
+header nav:has(> .language-switch) > .logo { margin-right: auto; }
+header nav > .language-switch { margin-left: clamp(10px, 2vw, 28px); }
+html[lang="ko"] :is(.section-title,.section-subtitle,.paper,.guide,.boot-readout,.arcade-feature,.about-card,.app-card) {
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+}
+html[lang="ko"] :is(.paper p,.about-card p,.app-description) {
+    line-height: 1.65;
+}
+@media (pointer: coarse) {
+    .language-switch button { min-height: 36px; min-width: 36px; }
+}
