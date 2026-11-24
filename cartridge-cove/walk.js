@@ -386,7 +386,6 @@ function backToFloor() {
 }
 function bindStationSigns(canvas, camera, scene, signs) {
     const ray = new T.Raycaster();
-    ray.layers.enable(1);
     const pointer = new T.Vector2();
     let press = null;
     let hovered = null;
@@ -399,9 +398,12 @@ function bindStationSigns(canvas, camera, scene, signs) {
         );
         ray.setFromCamera(pointer, camera);
         ray.far = camera.far;
+        ray.layers.set(2);
         const [hit] = ray.intersectObjects(signs);
         if (!hit) return null;
         // Ignore a sign seen through the back of a cabinet or covered by the character.
+        ray.layers.set(0);
+        ray.layers.enable(1);
         ray.far = hit.distance - 0.001;
         return ray.intersectObjects(scene.children, true).length ? null : hit.object;
     }
@@ -710,7 +712,7 @@ function tick(now) {
 async function startWorld() {
     await window.VibeLocale.readyFont();
     bootStep('Loading Samson’s desk');
-    const renderer = new T.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
+    const renderer = new T.WebGLRenderer({ antialias: !touch.matches, powerPreference: 'high-performance' });
     renderer.outputEncoding = T.sRGBEncoding;
     const scene = new T.Scene();
     scene.autoUpdate = false;
@@ -833,7 +835,7 @@ async function startWorld() {
             const dpr = Math.min(devicePixelRatio, 1.55);
             renderer.setPixelRatio(dpr);
             renderer.setSize(w, h, false);
-            ink.resize(w, h, dpr, touch.matches ? Math.min(1, dpr) : dpr);
+            ink.resize(w, h, touch.matches ? Math.min(1, dpr) : dpr);
             camera.aspect = w / h;
             camera.fov = small ? 49 : 40;
             camera.updateProjectionMatrix();

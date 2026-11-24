@@ -58,19 +58,26 @@ export function makeArcade(scene, onFontReady) {
     function piece(geom, color, x, y, z, w = 1, h = 1, d = 1, rx = 0, ry = 0, rz = 0, lit = false) {
         // Share one draw call per lighting mode and aisle section. Vertex colors preserve the paint.
         const key = [Math.floor(x / 7), lit].join('/');
-        if (!batches.has(key)) batches.set(key, { lit, p: [], n: [], colors: [] });
+        if (!batches.has(key)) batches.set(key, { lit, p: [], n: [], colors: [], indices: [] });
         const b = batches.get(key);
         transform.position.set(x, y, z);
         transform.rotation.set(rx, ry, rz);
         transform.scale.set(w, h, d);
         transform.updateMatrix();
-        const g = geom.index ? geom.toNonIndexed() : geom.clone();
+        const g = geom.clone();
         g.applyMatrix4(transform.matrix);
+        const base = b.p.length / 3;
+        const vertexCount = g.attributes.position.count;
+        if (g.index) {
+            for (const index of g.index.array) b.indices.push(base + index);
+        } else {
+            for (let i = 0; i < vertexCount; i++) b.indices.push(base + i);
+        }
         b.p.push(...g.attributes.position.array);
         b.n.push(...g.attributes.normal.array);
         if (!palette.has(color)) palette.set(color, matte(color));
         const { r, g: green, b: blue } = palette.get(color);
-        for (let i = 0; i < g.attributes.position.count; i++) b.colors.push(r, green, blue);
+        for (let i = 0; i < vertexCount; i++) b.colors.push(r, green, blue);
         g.dispose();
     }
     const box = (x, y, z, w, h, d, c, rx = 0, rz = 0, lit = false) =>
@@ -114,6 +121,8 @@ export function makeArcade(scene, onFontReady) {
         );
         m.position.set(x, y, z);
         m.rotation.x = rx;
+        // Printed faces sit on solid frames, cabinet screens or the floor. Their backing supplies the outline.
+        m.layers.set(2);
         scene.add(m);
         return m;
     }
@@ -304,7 +313,6 @@ export function makeArcade(scene, onFontReady) {
     const botSign = face(botSheet, -0.35, 3.37, -2.942, 0.54, 0.54);
     botSign.visible = false;
     botSign.material.alphaTest = 0.5;
-    botSign.layers.set(2);
     const mainSign = canvasTexture(896, 266, () => {});
     const ctx = mainSign.image.getContext('2d');
     const titleParts = [
@@ -595,6 +603,7 @@ export function makeArcade(scene, onFontReady) {
         g.setAttribute('position', new T.Float32BufferAttribute(b.p, 3));
         g.setAttribute('normal', new T.Float32BufferAttribute(b.n, 3));
         g.setAttribute('color', new T.Float32BufferAttribute(b.colors, 3));
+        g.setIndex(b.indices);
         g.computeBoundingSphere();
         const key = b.lit;
         if (!materials.has(key))
@@ -604,7 +613,10 @@ export function makeArcade(scene, onFontReady) {
                     ? new T.MeshBasicMaterial({ vertexColors: true })
                     : new T.MeshToonMaterial({ vertexColors: true, gradientMap: bands })
             );
-        scene.add(new T.Mesh(g, materials.get(key)));
+        const mesh = new T.Mesh(g, materials.get(key));
+        // Thin luminous inlays keep their own color at a distance instead of acquiring a second black edge.
+        if (b.lit) mesh.layers.set(2);
+        scene.add(mesh);
     }
     shell.dispose();
     cube.dispose();
