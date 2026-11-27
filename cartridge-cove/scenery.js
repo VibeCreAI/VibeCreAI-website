@@ -1,5 +1,5 @@
 import { createToonBands } from '../js/arcade-look.js';
-import { createMarqueeShutter, demoSeconds, drawDeskDemo } from './desk-demo.js';
+import { createMarqueeShutter, demoSeconds, demoWidth, drawDeskDemo } from './desk-demo.js';
 
 const T = window.THREE;
 const { t } = window.VibeLocale;
@@ -37,6 +37,9 @@ export const standTravel = 1.5;
 const cabinetOffset = 0.8;
 // The desk, its chair and the seated character sit centered under the desk marquee.
 export const deskX = -0.35;
+// The desk marquee keeps 448 demo pixels per 4.4 m, so cropping the display narrows the screen, not its content.
+const deskScreenWidth = (demoWidth / 448) * 4.4;
+export const deskMarquee = { width: deskScreenWidth + 0.15, y: 2.95, z: -2.947 };
 const points = [new T.Vector3(deskX, 0, 0), new T.Vector3(1.3, 0, -0.16), new T.Vector3(2.65, 0, 0.52)];
 const stopKnots = [];
 stations.forEach((s, i) => {
@@ -346,11 +349,11 @@ export function makeArcade(scene, onFontReady) {
     const botSign = face(botSheet, deskX, 3.37, -2.942, 0.54, 0.54);
     botSign.visible = false;
     botSign.material.alphaTest = 0.5;
-    const mainSign = canvasTexture(896, 266, () => {});
+    const mainSign = canvasTexture(demoWidth * 2, 266, () => {});
     const ctx = mainSign.image.getContext('2d');
-    const deskScreen = face(mainSign, deskX, 2.95, -2.947, 4.4, 1.32);
+    const deskScreen = face(mainSign, deskX, deskMarquee.y, deskMarquee.z, deskScreenWidth, 1.32);
     const shutter = createMarqueeShutter(T, deskScreen);
-    const demo = canvasTexture(448, 133, () => {});
+    const demo = canvasTexture(demoWidth, 133, () => {});
     demo.generateMipmaps = false;
     demo.minFilter = T.LinearFilter;
     const demoCtx = demo.image.getContext('2d');
@@ -366,7 +369,7 @@ export function makeArcade(scene, onFontReady) {
     const returnAt = titleSeconds + demoSeconds;
     const cycleSeconds = returnAt + closeSeconds + holdSeconds + openSeconds;
     let previousWord = -1, previousDemoFrame = -1;
-    function updateMarquee(seatedSeconds, aspect) {
+    function updateMarquee(seatedSeconds) {
         const time = seatedSeconds % cycleSeconds;
         const returning = time - returnAt;
         shutter.visible = returning >= 0;
@@ -383,8 +386,7 @@ export function makeArcade(scene, onFontReady) {
         if (!showingTitle) {
             const demoFrame = Math.floor(Math.min(time - titleSeconds, demoSeconds) * 16);
             if (demoFrame !== previousDemoFrame) {
-                // In portrait the desk camera crops the physical edges of the marquee.
-                drawDeskDemo(demoCtx, demoFrame / 16, botSheet.image, t, Math.min(1, aspect * 1.92));
+                drawDeskDemo(demoCtx, demoFrame / 16, botSheet.image, t);
                 demo.needsUpdate = true;
                 previousDemoFrame = demoFrame;
             }
@@ -442,10 +444,10 @@ export function makeArcade(scene, onFontReady) {
         });
         mainSign.needsUpdate = true;
     }
-    updateMarquee(0, 1);
+    updateMarquee(0);
     // The marquee bezel repeats the floor UI's neon frame (retro-ui.css): bright tube, dark gap,
-    // faint inner line and a soft glow on the glass. 400 px per meter over the 4.55 × 1.46 backing.
-    const bezel = canvasTexture(1820, 584, (c, W, H) => {
+    // faint inner line and a soft glow on the glass. 400 px per meter over the 1.46 m tall backing.
+    const bezel = canvasTexture(Math.round(deskMarquee.width * 400), 584, (c, W, H) => {
         const neon = '#38f4ff';
         const frame = (dx, dy, r) => {
             const p = new Path2D();
@@ -482,14 +484,14 @@ export function makeArcade(scene, onFontReady) {
         c.stroke(frame(8, 8, 24));
     });
     bezel.magFilter = T.LinearFilter;
-    const deskBezel = face(bezel, deskX, 2.95, -2.94, 4.55, 1.46);
+    const deskBezel = face(bezel, deskX, deskMarquee.y, -2.94, deskMarquee.width, 1.46);
     deskBezel.material.transparent = true;
     deskBezel.material.depthWrite = false;
     // Drawn after the shutter so the frame stays lit while the screen closes.
     deskBezel.renderOrder = 5;
-    box(deskX, 2.95, -3.12, 4.55, 1.46, 0.27, ink);
-    box(deskX, 2.18, -3.08, 4.41, 0.038, 0.14, mint, 0, 0, true);
-    pool(deskX, 2.86, -3.43, 7.7, 3.2, '#17d9d1', 0.6, true);
+    box(deskX, deskMarquee.y, -3.12, deskMarquee.width, 1.46, 0.27, ink);
+    box(deskX, 2.18, -3.08, deskScreenWidth + 0.01, 0.038, 0.14, mint, 0, 0, true);
+    pool(deskX, 2.86, -3.43, deskMarquee.width * 1.7, 3.2, '#17d9d1', 0.6, true);
     pool(0.05, 0.016, 0.26, 2.7, 2.15, '#000000', 0.86, false, true);
     pool(-0.6, 0.012, -0.93, 4.4, 2.8, '#0dd9c9', 0.19);
     const sideShape = new T.Shape();

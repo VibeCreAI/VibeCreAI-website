@@ -9,6 +9,10 @@ const mix = (from, to, amount) => from + (to - from) * amount;
 const clamp01 = (value) => Math.max(0, Math.min(1, value));
 
 export const demoSeconds = buildSeconds + launchSeconds + volleySeconds * hitOrder.length + 1.8;
+// The display is cropped to the 320 px content column (x 64–384 of the 448-wide layout) plus a thin margin,
+// so the whole marquee fits a portrait phone without shrinking the game.
+export const demoWidth = 336;
+const cropX = (448 - demoWidth) / 2;
 
 // A single overlay shutters the game, title and separate animated mascot together.
 export function createMarqueeShutter(T, screen) {
@@ -46,8 +50,8 @@ export function createMarqueeShutter(T, screen) {
     return shutter;
 }
 
-// The build meter and the game share the same seven bricks on this 448 × 133 display.
-export function drawDeskDemo(ctx, time, botSheet, t, scale) {
+// The build meter and the game share the same seven bricks on this demoWidth × 133 display.
+export function drawDeskDemo(ctx, time, botSheet, t) {
     const launch = clamp01((time - buildSeconds) / launchSeconds);
     const volleys = Math.max(0, (time - buildSeconds - launchSeconds) / volleySeconds);
     const cleared = Math.min(hitOrder.length, Math.floor(volleys + 0.5));
@@ -55,29 +59,30 @@ export function drawDeskDemo(ctx, time, botSheet, t, scale) {
     const progress = clamp01(time / (buildSeconds - 0.45));
     ctx.resetTransform();
     ctx.fillStyle = '#071321';
-    ctx.fillRect(0, 0, 448, 133);
-    ctx.setTransform(scale, 0, 0, scale, 224 * (1 - scale), 66.5 * (1 - scale));
+    ctx.fillRect(0, 0, demoWidth, 133);
+    // Draw in the original 448-wide coordinates, centered on the cropped display.
+    ctx.setTransform(1, 0, 0, 1, -cropX, 0);
     ctx.fillStyle = '#102b37';
     for (let i = 0; i < 44; i++) {
         ctx.fillRect((i * 83) % 414 + 17, (i * 37) % 89 + 39, 2, 2);
     }
     ctx.fillStyle = '#28515b';
-    ctx.fillRect(40, 30, 368, 1);
+    ctx.fillRect(64, 30, 320, 1);
     if (botSheet) {
         // Frame 50 is the fully formed Vibe Bot on the desk marquee.
         const size = botSheet.width;
         ctx.imageSmoothingEnabled = false;
-        ctx.drawImage(botSheet, 0, 50 * size, size, size, 36, -5, 32, 32);
+        ctx.drawImage(botSheet, 0, 50 * size, size, size, 60, -5, 32, 32);
     }
     ctx.font = '18px DungGeunMo, monospace';
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'left';
     ctx.fillStyle = '#e4fcff';
-    ctx.fillText(building ? 'brick-break.js' : t('BRICK BREAK'), 70, 17);
+    ctx.fillText(building ? 'brick-break.js' : t('BRICK BREAK'), 94, 17);
     ctx.textAlign = 'right';
     ctx.fillStyle = '#ffdc81';
     ctx.fillText(building ? t('BUILD') + ' ' + Math.floor(progress * 100) + '%' :
-        '1UP ' + String(cleared * 100).padStart(4, '0'), 406, 17);
+        '1UP ' + String(cleared * 100).padStart(4, '0'), 384, 17);
 
     if (building) {
         ctx.textAlign = 'left';

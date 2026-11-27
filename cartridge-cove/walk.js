@@ -1,4 +1,4 @@
-import { stations, stops, standTravel, route, routeLength, makeArcade, deskX } from './scenery.js';
+import { stations, stops, standTravel, route, routeLength, makeArcade, deskX, deskMarquee } from './scenery.js';
 import { loadStationContent } from './station-content.js';
 import { mountArcadeScores } from '../js/astrocade-scores.js';
 import { bindAvatarMotion } from '../js/avatar-motion.js';
@@ -962,6 +962,14 @@ async function startWorld() {
         deskCam.set(deskLook.x, 1.72, 5.55);
         // Pull back along the same sightline to fit the marquee in the narrower desktop field of view.
         if (!small) deskCam.lerp(deskLook, -0.09);
+        else {
+            // On very narrow phones, back away along the sightline just enough to keep the whole marquee in view.
+            const sight = Math.hypot(deskCam.y - deskLook.y, deskCam.z - deskLook.z);
+            const depth = ((deskCam.y - deskMarquee.y) * (deskCam.y - deskLook.y) +
+                (deskCam.z - deskMarquee.z) * (deskCam.z - deskLook.z)) / sight;
+            const needed = (deskMarquee.width / 2 + 0.06) / (Math.tan(camera.fov * Math.PI / 360) * camera.aspect);
+            if (needed > depth) deskCam.lerp(deskLook, (depth - needed) / sight);
+        }
         cam.set(p.x + (small ? -4.5 : -1.95), small ? 2.15 : 2.42, p.z + (small ? 3.6 : 5.4));
         look.set(p.x + (small ? 0.54 : 1.1), 1.47, p.z - 0.72);
         cam.lerp(deskCam, 1 - reveal);
@@ -988,7 +996,7 @@ async function startWorld() {
         const seated = !booting && !journey && stand < 0.012 && target < standTravel * 0.012;
         seatedSince = seated && !reduced.matches ? (seatedSince ?? now) : null;
         if (distance < standTravel + 1) {
-            updateMarquee(seatedSince === null ? 0 : (now - seatedSince) / 1000, camera.aspect);
+            updateMarquee(seatedSince === null ? 0 : (now - seatedSince) / 1000);
         }
         scene.updateMatrixWorld();
         ink.draw(scene, camera);
