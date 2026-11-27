@@ -35,7 +35,9 @@ export const stations = [
 ];
 export const standTravel = 1.5;
 const cabinetOffset = 0.8;
-const points = [new T.Vector3(0, 0, 0), new T.Vector3(1.3, 0, -0.16), new T.Vector3(2.65, 0, 0.52)];
+// The desk, its chair and the seated character sit centered under the desk marquee.
+export const deskX = -0.35;
+const points = [new T.Vector3(deskX, 0, 0), new T.Vector3(1.3, 0, -0.16), new T.Vector3(2.65, 0, 0.52)];
 const stopKnots = [];
 stations.forEach((s, i) => {
     s.x = 5.3 + cabinetOffset + i * 4.65;
@@ -341,12 +343,12 @@ export function makeArcade(scene, onFontReady) {
     botSheet.generateMipmaps = false;
     botSheet.encoding = T.sRGBEncoding;
     botSheet.repeat.set(1, 1 / 100);
-    const botSign = face(botSheet, -0.35, 3.37, -2.942, 0.54, 0.54);
+    const botSign = face(botSheet, deskX, 3.37, -2.942, 0.54, 0.54);
     botSign.visible = false;
     botSign.material.alphaTest = 0.5;
     const mainSign = canvasTexture(896, 266, () => {});
     const ctx = mainSign.image.getContext('2d');
-    const deskScreen = face(mainSign, -0.35, 2.95, -2.947, 4.4, 1.32);
+    const deskScreen = face(mainSign, deskX, 2.95, -2.947, 4.4, 1.32);
     const shutter = createMarqueeShutter(T, deskScreen);
     const demo = canvasTexture(448, 133, () => {});
     demo.generateMipmaps = false;
@@ -441,9 +443,9 @@ export function makeArcade(scene, onFontReady) {
         mainSign.needsUpdate = true;
     }
     updateMarquee(0, 1);
-    box(-0.35, 2.95, -3.12, 4.55, 1.46, 0.27, ink);
-    box(-0.35, 2.18, -3.08, 4.41, 0.038, 0.14, mint, 0, 0, true);
-    pool(-0.35, 2.86, -3.43, 7.7, 3.2, '#17d9d1', 0.6, true);
+    box(deskX, 2.95, -3.12, 4.55, 1.46, 0.27, ink);
+    box(deskX, 2.18, -3.08, 4.41, 0.038, 0.14, mint, 0, 0, true);
+    pool(deskX, 2.86, -3.43, 7.7, 3.2, '#17d9d1', 0.6, true);
     pool(0.05, 0.016, 0.26, 2.7, 2.15, '#000000', 0.86, false, true);
     pool(-0.6, 0.012, -0.93, 4.4, 2.8, '#0dd9c9', 0.19);
     const sideShape = new T.Shape();

@@ -1,4 +1,4 @@
-import { stations, stops, standTravel, route, routeLength, makeArcade } from './scenery.js';
+import { stations, stops, standTravel, route, routeLength, makeArcade, deskX } from './scenery.js';
 import { loadStationContent } from './station-content.js';
 import { mountArcadeScores } from '../js/astrocade-scores.js';
 import { bindAvatarMotion } from '../js/avatar-motion.js';
@@ -834,6 +834,7 @@ async function startWorld() {
     const react = avatarReactions(T, root, bones, characterMaterials, wave, motion);
     const actor = new T.Group();
     actor.add(avatar.scene);
+    desk.scene.position.x = deskX;
     scene.add(desk.scene, actor);
     const chair = desk.scene.getObjectByName('Chair'),
         chairZ = chair?.position.z || 0;
@@ -956,8 +957,9 @@ async function startWorld() {
         );
         shadow.position.set(p.x, 0.011, actor.position.z);
         const reveal = smooth(distance, standTravel * 0.35, standTravel + 2);
-        deskCam.set(0.37, 1.72, 5.55);
-        deskLook.set(-0.085, 0.98, -0.24);
+        deskLook.set(deskX, 0.98, -0.24);
+        // Face the desk head-on: same x as the look target, so the opening view has no sideways yaw.
+        deskCam.set(deskLook.x, 1.72, 5.55);
         // Pull back along the same sightline to fit the marquee in the narrower desktop field of view.
         if (!small) deskCam.lerp(deskLook, -0.09);
         cam.set(p.x + (small ? -4.5 : -1.95), small ? 2.15 : 2.42, p.z + (small ? 3.6 : 5.4));
