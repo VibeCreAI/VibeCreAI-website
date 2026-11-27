@@ -443,6 +443,50 @@ export function makeArcade(scene, onFontReady) {
         mainSign.needsUpdate = true;
     }
     updateMarquee(0, 1);
+    // The marquee bezel repeats the floor UI's neon frame (retro-ui.css): bright tube, dark gap,
+    // faint inner line and a soft glow on the glass. 400 px per meter over the 4.55 × 1.46 backing.
+    const bezel = canvasTexture(1820, 584, (c, W, H) => {
+        const neon = '#38f4ff';
+        const frame = (dx, dy, r) => {
+            const p = new Path2D();
+            p.roundRect(dx, dy, W - dx * 2, H - dy * 2, r);
+            return p;
+        };
+        const glass = frame(30, 28, 10);
+        const ring = frame(0, 0, 30);
+        ring.addPath(glass);
+        c.fillStyle = '#050a16';
+        c.fill(ring, 'evenodd');
+        c.save();
+        c.clip(glass);
+        c.shadowColor = 'rgba(56, 244, 255, 0.45)';
+        c.shadowBlur = 46;
+        c.strokeStyle = '#050a16';
+        c.lineWidth = 24;
+        c.stroke(frame(18, 16, 16));
+        c.restore();
+        c.strokeStyle = 'rgba(56, 244, 255, 0.4)';
+        c.lineWidth = 4;
+        c.stroke(frame(24, 22, 14));
+        c.strokeStyle = '#01030a';
+        c.lineWidth = 3;
+        c.stroke(frame(1.5, 1.5, 30));
+        c.shadowColor = neon;
+        c.shadowBlur = 18;
+        c.strokeStyle = neon;
+        c.lineWidth = 10;
+        c.stroke(frame(8, 8, 24));
+        c.shadowBlur = 0;
+        c.strokeStyle = '#c4fdff';
+        c.lineWidth = 3;
+        c.stroke(frame(8, 8, 24));
+    });
+    bezel.magFilter = T.LinearFilter;
+    const deskBezel = face(bezel, deskX, 2.95, -2.94, 4.55, 1.46);
+    deskBezel.material.transparent = true;
+    deskBezel.material.depthWrite = false;
+    // Drawn after the shutter so the frame stays lit while the screen closes.
+    deskBezel.renderOrder = 5;
     box(deskX, 2.95, -3.12, 4.55, 1.46, 0.27, ink);
     box(deskX, 2.18, -3.08, 4.41, 0.038, 0.14, mint, 0, 0, true);
     pool(deskX, 2.86, -3.43, 7.7, 3.2, '#17d9d1', 0.6, true);
