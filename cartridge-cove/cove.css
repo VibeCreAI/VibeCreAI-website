@@ -224,13 +224,6 @@ body.booting .station-travel, body:has(dialog[open]) .station-travel { visibilit
 }
 .boot-trim i { width: 15px; height: 3px; background: #071319; }
 .boot-trim span { margin-left: auto; width: 6px; height: 4px; background: #ffbd69; box-shadow: 0 0 7px #ffbd6980; }
-.boot-home {
-    position: absolute;
-    bottom: max(14px, env(safe-area-inset-bottom));
-    padding: 6px;
-    color: var(--muted);
-    font: 12px/1.3 var(--arcade-font);
-}
 @media (prefers-reduced-motion: reduce) {
     #arcade-boot { transition: none; }
 }

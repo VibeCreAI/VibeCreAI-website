@@ -7,7 +7,7 @@
         'Loading the arcade': '오락실을 여는 중', 'Starting the display': '화면을 켜는 중',
         'Loading Samson’s desk': '샘슨의 작업대를 불러오는 중', 'Powering on the arcade': '오락기에 전원을 넣는 중',
         'Samson’s desk is ready': '샘슨의 작업대 준비 완료', 'Arcade loading progress': '오락실 로딩 진행률',
-        'Open 2D homepage ↗': '2D 홈페이지 열기 ↗', 'Open the homepage': '홈페이지 열기',
+        'Open the homepage': '홈페이지 열기',
         'Explore the VibeCreAI homepage': 'VibeCreAI 홈페이지 둘러보기',
         'Return to Samson’s desk': '샘슨의 작업대로 돌아가기', 'Samson’s desk': '샘슨의 작업대',
         'Station select': '스테이션 선택', 'Arcade sound': '오락실 소리',

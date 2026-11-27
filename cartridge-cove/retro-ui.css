@@ -1,0 +1,331 @@
+/*
+ * Retro arcade skin for the floor UI.
+ * Loaded after cove.css and only restyles it: remove the <link> in index.html to roll back.
+ */
+:root {
+    --neon-cyan: #38f4ff;
+    --neon-pink: #ff4fd8;
+    --neon-yellow: #ffd23f;
+    --retro-deep: #050a16;
+    --retro-panel: rgb(8 15 30 / 90%);
+    --retro-scan: repeating-linear-gradient(transparent 0 3px, rgb(0 0 0 / 16%) 3px 4px);
+}
+
+/* One neon frame for every panel: bright outer tube, dark gap, faint inner line, soft glow. */
+.hud-panel,
+#arcade-settings,
+.paper,
+dialog {
+    --neon: var(--neon-cyan);
+    border: 2px solid var(--neon);
+    border-radius: 7px;
+    background: var(--retro-scan), linear-gradient(180deg, rgb(11 20 40 / 88%), rgb(4 9 20 / 93%));
+    box-shadow:
+        0 0 0 1px #01030a,
+        0 0 10px color-mix(in srgb, var(--neon) 50%, transparent),
+        inset 0 0 0 2px var(--retro-deep),
+        inset 0 0 0 3px color-mix(in srgb, var(--neon) 38%, transparent),
+        inset 0 0 16px color-mix(in srgb, var(--neon) 16%, transparent);
+}
+.hud-panel.quick-socials { --neon: var(--neon-pink); }
+#arcade-settings { --neon: var(--neon-yellow); }
+.hud-panel.guide,
+.hud-panel.quick-socials {
+    border: 2px solid var(--neon);
+}
+.hud-panel {
+    overflow: visible;
+}
+@media (hover: hover) {
+    .hud-panel:hover {
+        border-color: var(--neon);
+        background: var(--retro-scan), linear-gradient(180deg, rgb(16 30 56 / 92%), rgb(6 12 26 / 95%));
+        box-shadow:
+            0 0 0 1px #01030a,
+            0 0 18px color-mix(in srgb, var(--neon) 70%, transparent),
+            inset 0 0 0 2px var(--retro-deep),
+            inset 0 0 0 3px color-mix(in srgb, var(--neon) 55%, transparent),
+            inset 0 0 20px color-mix(in srgb, var(--neon) 24%, transparent);
+    }
+}
+.hud-panel:focus-visible,
+.hud-panel:has(:focus-visible) {
+    border-color: var(--neon);
+    background: var(--retro-scan), linear-gradient(180deg, rgb(16 30 56 / 92%), rgb(6 12 26 / 95%));
+}
+
+/* Station select HUD */
+.guide {
+    grid-template-rows: auto minmax(0, 1fr) 6px;
+    padding: 7px 13px 9px;
+}
+.position-label {
+    color: color-mix(in srgb, var(--neon-cyan) 55%, #8aa0b4);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+.guide strong {
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #f4feff;
+    text-shadow: 0 0 6px color-mix(in srgb, var(--neon-cyan) 60%, transparent);
+}
+.station-switch {
+    color: var(--neon-yellow);
+    text-shadow: 0 0 6px color-mix(in srgb, var(--neon-yellow) 70%, transparent);
+}
+@media (max-width: 800px) {
+    .guide strong { letter-spacing: 0; font-size: 0.9375rem; }
+}
+/* Segmented progress bar: the fill scales, a fixed mask cuts it into cells. */
+.meter {
+    position: relative;
+    height: 6px;
+    border-radius: 2px;
+    background: #12243a;
+    overflow: hidden;
+}
+.meter i {
+    background: linear-gradient(90deg, var(--neon-cyan), #8ffcff);
+    box-shadow: 0 0 6px var(--neon-cyan);
+}
+.meter::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(90deg, transparent 0 9px, var(--retro-deep) 9px 12px);
+}
+
+/* Social shortcuts */
+.quick-socials a + a {
+    border-left: 1px solid color-mix(in srgb, var(--neon-pink) 35%, transparent);
+}
+.quick-socials a {
+    border-radius: 4px;
+    filter: drop-shadow(0 0 4px color-mix(in srgb, var(--neon-pink) 45%, transparent));
+}
+.quick-socials a:is(:focus-visible, :active) {
+    color: var(--neon-pink);
+    background: color-mix(in srgb, var(--neon-pink) 16%, transparent);
+}
+@media (hover: hover) {
+    .quick-socials a:hover {
+        color: var(--neon-pink);
+        background: color-mix(in srgb, var(--neon-pink) 16%, transparent);
+    }
+    .quick-socials a:is(:hover, :focus-visible)::before {
+        border: 2px solid var(--neon-pink);
+        border-radius: 4px;
+        background: var(--retro-deep);
+        text-transform: uppercase;
+        box-shadow: 0 0 8px color-mix(in srgb, var(--neon-pink) 55%, transparent);
+    }
+}
+
+/* Settings popover */
+#arcade-settings {
+    padding: 6px 13px 13px;
+}
+#arcade-sound {
+    text-transform: uppercase;
+    border-bottom: 1px dashed color-mix(in srgb, var(--neon-yellow) 40%, transparent);
+}
+#arcade-sound[aria-pressed='true'] .sound-state {
+    color: var(--neon-yellow);
+    text-shadow: 0 0 6px color-mix(in srgb, var(--neon-yellow) 70%, transparent);
+}
+#settings-language {
+    color: var(--neon-yellow);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 13px;
+}
+
+/* Arcade buttons: outlined neon at rest, lit when selected or pressed. */
+.arcade-language button,
+.paper a:not(.game-cover, .chroma-trailer),
+#contacts a,
+.close,
+.demo-video-close {
+    --neon: var(--neon-cyan);
+    border: 2px solid var(--neon);
+    border-radius: 5px;
+    color: var(--neon);
+    background: var(--retro-deep);
+    box-shadow:
+        0 3px 0 color-mix(in srgb, var(--neon) 35%, #000),
+        0 0 8px color-mix(in srgb, var(--neon) 30%, transparent),
+        inset 0 0 8px color-mix(in srgb, var(--neon) 18%, transparent);
+    text-shadow: 0 0 5px color-mix(in srgb, var(--neon) 55%, transparent);
+}
+.arcade-language button { --neon: var(--neon-yellow); text-transform: uppercase; }
+.arcade-language button[aria-pressed='true'] {
+    border-color: var(--neon);
+    color: var(--retro-deep);
+    background: var(--neon);
+    text-shadow: none;
+    box-shadow:
+        0 3px 0 color-mix(in srgb, var(--neon) 45%, #000),
+        0 0 12px color-mix(in srgb, var(--neon) 60%, transparent);
+}
+.close,
+.demo-video-close { --neon: var(--neon-pink); line-height: 1; }
+:is(.arcade-language button, .paper a:not(.game-cover, .chroma-trailer), #contacts a, .close, .demo-video-close, .primary):active {
+    translate: 0 2px;
+    box-shadow: 0 1px 0 color-mix(in srgb, var(--neon, var(--neon-cyan)) 35%, #000);
+}
+:is(.paper a:not(.game-cover, .chroma-trailer), #contacts a, .close, .demo-video-close):is(:hover, :focus-visible) {
+    border-color: var(--neon);
+    color: #fff;
+    background: color-mix(in srgb, var(--neon) 22%, var(--retro-deep));
+    box-shadow:
+        0 3px 0 color-mix(in srgb, var(--neon) 35%, #000),
+        0 0 14px color-mix(in srgb, var(--neon) 60%, transparent),
+        inset 0 0 10px color-mix(in srgb, var(--neon) 30%, transparent);
+}
+
+/* Station select dialog */
+#map {
+    background: var(--retro-scan), linear-gradient(180deg, rgb(11 20 40 / 92%), rgb(4 9 20 / 96%));
+    border-radius: 7px;
+}
+dialog h2 {
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #f4feff;
+    text-shadow:
+        0 0 8px color-mix(in srgb, var(--neon-cyan) 70%, transparent),
+        2px 2px 0 #0b3a52;
+}
+.dialog-head {
+    padding-bottom: 8px;
+    margin-bottom: 6px;
+    border-bottom: 2px solid color-mix(in srgb, var(--neon-pink) 60%, transparent);
+}
+#stations a {
+    border-top: 0;
+    border-radius: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+#stations a + a { margin-top: 3px; }
+#stations a::before { border-left: 2px dotted color-mix(in srgb, var(--neon-cyan) 35%, transparent); }
+#stations a:nth-child(3n + 1) { --tile: var(--neon-cyan); }
+#stations a:nth-child(3n + 2) { --tile: var(--neon-pink); }
+#stations a:nth-child(3n) { --tile: var(--neon-yellow); }
+#stations a kbd {
+    min-width: 24px;
+    padding: 3px 4px;
+    border: 2px solid var(--tile);
+    border-radius: 4px;
+    color: var(--tile);
+    background: var(--retro-deep);
+    box-shadow: 0 0 6px color-mix(in srgb, var(--tile) 50%, transparent);
+}
+#stations a:is(:hover, :focus-visible) {
+    color: #fff;
+    background: color-mix(in srgb, var(--tile) 14%, transparent);
+}
+#stations a:is(:hover, :focus-visible) kbd {
+    color: var(--retro-deep);
+    background: var(--tile);
+}
+#stations a[aria-current='location'] {
+    color: var(--tile);
+    background: color-mix(in srgb, var(--tile) 16%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tile) 55%, transparent);
+}
+#stations a[aria-current='location'] kbd {
+    border-color: var(--tile);
+}
+#stations a[aria-current='location']::after {
+    content: '◀';
+    text-shadow: 0 0 6px var(--tile);
+}
+#contacts {
+    border-top: 2px solid color-mix(in srgb, var(--neon-pink) 60%, transparent);
+    gap: 7px;
+    padding-top: 12px;
+}
+.contact-row { gap: 7px; }
+#contacts .contact-row:first-child a { --neon: var(--neon-pink); }
+#contacts .contact-row + .contact-row a { --neon: var(--neon-yellow); }
+
+/* Station card */
+.paper {
+    border-top-width: 2px;
+}
+.paper .back {
+    margin: 3px 3px 0;
+    border-bottom: 2px solid color-mix(in srgb, var(--neon-cyan) 45%, transparent);
+    border-radius: 4px 4px 0 0;
+    background: rgb(6 12 26 / 70%);
+    color: color-mix(in srgb, var(--neon-cyan) 70%, #c8d6e0);
+    text-transform: uppercase;
+    font-size: 15px;
+    letter-spacing: 0.04em;
+}
+.paper .back:is(:hover, :focus-visible) {
+    color: var(--neon-yellow);
+    text-shadow: 0 0 6px color-mix(in srgb, var(--neon-yellow) 65%, transparent);
+}
+.paper h1 {
+    text-transform: uppercase;
+    color: #f4feff;
+    text-shadow:
+        0 0 10px color-mix(in srgb, var(--neon-cyan) 65%, transparent),
+        3px 3px 0 #0b3a52;
+}
+.paper h2,
+.paper h3 {
+    color: var(--neon-yellow);
+    text-shadow: 0 0 7px color-mix(in srgb, var(--neon-yellow) 45%, transparent);
+}
+.paper .project,
+.paper .creator-bio {
+    border-top: 2px dashed color-mix(in srgb, var(--neon-pink) 45%, transparent);
+}
+.paper a:not(.game-cover, .chroma-trailer) {
+    text-transform: uppercase;
+    font-size: 14px;
+    padding: 8px 11px;
+    letter-spacing: 0.03em;
+}
+.paper .feature-actions a:nth-child(2n),
+.paper .app-buttons-container a:nth-child(2n) { --neon: var(--neon-pink); }
+.paper .feature-actions a:nth-child(3n),
+.paper .app-buttons-container a:nth-child(3n) { --neon: var(--neon-yellow); }
+/* Media links keep their artwork untinted. */
+.paper .chroma-trailer {
+    border: 2px solid var(--neon-cyan);
+    border-radius: 5px;
+    overflow: hidden;
+    box-shadow: 0 0 10px color-mix(in srgb, var(--neon-cyan) 40%, transparent);
+}
+.paper .game-cover img {
+    border-radius: 4px;
+}
+.primary {
+    --neon: var(--neon-yellow);
+    border: 2px solid #fff6c4;
+    border-radius: 5px;
+    color: var(--retro-deep);
+    background: var(--neon-yellow);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    box-shadow:
+        0 4px 0 #9c7a12,
+        0 0 14px color-mix(in srgb, var(--neon-yellow) 55%, transparent);
+}
+.primary:is(:hover, :focus-visible) {
+    background: #ffe27a;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    :is(.arcade-language button, .paper a:not(.game-cover, .chroma-trailer), #contacts a, .close, .demo-video-close, .primary, #stations a) {
+        transition: background-color 120ms ease-out, color 120ms ease-out, box-shadow 120ms ease-out, translate 60ms ease-out;
+    }
+}
